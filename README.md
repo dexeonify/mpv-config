@@ -1,5 +1,5 @@
 # mpv-config
-My personal mpv configs and user scripts :)
+My personal [mpv](https://github.com/mpv-player/mpv/) config and user scripts :)
 
 Nothing special, not even any fancy shaders or anything, since I only have an integrated GPU.
 This is mainly just for backup and keeping track of changes.
