@@ -92,6 +92,8 @@ function seek_to()
 end
 
 function backspace()
+    -- Original:
+    -- if cursor_position ~= 9 or current_time[9] == 0 then
     if cursor_position ~= 10 then
         shift_cursor(true)
     end

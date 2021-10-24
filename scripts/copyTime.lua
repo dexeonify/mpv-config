@@ -1,3 +1,6 @@
+-- Original script from https://github.com/Arieleg/mpv-copyTime
+-- Added a feature to also copy the current frame count.
+
 require 'mp'
 
 local function set_clipboard(text)
@@ -15,7 +18,7 @@ local function copyTime()
     time_seg,time_ms=string.format("%.03f", time_seg):match"([^.]*).(.*)"
     time = string.format("%02d:%02d:%02d.%s", time_hours, time_minutes, time_seg, time_ms)
     mp.osd_message(string.format("Copied to Clipboard: %s", time))
-    set_clipboard(time)    
+    set_clipboard(time)
 end
 
 local function copyFrameCount()
