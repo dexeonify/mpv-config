@@ -1,3 +1,11 @@
+-- Original script from https://github.com/occivink/mpv-scripts/blob/master/scripts/seek-to.lua
+--
+-- I've modified line 95 of this script to prevent the script from crashing
+-- if you backspace at the last position.
+-- Though it's more of a workaround, as I do not know Lua.
+-- As a result, you can't delete the last number using backspace,
+-- it has to be overwritten by pressing '0' manually.
+
 local assdraw = require 'mp.assdraw'
 local active = false
 local cursor_position = 1
