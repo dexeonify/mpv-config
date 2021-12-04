@@ -24,6 +24,10 @@ This is mainly just for backup and keeping track of changes.
 - [crop.lua](https://github.com/occivink/mpv-scripts#croplua):
   Crop the video by defining the target rectangle with the cursor.
 
+- [mordenx.lua](https://github.com/cyl0/mpv-osc-morden-x):
+  A fork again of [mpv-osc-morden-x](https://github.com/cyl0/mpv-osc-morden-x),
+  with added support of deus0ww's Thumbnailer.lua (see below).
+
 - [playlistmanager.lua](https://github.com/jonniek/mpv-playlistmanager):
   Create and manage playlists intuitively.
 
