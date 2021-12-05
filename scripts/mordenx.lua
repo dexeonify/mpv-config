@@ -35,6 +35,8 @@ local user_opts = {
     scaleforcedwindow = 2,      -- scaling when rendered on a forced window
     vidscale = true,            -- scale the controller with the video?
     barmargin = 0,              -- vertical margin of top/bottombar
+    boxalpha = 80,              -- alpha of the background box,
+                                -- 0 (opaque) to 255 (fully transparent)
     hidetimeout = 500,          -- duration in ms until the OSC hides if no
                                 -- mouse movement. enforced non-negative for the
                                 -- user, but internally negative is "always-on".
@@ -59,10 +61,10 @@ local user_opts = {
     timems = false,             -- display timecodes with milliseconds?
     visibility = "auto",        -- only used at init to set visibility_mode(...)
     windowcontrols = "auto",    -- whether to show window controls
+    windowcontrols_alignment = "right", -- which side to show window controls on
     language = "eng",		-- eng=English, chs=Chinese
 
-    boxalpha = 80,              -- alpha of the background box,
-                                -- 0 (opaque) to 255 (fully transparent)
+
     font = "sans",
     font_mono = "monospace",
     font_bold = 600,
@@ -1644,6 +1646,12 @@ function validate_user_opts()
         msg.warn("windowcontrols cannot be \"" ..
                 user_opts.windowcontrols .. "\". Ignoring.")
         user_opts.windowcontrols = "auto"
+    end
+    if user_opts.windowcontrols_alignment ~= "right" and
+       user_opts.windowcontrols_alignment ~= "left" then
+        msg.warn("windowcontrols_alignment cannot be \"" ..
+                user_opts.windowcontrols_alignment .. "\". Ignoring.")
+        user_opts.windowcontrols_alignment = "right"
     end
 end
 
