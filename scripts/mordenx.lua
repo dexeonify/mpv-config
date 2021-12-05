@@ -16,11 +16,11 @@
 local ipairs,loadfile,pairs,pcall,tonumber,tostring = ipairs,loadfile,pairs,pcall,tonumber,tostring
 local debug,io,math,os,string,table,utf8 = debug,io,math,os,string,table,utf8
 local min,max,floor,ceil,huge = math.min,math.max,math.floor,math.ceil,math.huge
-local mp      = require "mp"
-local assdraw = require "mp.assdraw"
-local msg     = require "mp.msg"
-local opt     = require "mp.options"
-local utils   = require "mp.utils"
+local mp      = require 'mp'
+local assdraw = require 'mp.assdraw'
+local msg     = require 'mp.msg'
+local opt     = require 'mp.options'
+local utils   = require 'mp.utils'
 
 --
 -- Parameters
@@ -1195,7 +1195,7 @@ function limited_list(prop, pos)
         return count, proplist
     end
 
-    local fs = tonumber(mp.get_property("options/osd-font-size"))
+    local fs = tonumber(mp.get_property('options/osd-font-size'))
     local max = math.ceil(osc_param.unscaled_y*0.75 / fs)
     if max % 2 == 0 then
         max = max - 1
@@ -1214,41 +1214,41 @@ function limited_list(prop, pos)
 end
 
 function get_playlist()
-    local pos = mp.get_property_number("playlist-pos", 0) + 1
-    local count, limlist = limited_list("playlist", pos)
+    local pos = mp.get_property_number('playlist-pos', 0) + 1
+    local count, limlist = limited_list('playlist', pos)
     if count == 0 then
-        return texts.nolist
+        return 'Empty playlist.'
     end
 
-    local message = string.format(texts.playlist .. " [%d/%d]:\n", pos, count)
+    local message = string.format('Playlist [%d/%d]:\n', pos, count)
     for i, v in ipairs(limlist) do
         local title = v.title
         local _, filename = utils.split_path(v.filename)
         if title == nil then
             title = filename
         end
-        message = string.format("%s %s %s\n", message,
-            (v.current and "●" or "○"), title)
+        message = string.format('%s %s %s\n', message,
+            (v.current and '●' or '○'), title)
     end
     return message
 end
 
 function get_chapterlist()
-    local pos = mp.get_property_number("chapter", 0) + 1
-    local count, limlist = limited_list("chapter-list", pos)
+    local pos = mp.get_property_number('chapter', 0) + 1
+    local count, limlist = limited_list('chapter-list', pos)
     if count == 0 then
-        return texts.nochapter
+        return 'No chapters.'
     end
 
-    local message = string.format(texts.chapter.. " [%d/%d]:\n", pos, count)
+    local message = string.format('Chapters [%d/%d]:\n', pos, count)
     for i, v in ipairs(limlist) do
         local time = mp.format_time(v.time)
         local title = v.title
         if title == nil then
-            title = string.format(texts.chapter .. " %02d", i)
+            title = string.format('Chapter %02d', i)
         end
-        message = string.format("%s[%s] %s %s\n", message, time,
-            (v.current and "●" or "○"), title)
+        message = string.format('%s[%s] %s %s\n', message, time,
+            (v.current and '●' or '○'), title)
     end
     return message
 end
@@ -1359,7 +1359,7 @@ function add_layout(name)
 
         return elements[name].layout
     else
-        msg.error("Can\"t add_layout to element \""..name.."\", doesn\"t exist.")
+        msg.error("Can't add_layout to element \""..name.."\", doesn't exist.")
     end
 end
 
@@ -1974,7 +1974,7 @@ function hide_osc()
     msg.trace("hide_osc")
     if not state.enabled then
         -- typically hide happens at render() from tick(), but now tick() is
-        -- no-op and won"t render again to remove the osc, so do that manually.
+        -- no-op and won't render again to remove the osc, so do that manually.
         state.osc_visible = false
         render_wipe()
     elseif (user_opts.fadeduration > 0) then
@@ -2416,7 +2416,7 @@ mp.register_script_message("osc-tracklist", function(dur)
     for k,v in pairs(nicetypes) do
         table.insert(msg, get_tracklist(k))
     end
-    show_message(table.concat(msg, "\n\n"), dur)
+    show_message(table.concat(msg, '\n\n'), dur)
 end)
 
 mp.observe_property("fullscreen", "bool",
@@ -2518,7 +2518,7 @@ function visibility_mode(mode, no_osd)
     elseif mode == "never" then
         enable_osc(false)
     else
-        msg.warn("Ignoring unknown visibility mode \"" .. mode .. "\"")
+        msg.warn("Ignoring unknown visibility mode '" .. mode .. "'")
         return
     end
     
@@ -2529,7 +2529,7 @@ function visibility_mode(mode, no_osd)
     end
 
     -- Reset the input state on a mode change. The input state will be
-    -- recalcuated on the next render cycle, except in "never" mode where it
+    -- recalcuated on the next render cycle, except in 'never' mode where it
     -- will just stay disabled.
     mp.disable_key_bindings("input")
     mp.disable_key_bindings("window-controls")
