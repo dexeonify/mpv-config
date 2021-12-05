@@ -34,10 +34,12 @@ local user_opts = {
     scalefullscreen = 1,        -- scaling of the controller when fullscreen
     scaleforcedwindow = 2,      -- scaling when rendered on a forced window
     vidscale = true,            -- scale the controller with the video?
+    barmargin = 0,              -- vertical margin of top/bottombar
     hidetimeout = 500,          -- duration in ms until the OSC hides if no
                                 -- mouse movement. enforced non-negative for the
                                 -- user, but internally negative is "always-on".
     fadeduration = 200,         -- duration of fade out in ms, 0 = no fade
+    deadzonesize = 0.5,         -- size of deadzone
     minmousemove = 0,           -- minimum amount of pixels the mouse has to
                                 -- move between ticks to make the OSC show up
     iamaprogrammer = false,     -- use native mpv values and disable OSC
@@ -553,6 +555,9 @@ local osc_param = { -- calculated by osc_init()
     display_aspect = 1,
     unscaled_y = 0,
     areas = {},
+    video_margins = {
+        l = 0, r = 0, t = 0, b = 0,         -- left/right/top/bottom
+    },
 }
 
 local osc_styles = {
@@ -567,6 +572,9 @@ local osc_styles = {
     Title = "{\\blur1\\bord0.5\\1c&HFFFFFF&\\3c&H0\\fs38\\q2\\fn" .. user_opts.font .. "}",
     WinCtrl = "{\\blur1\\bord0.5\\1c&HFFFFFF&\\3c&H0\\fs20\\fnmpv-osd-symbols}",
     elementDown = "{\\1c&H999999&}",
+    wcButtons = "{\\1c&HFFFFFF\\fs24\\fnmpv-osd-symbols}",
+    wcTitle = "{\\1c&HFFFFFF\\fs24\\q2}",
+    wcBar = "{\\1c&H000000}",
 }
 
 -- internal states, do not touch
@@ -747,6 +755,14 @@ function countone(val)
     return val
 end
 
+-- align:  -1 .. +1
+-- frame:  size of the containing area
+-- obj:    size of the object that should be positioned inside the area
+-- margin: min. distance from object to frame (as long as -1 <= align <= +1)
+function get_align(align, frame, obj, margin)
+    return (frame / 2) + (((frame / 2) - margin - (obj / 2)) * align)
+end
+
 -- multiplies two alpha values, formular can probably be improved
 function mult_alpha(alphaA, alphaB)
     return 255 - (((1-(alphaA/255)) * (1-(alphaB/255))) * 255)
@@ -893,10 +909,14 @@ end
 function window_controls_enabled()
     val = user_opts.windowcontrols
     if val == "auto" then
-        return (not state.border) or state.fullscreen
+        return not state.border
     else
         return val ~= "no"
     end
+end
+
+function window_controls_alignment()
+    return user_opts.windowcontrols_alignment
 end
 
 --
@@ -1364,15 +1384,16 @@ function add_layout(name)
 end
 
 -- Window Controls
-function window_controls()
+function window_controls(topbar)
     local wc_geo = {
         x = 0,
-        y = 32,
+        y = 30 + user_opts.barmargin,
         an = 1,
         w = osc_param.playresx,
-        h = 32,
+        h = 30,
     }
 
+    local alignment = window_controls_alignment()
     local controlbox_w = window_control_box_width
     local titlebox_w = wc_geo.w - controlbox_w
 
@@ -1381,19 +1402,33 @@ function window_controls()
     local titlebox_left = wc_geo.x
     local titlebox_right = wc_geo.w - controlbox_w
 
+    if alignment == "left" then
+        controlbox_left = wc_geo.x
+        titlebox_left = wc_geo.x + controlbox_w
+        titlebox_right = wc_geo.w
+    end
+
     add_area("window-controls",
              get_hitbox_coords(controlbox_left, wc_geo.y, wc_geo.an,
                                controlbox_w, wc_geo.h))
 
     local lo
 
+    -- Background Bar
+    new_element("wcbar", "box")
+    lo = add_layout("wcbar")
+    lo.geometry = wc_geo
+    lo.layer = 10
+    lo.style = osc_styles.wcBar
+    lo.alpha[1] = user_opts.boxalpha
+
     local button_y = wc_geo.y - (wc_geo.h / 2)
     local first_geo =
-        {x = controlbox_left + 27, y = button_y, an = 5, w = 40, h = wc_geo.h}
+        {x = controlbox_left + 5, y = button_y, an = 4, w = 25, h = 25}
     local second_geo =
-        {x = controlbox_left + 69, y = button_y, an = 5, w = 40, h = wc_geo.h}
+        {x = controlbox_left + 30, y = button_y, an = 4, w = 25, h = 25}
     local third_geo =
-        {x = controlbox_left + 115, y = button_y, an = 5, w = 40, h = wc_geo.h}
+        {x = controlbox_left + 55, y = button_y, an = 4, w = 25, h = 25}
 
     -- Window control buttons use symbols in the custom mpv osd font
     -- because the official unicode codepoints are sufficiently
@@ -1401,27 +1436,25 @@ function window_controls()
     -- and libass will complain that they are not present in the
     -- default font, even if another font with them is available.
 
-    -- Close: ??
+    -- Close: 🗙
     ne = new_element("close", "button")
     ne.content = "\238\132\149"
     ne.eventresponder["mbtn_left_up"] =
         function () mp.commandv("quit") end
     lo = add_layout("close")
-    lo.geometry = third_geo
-    lo.style = osc_styles.WinCtrl
-    lo.alpha[3] = 0
+    lo.geometry = alignment == "left" and first_geo or third_geo
+    lo.style = osc_styles.wcButtons
 
-    -- Minimize: ??
+    -- Minimize: 🗕
     ne = new_element("minimize", "button")
-    ne.content = "\\n\238\132\146"
+    ne.content = "\238\132\146"
     ne.eventresponder["mbtn_left_up"] =
         function () mp.commandv("cycle", "window-minimized") end
     lo = add_layout("minimize")
-    lo.geometry = first_geo
-    lo.style = osc_styles.WinCtrl
-    lo.alpha[3] = 0
-    
-    -- Maximize: ?? /??
+    lo.geometry = alignment == "left" and second_geo or first_geo
+    lo.style = osc_styles.wcButtons
+
+    -- Maximize: 🗖 /🗗
     ne = new_element("maximize", "button")
     if state.maximized or state.fullscreen then
         ne.content = "\238\132\148"
@@ -1437,9 +1470,46 @@ function window_controls()
             end
         end
     lo = add_layout("maximize")
-    lo.geometry = second_geo
-    lo.style = osc_styles.WinCtrl
-    lo.alpha[3] = 0
+    lo.geometry = alignment == "left" and third_geo or second_geo
+    lo.style = osc_styles.wcButtons
+
+    -- deadzone below window controls
+    local sh_area_y0, sh_area_y1
+    sh_area_y0 = user_opts.barmargin
+    sh_area_y1 = (wc_geo.y + (wc_geo.h / 2)) +
+                 get_align(1 - (2 * user_opts.deadzonesize),
+                 osc_param.playresy - (wc_geo.y + (wc_geo.h / 2)), 0, 0)
+    add_area("showhide_wc", wc_geo.x, sh_area_y0, wc_geo.w, sh_area_y1)
+
+    if topbar then
+        -- The title is already there as part of the top bar
+        return
+    else
+        -- Apply boxvideo margins to the control bar
+        osc_param.video_margins.t = wc_geo.h / osc_param.playresy
+    end
+
+    -- Window Title
+    ne = new_element("wctitle", "button")
+    ne.content = function ()
+        local title = mp.command_native({"expand-text", user_opts.title})
+        -- escape ASS, and strip newlines and trailing slashes
+        title = title:gsub("\\n", " "):gsub("\\$", ""):gsub("{","\\{")
+        return not (title == "") and title or "mpv"
+    end
+    local left_pad = 5
+    local right_pad = 10
+    lo = add_layout("wctitle")
+    lo.geometry =
+        { x = titlebox_left + left_pad, y = wc_geo.y - 3, an = 1,
+          w = titlebox_w, h = wc_geo.h }
+    lo.style = string.format("%s{\\clip(%f,%f,%f,%f)}",
+        osc_styles.wcTitle,
+        titlebox_left + left_pad, wc_geo.y - wc_geo.h,
+        titlebox_right - right_pad , wc_geo.y + wc_geo.h)
+
+    add_area("window-controls-title",
+             titlebox_left, 0, titlebox_right, wc_geo.h)
 end
 
 --
