@@ -26,43 +26,43 @@ local utils   = require 'mp.utils'
 -- Parameters
 --
 -- default user option values
--- may change them in osc.conf
+-- do not touch, change them in osc.conf
 local user_opts = {
     showwindowed = true,        -- show OSC when windowed?
     showfullscreen = true,      -- show OSC when fullscreen?
-    scalewindowed = 1.0,        -- scaling of the controller when windowed
-    scalefullscreen = 1.0,      -- scaling of the controller when fullscreen
-    scaleforcedwindow = 2.0,    -- scaling when rendered on a forced window
+    scalewindowed = 1,          -- scaling of the controller when windowed
+    scalefullscreen = 1,        -- scaling of the controller when fullscreen
+    scaleforcedwindow = 2,      -- scaling when rendered on a forced window
     vidscale = true,            -- scale the controller with the video?
-    hidetimeout = 1500,         -- duration in ms until the OSC hides if no
+    hidetimeout = 500,          -- duration in ms until the OSC hides if no
                                 -- mouse movement. enforced non-negative for the
-                                -- user, but internally negative is 'always-on'.
-    fadeduration = 250,         -- duration of fade out in ms, 0 = no fade
-    minmousemove = 2,           -- minimum amount of pixels the mouse has to
+                                -- user, but internally negative is "always-on".
+    fadeduration = 200,         -- duration of fade out in ms, 0 = no fade
+    minmousemove = 0,           -- minimum amount of pixels the mouse has to
                                 -- move between ticks to make the OSC show up
     iamaprogrammer = false,     -- use native mpv values and disable OSC
                                 -- internal track list management (and some
                                 -- functions that depend on it)
+    layout = "bottombar",
     font = 'mpv-osd-symbols',	-- default osc font
-    seekbarhandlesize = 1.0,	-- size ratio of the slider handle, range 0 ~ 1
+    seekbarhandlesize = 0.6,    -- size ratio of the diamond and knob handle
     seekrange = true,		-- show seekrange overlay
-    seekrangealpha = 64,      	-- transparency of seekranges
+    seekrangealpha = 200,       -- transparency of seekranges
     seekbarkeyframes = true,    -- use keyframes when dragging the seekbar
     title = '${media-title}',   -- string compatible with property-expansion
                                 -- to be shown as OSC title
     showtitle = true,		-- show title in OSC
     showonpause = true,         -- whether to disable the hide timeout on pause
-    timetotal = true,          	-- display total time instead of remaining time?
-    timems = false,             -- Display time down to millliseconds by default
+    timetotal = false,          -- display total time instead of remaining time?
+    timems = false,             -- display timecodes with milliseconds?
     visibility = 'auto',        -- only used at init to set visibility_mode(...)
     windowcontrols = 'auto',    -- whether to show window controls
     language = 'eng',		-- eng=English, chs=Chinese
 
     boxalpha = 80,              -- alpha of the background box,
                                 -- 0 (opaque) to 255 (fully transparent)
-    layout = "bottombar",
-    font = "Cascadia Code",
-    font_mono = "Cascadia Code",
+    font = "sans",
+    font_mono = "monospace",
     font_bold = 600,
 }
 
