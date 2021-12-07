@@ -1595,7 +1595,7 @@ layouts = function ()
     lo.slider.tooltip_style = osc_styles.Tooltip
     lo.slider.tooltip_an = 2
 
-	-- buttons
+	-- Buttons
     lo = add_layout("pl_prev")
     lo.geometry = {x = refX - 120, y = refY - 40 , an = 5, w = 30, h = 24}
     lo.style = osc_styles.Ctrl2
@@ -1603,7 +1603,6 @@ layouts = function ()
 	lo = add_layout("skipback")
     lo.geometry = {x = refX - 60, y = refY - 40 , an = 5, w = 30, h = 24}
     lo.style = osc_styles.Ctrl2
-
 
     lo = add_layout("playpause")
     lo.geometry = {x = refX, y = refY - 40 , an = 5, w = 45, h = 45}
@@ -1631,18 +1630,27 @@ layouts = function ()
     lo.geometry = {x = osc_geo.w - 25 , y = refY -84, an = 9, w = 64, h = 20}
     lo.style = osc_styles.Time
 
+    -- Volume
+    lo = add_layout("volume")
+    lo.geometry = {x = 37, y = refY - 40, an = 5, w = 24, h = 24}
+    lo.style = osc_styles.Ctrl3
+
+    -- Audio tracks
     lo = add_layout("cy_audio")
-	lo.geometry = {x = 37, y = refY - 40, an = 5, w = 24, h = 24}
+	lo.geometry = {x = 87, y = refY - 40, an = 5, w = 24, h = 24}
     lo.style = osc_styles.Ctrl3
 
+    -- Subtitle tracks
     lo = add_layout("cy_sub")
-    lo.geometry = {x = 87, y = refY - 40, an = 5, w = 24, h = 24}
+    lo.geometry = {x = 137, y = refY - 40, an = 5, w = 24, h = 24}
     lo.style = osc_styles.Ctrl3
 
+    -- Toggle fullscreen
 	lo = add_layout("tog_fs")
     lo.geometry = {x = osc_geo.w - 37, y = refY - 40, an = 5, w = 24, h = 24}
     lo.style = osc_styles.Ctrl3
 
+    -- Toggle info
 	lo = add_layout("tog_info")
     lo.geometry = {x = osc_geo.w - 87, y = refY - 40, an = 5, w = 24, h = 24}
     lo.style = osc_styles.Ctrl3
@@ -2103,6 +2111,28 @@ function osc_init()
             string.format("%sm%02.0fs", min, sec) or
             string.format("%3.0fs", sec))
     end
+
+    -- volume
+    ne = new_element("volume", "button")
+
+    ne.content = function()
+        local volume = mp.get_property_number("volume", 0)
+        local mute = mp.get_property_native("mute")
+        local volicon = {"\xEF\x8E\xBA", "\xEF\x8E\xB9", "\xEF\x8E\xBC"}
+        if volume == 0 or mute then
+            return "\xEF\x8E\xBB"
+        else
+            return volicon[math.min(4,math.ceil(volume / (100/3)))]
+        end
+    end
+    ne.eventresponder["mbtn_left_up"] =
+        function () mp.commandv("cycle", "mute") end
+
+    ne.eventresponder["wheel_up_press"] =
+        function () mp.commandv("osd-auto", "add", "volume", 5) end
+    ne.eventresponder["wheel_down_press"] =
+        function () mp.commandv("osd-auto", "add", "volume", -5) end
+
 
     -- load layout
     layouts()
