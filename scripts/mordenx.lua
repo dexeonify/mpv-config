@@ -64,6 +64,9 @@ local user_opts = {
     windowcontrols_alignment = "right", -- which side to show window controls on
     greenandgrumpy = false,     -- disable santa hat
     livemarkers = true,         -- update seekbar chapter markers on duration change
+    chapters_osd = true,        -- whether to show chapters OSD on next/prev
+    playlist_osd = true,        -- whether to show playlist OSD on next/prev
+    chapter_fmt = "Chapter: %s", -- chapter print format for seekbar-hover. "no" to disable
     language = "eng",		-- eng=English, chs=Chinese
 }
 
@@ -1036,27 +1039,63 @@ function prepare_elements()
     end
 end
 
+
 --
 -- Element Rendering
 --
+
+-- returns nil or a chapter element from the native property chapter-list
+function get_chapter(possec)
+    local cl = mp.get_property_native("chapter-list", {})
+    local ch = nil
+
+    -- chapters might not be sorted by time. find nearest-before/at possec
+    for n=1, #cl do
+        if possec >= cl[n].time and (not ch or cl[n].time > ch.time) then
+            ch = cl[n]
+        end
+    end
+    return ch
+end
+
 function render_elements(master_ass)
+
+    -- when the slider is dragged or hovered and we have a target chapter name
+    -- then we use it instead of the normal title. we calculate it before the
+    -- render iterations because the title may be rendered before the slider.
+    state.forced_title = nil
+    local se, ae = state.slider_element, elements[state.active_element]
+    if user_opts.chapter_fmt ~= "no" and se and (ae == se or (not ae and mouse_hit(se))) then
+        local dur = mp.get_property_number("duration", 0)
+        if dur > 0 then
+            local possec = get_slider_value(se) * dur / 100 -- of mouse pos
+            local ch = get_chapter(possec)
+            if ch and ch.title and ch.title ~= "" then
+                state.forced_title = string.format(user_opts.chapter_fmt, ch.title)
+            end
+        end
+    end
 
     for n=1, #elements do
         local element = elements[n]
+
         local style_ass = assdraw.ass_new()
         style_ass:merge(element.style_ass)
         ass_append_alpha(style_ass, element.layout.alpha, 0)
 
         if element.eventresponder and (state.active_element == n) then
+
             -- run render event functions
             if not (element.eventresponder.render == nil) then
                 element.eventresponder.render(element)
             end
+
             if mouse_hit(element) then
                 -- mouse down styling
                 if (element.styledown) then
                     style_ass:append(osc_styles.elementDown)
                 end
+
                 if (element.softrepeat) and (state.mouse_down_counter >= 15
                     and state.mouse_down_counter % 5 == 0) then
 
@@ -1064,11 +1103,13 @@ function render_elements(master_ass)
                 end
                 state.mouse_down_counter = state.mouse_down_counter + 1
             end
+
         end
 
         local elem_ass = assdraw.ass_new()
+
         elem_ass:merge(style_ass)
-        
+
         if not (element.type == "button") then
             elem_ass:merge(element.static_ass)
         end
@@ -1079,12 +1120,13 @@ function render_elements(master_ass)
             local elem_geo = element.layout.geometry
             local s_min = element.slider.min.value
             local s_max = element.slider.max.value
+
             -- draw pos marker
             local pos = element.slider.posF()
             local seekRanges = element.slider.seekRangesF()
 			local rh = user_opts.seekbarhandlesize * elem_geo.h / 2 -- Handle radius
             local xp
-            
+
             if pos then
                 xp = get_slider_ele_pos_for(element, pos)
 				ass_draw_cir_cw(elem_ass, xp, elem_geo.h/2, rh)
@@ -1709,7 +1751,38 @@ function osc_init()
 
     local ne
 
+    -- title
+    ne = new_element("title", "button")
+
+    ne.content = function ()
+        local title = state.forced_title or
+                      mp.command_native({"expand-text", user_opts.title})
+        -- escape ASS, and strip newlines and trailing slashes
+        title = title:gsub("\\n", " "):gsub("\\$", ""):gsub("{","\\{")
+        return not (title == "") and title or "mpv"
+    end
+
+    ne.eventresponder["mbtn_left_up"] = function ()
+        local title = mp.get_property_osd("media-title")
+        if (have_pl) then
+            title = string.format("[%d/%d] %s", countone(pl_pos - 1),
+                                  pl_count, title)
+        end
+        show_message(title)
+    end
+
+    ne.eventresponder["mbtn_right_up"] =
+        function () show_message(mp.get_property_osd("filename")) end
+
+    --tog_info
+    ne = new_element("tog_info", "button")
+    ne.content = ""
+    ne.visible = (osc_param.playresx >= 600)
+    ne.eventresponder["mbtn_left_up"] =
+        function () mp.commandv("script-binding", "stats/display-stats-toggle") end
+
     -- playlist buttons
+
     -- prev
     ne = new_element("pl_prev", "button")
 
@@ -1718,9 +1791,14 @@ function osc_init()
     ne.eventresponder["mbtn_left_up"] =
         function ()
             mp.commandv("playlist-prev", "weak")
+            if user_opts.playlist_osd then
+                show_message(get_playlist(), 3)
+            end
         end
+    ne.eventresponder["shift+mbtn_left_up"] =
+        function () show_message(get_playlist(), 3) end
     ne.eventresponder["mbtn_right_up"] =
-        function () show_message(get_playlist()) end
+        function () show_message(get_playlist(), 3) end
 
     --next
     ne = new_element("pl_next", "button")
@@ -1730,13 +1808,19 @@ function osc_init()
     ne.eventresponder["mbtn_left_up"] =
         function ()
             mp.commandv("playlist-next", "weak")
-        end
+            if user_opts.playlist_osd then
+                show_message(get_playlist(), 3)
+                end
+            end
+    ne.eventresponder["shift+mbtn_left_up"] =
+        function () show_message(get_playlist(), 3) end
     ne.eventresponder["mbtn_right_up"] =
-        function () show_message(get_playlist()) end
+        function () show_message(get_playlist(), 3) end
 
+
+    -- big buttons
 
     --play control buttons
-    --playpause
     ne = new_element("playpause", "button")
 
     ne.content = function ()
@@ -1781,9 +1865,41 @@ function osc_init()
     --ne.eventresponder["shift+mbtn_left_down"] =
         --function () mp.commandv("frame-step") end
     ne.eventresponder["mbtn_right_down"] =
-        function () show_message(get_chapterlist()) end
-        --function () mp.command("seek +60") end
-        --function () mp.commandv("seek", 60, "relative", "keyframes") end
+    function () mp.commandv("seek", 60, "relative", "keyframes") end
+
+    --ch_prev
+    ne = new_element("ch_prev", "button")
+
+    ne.enabled = have_ch
+    ne.content = "\238\132\132"
+    ne.eventresponder["mbtn_left_up"] =
+        function ()
+            mp.commandv("add", "chapter", -1)
+            if user_opts.chapters_osd then
+                show_message(get_chapterlist(), 3)
+            end
+        end
+    ne.eventresponder["shift+mbtn_left_up"] =
+        function () show_message(get_chapterlist(), 3) end
+    ne.eventresponder["mbtn_right_up"] =
+        function () show_message(get_chapterlist(), 3) end
+
+    --ch_next
+    ne = new_element("ch_next", "button")
+
+    ne.enabled = have_ch
+    ne.content = "\238\132\133"
+    ne.eventresponder["mbtn_left_up"] =
+        function ()
+            mp.commandv("add", "chapter", 1)
+            if user_opts.chapters_osd then
+                show_message(get_chapterlist(), 3)
+            end
+        end
+    ne.eventresponder["shift+mbtn_left_up"] =
+        function () show_message(get_chapterlist(), 3) end
+    ne.eventresponder["mbtn_right_up"] =
+        function () show_message(get_chapterlist(), 3) end
 
     --
     update_tracklist()
@@ -1845,9 +1961,9 @@ function osc_init()
         function () set_track("sub", 1) end
     ne.eventresponder["mbtn_right_up"] =
         function () set_track("sub", -1) end
-    ne.eventresponder["mbtn_mid_up"] =
-        function () show_message(get_tracklist("sub")) end
-        
+    ne.eventresponder["shift+mbtn_left_down"] =
+        function () show_message(get_tracklist("sub"), 2) end
+
     --tog_fs
     ne = new_element("tog_fs", "button")
     ne.content = function ()
@@ -1860,31 +1976,12 @@ function osc_init()
     ne.visible = (osc_param.playresx >= 540)
     ne.eventresponder["mbtn_left_up"] =
         function () mp.commandv("cycle", "fullscreen") end
-
-    --tog_info
-    ne = new_element("tog_info", "button")
-    ne.content = ""
-    ne.visible = (osc_param.playresx >= 600)
-    ne.eventresponder["mbtn_left_up"] =
-        function () mp.commandv("script-binding", "stats/display-stats-toggle") end
-
-    -- title
-    ne = new_element("title", "button")
-    ne.content = function ()
-		local title = mp.command_native({"expand-text", user_opts.title})
-        if state.paused then
-			title = title:gsub("\\n", " "):gsub("\\$", ""):gsub("{","\\{")
-		else
-			title = title:gsub("\\n", " "):gsub("\\$", ""):gsub("{","\\{") --title = " "
-		end
-        return not (title == "") and title or " "
-    end
-    ne.visible = osc_param.playresy >= 320 and user_opts.showtitle
     
     --seekbar
     ne = new_element("seekbar", "slider")
 
     ne.enabled = not (mp.get_property("percent-pos") == nil)
+    state.slider_element = ne.enabled and ne or nil  -- used for forced_title
     ne.slider.markerF = function ()
         local duration = mp.get_property_number("duration", nil)
         if not (duration == nil) then
