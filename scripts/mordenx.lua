@@ -584,6 +584,7 @@ local state = {
     active_element = nil,                   -- nil = none, 0 = background, 1+ = see elements[]
     active_event_source = nil,              -- the "button" that issued the current event
     rightTC_trem = not user_opts.timetotal, -- if the right timecode should display total or remaining time
+    tc_ms = user_opts.timems,               -- Should the timecodes display their time with milliseconds
     mp_screen_sizeX, mp_screen_sizeY,       -- last screen-resolution, to detect resolution changes to issue reINITs
     initREQ = false,                        -- is a re-init request pending?
     last_mouseX, last_mouseY,               -- last mouse position, to detect significant mouse movement
@@ -604,7 +605,6 @@ local state = {
     maximized = false,
     osd = mp.create_osd_overlay("ass-events"),
     lastvisibility = user_opts.visibility,	-- save last visibility on pause if showonpause
-    fulltime = user_opts.timems,
 }
 
 local window_control_box_width = 138
@@ -1974,14 +1974,14 @@ function osc_init()
     -- tc_left (current pos)
     ne = new_element("tc_left", "button")
     ne.content = function ()
-	if (state.fulltime) then
+	if (state.tc_ms) then
 		return (mp.get_property_osd("playback-time/full"))
 	else
 		return (mp.get_property_osd("playback-time"))
 	end
     end
     ne.eventresponder["mbtn_left_up"] = function ()
-        state.fulltime = not state.fulltime
+        state.tc_ms = not state.tc_ms
         request_init()
     end
     -- tc_right (total/remaining time)
@@ -1989,13 +1989,13 @@ function osc_init()
     ne.content = function ()
         if (mp.get_property_number("duration", 0) <= 0) then return "--:--:--" end
         if (state.rightTC_trem) then
-		if (state.fulltime) then
+		if state.tc_ms then
 			return ("-"..mp.get_property_osd("playtime-remaining/full"))
 		else
 			return ("-"..mp.get_property_osd("playtime-remaining"))
 		end
         else
-		if (state.fulltime) then
+		if state.tc_ms then
 			return (mp.get_property_osd("duration/full"))
 		else
 			return (mp.get_property_osd("duration"))
