@@ -48,7 +48,6 @@ local user_opts = {
                                 -- internal track list management (and some
                                 -- functions that depend on it)
     layout = "bottombar",
-    font = "mpv-osd-symbols",	-- default osc font
     seekbarhandlesize = 0.6,    -- size ratio of the diamond and knob handle
     seekrange = true,		-- show seekrange overlay
     seekrangealpha = 200,       -- transparency of seekranges
@@ -64,11 +63,6 @@ local user_opts = {
     windowcontrols = "auto",    -- whether to show window controls
     windowcontrols_alignment = "right", -- which side to show window controls on
     language = "eng",		-- eng=English, chs=Chinese
-
-
-    font = "sans",
-    font_mono = "monospace",
-    font_bold = 600,
 }
 
 -- Localization
@@ -240,7 +234,7 @@ local tn_style_format = {
 	progress_mini  = "{\\bord0\\1c&%s&\\1a&H%X&\\fs18\\fscx%f\\fscy%f",
 	progress_mini2 = "\\frz%d}",
 	progress_block = "{\\bord0\\1c&H%s&\\1a&H%X&}",
-	progress_text  = "{\\1c&%s&\\3c&H%s&\\1a&H%X&\\3a&H%X&\\blur0.25\\fs18\\fscx%f\\fscy%f\\xbord%f\\ybord%f\\fn" .. user_opts.font_mono .. "}",
+	progress_text  = "{\\1c&%s&\\3c&H%s&\\1a&H%X&\\3a&H%X&\\blur0.25\\fs18\\fscx%f\\fscy%f\\xbord%f\\ybord%f}",
 	text_timer     = "%.2ds",
 	text_progress  = "%.3d/%.3d",
 	text_progress2 = "[%d]",
@@ -570,9 +564,9 @@ local osc_styles = {
     Ctrl1 = "{\\blur0\\bord0\\1c&HFFFFFF&\\3c&HFFFFFF&\\fs36\\fnmaterial-design-iconic-font}",
     Ctrl2 = "{\\blur0\\bord0\\1c&HFFFFFF&\\3c&HFFFFFF&\\fs24\\fnmaterial-design-iconic-font}",
     Ctrl3 = "{\\blur0\\bord0\\1c&HFFFFFF&\\3c&HFFFFFF&\\fs24\\fnmaterial-design-iconic-font}",
-    Time = "{\\blur0\\bord0\\1c&HFFFFFF&\\3c&H000000&\\fs17\\fn" .. user_opts.font .. "}",
+    Time = "{\\blur0\\bord0\\1c&HFFFFFF&\\3c&H000000&\\fs17}",
     Tooltip = "{\\blur1\\bord" .. user_opts.tooltipborder .. "\\1c&HFFFFFF&\\3c&H000000&\\fs18}",
-    Title = "{\\blur1\\bord0.5\\1c&HFFFFFF&\\3c&H0\\fs38\\q2\\fn" .. user_opts.font .. "}",
+    Title = "{\\blur1\\bord0.5\\1c&HFFFFFF&\\3c&H0\\fs38\\q2}",
     WinCtrl = "{\\blur1\\bord0.5\\1c&HFFFFFF&\\3c&H0\\fs20\\fnmpv-osd-symbols}",
     elementDown = "{\\1c&H999999&}",
     wcButtons = "{\\1c&HFFFFFF\\fs24\\fnmpv-osd-symbols}",
