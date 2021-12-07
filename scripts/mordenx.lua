@@ -510,13 +510,10 @@ mp.register_script_message(message.debug, function()
 end)
 
 
-
-
 -----------------
 -- mordenx.lua --
 -----------------
 
--- apply lang opts
 local osc_param = { -- calculated by osc_init()
     playresy = 0,                           -- canvas size Y
     playresx = 0,                           -- canvas size X
