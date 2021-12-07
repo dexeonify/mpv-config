@@ -333,7 +333,7 @@ local function update_tn_osc_params(seek_y)
 			tn_style.progress_mini = (tn_style_format.progress_mini):format(tn_palette.white, tn_palette.alpha_opaque, tn_osc.font_scale.x, tn_osc.font_scale.y)
 		end
 	end
-	
+
 	if not tn_osc.position.y then return end
 	if (osc_changed or tn_osc.cursor.x_last ~= tn_osc.cursor.x) and tn_osc.osd.w_scaled >= (tn_osc.thumbnail.w + 2 * tn_osc.spacer.x) then
 		tn_osc.cursor.x_last  = tn_osc.cursor.x
@@ -347,7 +347,7 @@ local function update_tn_osc_params(seek_y)
 		tn_osc.thumbnail.left, tn_osc.thumbnail.right = tn_osc.position.x - tn_osc.thumbnail.w * 0.5, tn_osc.position.x + tn_osc.thumbnail.w * 0.5
 		tn_osc.mini.x = tn_osc.thumbnail.right - 6 * tn_osc.osc_scale.x
 	end
-	
+
 	if (osc_changed or tn_osc.display_progress.last ~= tn_osc.display_progress.current) then
 		tn_osc.display_progress.last = tn_osc.display_progress.current
 		tn_osc.background.h          = tn_osc.thumbnail.h + (tn_osc.display_progress.current and (tn_osc.progress.h + tn_osc.spacer.y) or 0)
@@ -495,7 +495,7 @@ end
 ---------------
 mp.register_script_message(message.osc.reset, function()
 	hide_thumbnail()
-	reset_all()	
+	reset_all()
 end)
 
 local text_progress_format = { two_digits = "%.2d/%.2d", three_digits = "%.3d/%.3d" }
@@ -1030,6 +1030,7 @@ function prepare_elements()
 
         element.static_ass = static_ass
 
+
         -- if the element is supposed to be disabled,
         -- style it accordingly and kill the eventresponders
         if not (element.enabled) then
@@ -1147,14 +1148,18 @@ function render_elements(master_ass)
             end
 
             elem_ass:draw_stop()
-            
+
             -- add tooltip
             if not (element.slider.tooltipF == nil) then
+
                 if mouse_hit(element) then
                     local sliderpos = get_slider_value(element)
                     local tooltiplabel = element.slider.tooltipF(sliderpos)
+
                     local an = slider_lo.tooltip_an
+
                     local ty
+
                     if (an == 2) then
                         ty = element.hitbox.y1
                     else
@@ -1199,7 +1204,7 @@ function render_elements(master_ass)
             elseif not (element.content == nil) then
                 buttontext = element.content -- text objects
             end
-			
+
 			buttontext = buttontext:gsub(":%((.?.?.?)%) unknown ", ":%(%1%)")  --gsub("%) unknown %(\"", "")
 
             local maxchars = element.layout.button.maxchars
@@ -1218,7 +1223,7 @@ function render_elements(master_ass)
             end
 
             elem_ass:append(buttontext)
-            
+
             -- add tooltip
 			if not (element.tooltipF == nil) and element.enabled then
                 if mouse_hit(element) then
@@ -1226,7 +1231,7 @@ function render_elements(master_ass)
                     local an = 1
                     local ty = element.hitbox.y1
                     local tx = get_virt_mouse_pos()
-                    
+
                     if ty < osc_param.playresy / 2 then
 						ty = element.hitbox.y2
 						an = 7
@@ -1601,14 +1606,14 @@ layouts = function ()
 	lo.style = osc_styles.TransBg
 	lo.layer = 10
 	lo.alpha[3] = 0
-	
+
     --
     -- Alignment
     --
 	local refX = osc_w / 2
 	local refY = posY
 	local geo
-	
+
     --
     -- Seekbar
     --
@@ -1626,7 +1631,7 @@ layouts = function ()
     lo.slider.gap = 7
     lo.slider.tooltip_style = osc_styles.Tooltip
     lo.slider.tooltip_an = 2
-    
+
 	-- buttons
     lo = add_layout("pl_prev")
     lo.geometry = {x = refX - 120, y = refY - 40 , an = 5, w = 30, h = 24}
@@ -1636,14 +1641,14 @@ layouts = function ()
     lo.geometry = {x = refX - 60, y = refY - 40 , an = 5, w = 30, h = 24}
     lo.style = osc_styles.Ctrl2
 
-			
+
     lo = add_layout("playpause")
     lo.geometry = {x = refX, y = refY - 40 , an = 5, w = 45, h = 45}
-    lo.style = osc_styles.Ctrl1	
+    lo.style = osc_styles.Ctrl1
 
     lo = add_layout("skipfrwd")
     lo.geometry = {x = refX + 60, y = refY - 40 , an = 5, w = 30, h = 24}
-    lo.style = osc_styles.Ctrl2	
+    lo.style = osc_styles.Ctrl2
 
     lo = add_layout("pl_next")
     lo.geometry = {x = refX + 120, y = refY - 40 , an = 5, w = 30, h = 24}
@@ -1653,29 +1658,29 @@ layouts = function ()
 	-- Time
     lo = add_layout("tc_left")
     lo.geometry = {x = 25, y = refY - 84, an = 7, w = 64, h = 20}
-    lo.style = osc_styles.Time	
-	
+    lo.style = osc_styles.Time
+
 
     lo = add_layout("tc_right")
     lo.geometry = {x = osc_geo.w - 25 , y = refY -84, an = 9, w = 64, h = 20}
-    lo.style = osc_styles.Time	
+    lo.style = osc_styles.Time
 
     lo = add_layout("cy_audio")
 	lo.geometry = {x = 37, y = refY - 40, an = 5, w = 24, h = 24}
-    lo.style = osc_styles.Ctrl3	
-	
+    lo.style = osc_styles.Ctrl3
+
     lo = add_layout("cy_sub")
     lo.geometry = {x = 87, y = refY - 40, an = 5, w = 24, h = 24}
     lo.style = osc_styles.Ctrl3
 
 	lo = add_layout("tog_fs")
     lo.geometry = {x = osc_geo.w - 37, y = refY - 40, an = 5, w = 24, h = 24}
-    lo.style = osc_styles.Ctrl3    
+    lo.style = osc_styles.Ctrl3
 
 	lo = add_layout("tog_info")
     lo.geometry = {x = osc_geo.w - 87, y = refY - 40, an = 5, w = 24, h = 24}
     lo.style = osc_styles.Ctrl3
-    
+
     geo = { x = 25, y = refY - 132, an = 1, w = osc_geo.w - 50, h = 48 }
     lo = add_layout("title")
     lo.geometry = geo
@@ -1903,9 +1908,10 @@ function osc_init()
 
     --
     update_tracklist()
-    
+
     --cy_audio
     ne = new_element("cy_audio", "button")
+
     ne.enabled = (#tracks_osc.audio > 0)
     ne.visible = (osc_param.playresx >= 540)
     ne.content = "\xEF\x8E\xB7"
@@ -1933,7 +1939,7 @@ function osc_init()
         function () set_track("audio", -1) end
     ne.eventresponder["mbtn_mid_up"] =
         function () show_message(get_tracklist("audio")) end
-                
+
     --cy_sub
     ne = new_element("cy_sub", "button")
     ne.enabled = (#tracks_osc.sub > 0)
@@ -1976,7 +1982,7 @@ function osc_init()
     ne.visible = (osc_param.playresx >= 540)
     ne.eventresponder["mbtn_left_up"] =
         function () mp.commandv("cycle", "fullscreen") end
-    
+
     --seekbar
     ne = new_element("seekbar", "slider")
 
@@ -2007,7 +2013,7 @@ function osc_init()
         end
     end
     ne.slider.seekRangesF = function()
-        if not user_opts.seekrange then
+        if user_opts.seekrangestyle == "none" then
             return nil
         end
         local cache_state = state.cache_state
@@ -2081,6 +2087,7 @@ function osc_init()
 
     -- tc_left (current pos)
     ne = new_element("tc_left", "button")
+
     ne.content = function ()
 	if (state.tc_ms) then
 		return (mp.get_property_osd("playback-time/full"))
@@ -2092,6 +2099,7 @@ function osc_init()
         state.tc_ms = not state.tc_ms
         request_init()
     end
+
     -- tc_right (total/remaining time)
     ne = new_element("tc_right", "button")
     ne.content = function ()
@@ -2108,7 +2116,7 @@ function osc_init()
 		else
 			return (mp.get_property_osd("duration"))
 		end
-			
+
         end
     end
     ne.eventresponder["mbtn_left_up"] =
@@ -2127,7 +2135,7 @@ function osc_init()
 end
 
 function shutdown()
-    
+
 end
 
 --
@@ -2237,6 +2245,7 @@ end
 
 function render_wipe()
     msg.trace("render_wipe()")
+    state.osd.data = "" -- allows set_osd to immediately update on enable
     state.osd:remove()
 end
 
@@ -2257,7 +2266,14 @@ function render()
     end
 
     -- init management
-    if state.initREQ then
+    if state.active_element then
+        -- mouse is held down on some element - keep ticking and igore initReq
+        -- till it's released, or else the mouse-up (click) will misbehave or
+        -- get ignored. that's because osc_init() recreates the osc elements,
+        -- but mouse handling depends on the elements staying unmodified
+        -- between mouse-down and mouse-up (using the index active_element).
+        request_tick()
+    elseif state.initREQ then
         osc_init()
         state.initREQ = false
 
@@ -2471,9 +2487,12 @@ function process_event(source, what)
         if element_has_action(elements[n], action) then
             elements[n].eventresponder[action](elements[n])
         end
-        request_tick()
     end
+
+    -- ensure rendering after any (mouse) event - icons could change etc
+    request_tick()
 end
+
 
 local logo_lines = {
     -- White border
@@ -2531,7 +2550,7 @@ function tick()
         ass:an(8)
         ass:append("Drop files or URLs to play here.")
         set_osd(640, 360, ass.text)
-        
+
         if state.showhide_enabled then
             mp.disable_key_bindings("showhide")
             mp.disable_key_bindings("showhide_wc")
@@ -2552,6 +2571,7 @@ function tick()
     state.tick_last_time = mp.get_time()
 
     if state.anitype ~= nil then
+        -- animating or starting, or still within 1s past the deadline
         request_tick()
     end
 end
@@ -2731,9 +2751,9 @@ function visibility_mode(mode, no_osd)
         msg.warn("Ignoring unknown visibility mode '" .. mode .. "'")
         return
     end
-    
+
 	user_opts.visibility = mode
-	
+
     if not no_osd and tonumber(mp.get_property("osd-level")) >= 1 then
         mp.osd_message("OSC visibility: " .. mode)
     end
@@ -2744,6 +2764,7 @@ function visibility_mode(mode, no_osd)
     mp.disable_key_bindings("input")
     mp.disable_key_bindings("window-controls")
     state.input_enabled = false
+
     request_tick()
 end
 
