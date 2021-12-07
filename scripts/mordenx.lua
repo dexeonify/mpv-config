@@ -575,7 +575,7 @@ local state = {
     lastvisibility = user_opts.visibility,	-- save last visibility on pause if showonpause
 }
 
-local window_control_box_width = 138
+local window_control_box_width = 80
 local tick_delay = 0.03
 
 local is_december = os.date("*t").month == 12
