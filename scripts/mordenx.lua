@@ -2057,21 +2057,21 @@ function osc_init()
 
     -- tc_right (total/remaining time)
     ne = new_element("tc_right", "button")
-    ne.content = function ()
-        if (mp.get_property_number("duration", 0) <= 0) then return "--:--:--" end
-        if (state.rightTC_trem) then
-		if state.tc_ms then
-			return ("-"..mp.get_property_osd("playtime-remaining/full"))
-		else
-			return ("-"..mp.get_property_osd("playtime-remaining"))
-		end
-        else
-		if state.tc_ms then
-			return (mp.get_property_osd("duration/full"))
-		else
-			return (mp.get_property_osd("duration"))
-		end
 
+    ne.visible = (mp.get_property_number("duration", 0) > 0)
+    ne.content = function ()
+        if (state.rightTC_trem) then
+            if state.tc_ms then
+                return ("-"..mp.get_property_osd("playtime-remaining/full"))
+            else
+                return ("-"..mp.get_property_osd("playtime-remaining"))
+            end
+        else
+            if state.tc_ms then
+                return (mp.get_property_osd("duration/full"))
+            else
+                return (mp.get_property_osd("duration"))
+            end
         end
     end
     ne.eventresponder["mbtn_left_up"] =
