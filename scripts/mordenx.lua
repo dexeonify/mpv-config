@@ -70,41 +70,10 @@ local user_opts = {
     language = "eng",		-- eng=English, chs=Chinese
 }
 
--- Localization
-local language = {
-	["eng"] = {
-	    welcome = "{\\fs24\\1c&H0&\\1c&HFFFFFF&}Drop files or URLs to play here.",  -- this text appears when mpv starts
-		off = "OFF",
-		na = "n/a",
-		none = "none",
-		video = "Video",
-		audio = "Audio",
-		subtitle = "Subtitle",
-		available = "Available ",
-		track = " Tracks:",
-		playlist = "Playlist",
-		nolist = "Empty playlist.",
-		chapter = "Chapter",
-		nochapter = "No chapters.",
-	},
-	["chs"] = {
-		welcome = "{\\1c&H00\\bord0\\fs30\\fn微软雅黑 light\\fscx125}MPV{\\fscx100} 播放器",  -- this text appears when mpv starts
-		off = "关闭",
-		na = "n/a",
-		none = "无",
-		video = "视频",
-		audio = "音频",
-		subtitle = "字幕",
-		available = "可选",
-		track = "：",
-		playlist = "播放列表",
-		nolist = "无列表信息",
-		chapter = "章节",
-		nochapter = "无章节信息",
-	}
-}
 -- read options from config and command-line
 opt.read_options(user_opts, "osc", function(list) update_options(list) end)
+
+
 -- deus0ww - 2021-11-26
 
 ------------
@@ -550,7 +519,6 @@ end)
 -----------------
 
 -- apply lang opts
-local texts = language[user_opts.language]
 local osc_param = { -- calculated by osc_init()
     playresy = 0,                           -- canvas size Y
     playresx = 0,                           -- canvas size X
@@ -825,7 +793,7 @@ end
 -- Tracklist Management
 --
 
-local nicetypes = {video = texts.video, audio = texts.audio, sub = texts.subtitle}
+local nicetypes = {video = "Video", audio = "Audio", sub = "Subtitle"}
 
 -- updates the OSC internal playlists, should be run each time the track-layout changes
 function update_tracklist()
@@ -854,9 +822,9 @@ end
 
 -- return a nice list of tracks of the given type (video, audio, sub)
 function get_tracklist(type)
-    local msg = texts.available .. nicetypes[type] .. texts.track
+    local msg = "Available " .. nicetypes[type] .. " Tracks: "
     if #tracks_osc[type] == 0 then
-        msg = msg .. texts.none
+        msg = msg .. "none"
     else
         for n = 1, #tracks_osc[type] do
             local track = tracks_osc[type][n]
@@ -1909,12 +1877,12 @@ function osc_init()
     ne.content = "\xEF\x8E\xB7"
     ne.tooltip_style = osc_styles.Tooltip
     ne.tooltipF = function ()
-		local msg = texts.off
+		local msg = "OFF"
         if not (get_track("audio") == 0) then
-            msg = (texts.audio .. " [" .. get_track("audio") .. " ∕ " .. #tracks_osc.audio .. "] ")
+            msg = ("Audio" .. " [" .. get_track("audio") .. " ∕ " .. #tracks_osc.audio .. "] ")
             local prop = mp.get_property("current-tracks/audio/title") --("current-tracks/audio/lang")
             if not prop then
-				prop = texts.na
+				prop = "n/a"
 			end
 			msg = msg .. "[" .. prop .. "]"
 			prop = mp.get_property("current-tracks/audio/lang") --("current-tracks/audio/title")
