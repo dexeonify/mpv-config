@@ -1845,32 +1845,24 @@ function osc_init()
 
     ne.softrepeat = true
     ne.content = "\xEF\x8E\xA0"
-    ne.enabled = (have_ch) -- disables button when no chapters available.
     ne.eventresponder["mbtn_left_down"] =
-        --function () mp.command("seek -5") end
-        --function () mp.commandv("seek", -5, "relative", "keyframes") end
-        function () mp.commandv("add", "chapter", -1) end
-    --ne.eventresponder["shift+mbtn_left_down"] =
-        --function () mp.commandv("frame-back-step") end
+        function () mp.commandv("seek", -5, "relative", "keyframes") end
+    ne.eventresponder["shift+mbtn_left_down"] =
+        function () mp.commandv("frame-back-step") end
     ne.eventresponder["mbtn_right_down"] =
-        function () show_message(get_chapterlist()) end
-        --function () mp.command("seek -60") end
-        --function () mp.commandv("seek", -60, "relative", "keyframes") end
+        function () mp.commandv("seek", -30, "relative", "keyframes") end
 
     --skipfrwd
     ne = new_element("skipfrwd", "button")
 
     ne.softrepeat = true
     ne.content = "\xEF\x8E\x9F"
-    ne.enabled = (have_ch) -- disables button when no chapters available.
     ne.eventresponder["mbtn_left_down"] =
-        --function () mp.command("seek +5") end
-        --function () mp.commandv("seek", 5, "relative", "keyframes") end
-        function () mp.commandv("add", "chapter", 1) end
-    --ne.eventresponder["shift+mbtn_left_down"] =
-        --function () mp.commandv("frame-step") end
+        function () mp.commandv("seek", 10, "relative", "keyframes") end
+    ne.eventresponder["shift+mbtn_left_down"] =
+        function () mp.commandv("frame-step") end
     ne.eventresponder["mbtn_right_down"] =
-    function () mp.commandv("seek", 60, "relative", "keyframes") end
+        function () mp.commandv("seek", 60, "relative", "keyframes") end
 
     --ch_prev
     ne = new_element("ch_prev", "button")
@@ -2702,13 +2694,17 @@ do_enable_keybindings()
 mp.set_key_bindings({
     {"mbtn_left",           function(e) process_event("mbtn_left", "up") end,
                             function(e) process_event("mbtn_left", "down")  end},
+    {"shift+mbtn_left",     function(e) process_event("shift+mbtn_left", "up") end,
+                            function(e) process_event("shift+mbtn_left", "down")  end},
     {"mbtn_right",          function(e) process_event("mbtn_right", "up") end,
                             function(e) process_event("mbtn_right", "down")  end},
-    {"mbtn_mid",            function(e) process_event("mbtn_mid", "up") end,
-                            function(e) process_event("mbtn_mid", "down")  end},
+    -- alias to shift_mbtn_left for single-handed mouse use
+    {"mbtn_mid",            function(e) process_event("shift+mbtn_left", "up") end,
+                            function(e) process_event("shift+mbtn_left", "down")  end},
     {"wheel_up",            function(e) process_event("wheel_up", "press") end},
     {"wheel_down",          function(e) process_event("wheel_down", "press") end},
     {"mbtn_left_dbl",       "ignore"},
+    {"shift+mbtn_left_dbl", "ignore"},
     {"mbtn_right_dbl",      "ignore"},
 }, "input", "force")
 mp.enable_key_bindings("input")
