@@ -624,6 +624,12 @@ end
 -- Helperfunctions
 --
 
+function kill_animation()
+    state.anistart = nil
+    state.animation = nil
+    state.anitype =  nil
+end
+
 function set_osd(res_x, res_y, text)
     if state.osd.res_x == res_x and
        state.osd.res_y == res_y and
@@ -2191,14 +2197,10 @@ function render()
             if (state.anitype == "out") then
                 osc_visible(false)
             end
-            state.anistart = nil
-            state.animation = nil
-            state.anitype =  nil
+            kill_animation()
         end
     else
-        state.anistart = nil
-        state.animation = nil
-        state.anitype =  nil
+        kill_animation()
     end
 
     --mouse show/hide area
