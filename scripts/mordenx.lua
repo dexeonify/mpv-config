@@ -49,17 +49,16 @@ local user_opts = {
                                 -- functions that depend on it)
     layout = "bottombar",
     seekbarhandlesize = 0.6,    -- size ratio of the diamond and knob handle
-    seekrange = true,		-- show seekrange overlay
     seekrangealpha = 200,       -- transparency of seekranges
     seekbarkeyframes = true,    -- use keyframes when dragging the seekbar
     title = "${media-title}",   -- string compatible with property-expansion
                                 -- to be shown as OSC title
     tooltipborder = 1,          -- border of tooltip in bottom/topbar
-    showtitle = true,		-- show title in OSC
-    showonpause = true,         -- whether to disable the hide timeout on pause
     timetotal = false,          -- display total time instead of remaining time?
     timems = false,             -- display timecodes with milliseconds?
     visibility = "auto",        -- only used at init to set visibility_mode(...)
+    showtitle = true,		    -- show title in OSC
+    showonpause = true,         -- whether to disable the hide timeout on pause
     windowcontrols = "auto",    -- whether to show window controls
     windowcontrols_alignment = "right", -- which side to show window controls on
     greenandgrumpy = false,     -- disable santa hat
@@ -67,7 +66,6 @@ local user_opts = {
     chapters_osd = true,        -- whether to show chapters OSD on next/prev
     playlist_osd = true,        -- whether to show playlist OSD on next/prev
     chapter_fmt = "Chapter: %s", -- chapter print format for seekbar-hover. "no" to disable
-    language = "eng",		-- eng=English, chs=Chinese
 }
 
 -- read options from config and command-line
