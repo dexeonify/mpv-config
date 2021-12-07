@@ -1617,12 +1617,15 @@ layouts = function ()
     lo.geometry = {x = refX + 120, y = refY - 40 , an = 5, w = 30, h = 24}
     lo.style = osc_styles.Ctrl2
 
+    -- Cache
+    lo = add_layout("cache")
+    lo.geometry = {x = osc_geo.w - 117, y = refY - 50, an = 9, w = 64, h = 20}
+    lo.style = osc_styles.Time
 
 	-- Time
     lo = add_layout("tc_left")
     lo.geometry = {x = 25, y = refY - 84, an = 7, w = 64, h = 20}
     lo.style = osc_styles.Time
-
 
     lo = add_layout("tc_right")
     lo.geometry = {x = osc_geo.w - 25 , y = refY -84, an = 9, w = 64, h = 20}
@@ -2076,6 +2079,30 @@ function osc_init()
     end
     ne.eventresponder["mbtn_left_up"] =
         function () state.rightTC_trem = not state.rightTC_trem end
+
+    -- cache
+    ne = new_element("cache", "button")
+
+    ne.content = function ()
+        local cache_state = state.cache_state
+        if not (cache_state and cache_state["seekable-ranges"] and
+            #cache_state["seekable-ranges"] > 0) then
+            -- probably not a network stream
+            return ""
+        end
+        local dmx_cache = cache_state and cache_state["cache-duration"]
+        local thresh = math.min(state.dmx_cache * 0.05, 5)  -- 5% or 5s
+        if dmx_cache and math.abs(dmx_cache - state.dmx_cache) >= thresh then
+            state.dmx_cache = dmx_cache
+        else
+            dmx_cache = state.dmx_cache
+        end
+        local min = math.floor(dmx_cache / 60)
+        local sec = math.floor(dmx_cache % 60) -- don't round e.g. 59.9 to 60
+        return "Cache: " .. (min > 0 and
+            string.format("%sm%02.0fs", min, sec) or
+            string.format("%3.0fs", sec))
+    end
 
     -- load layout
     layouts()
