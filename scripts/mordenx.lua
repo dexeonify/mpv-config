@@ -529,7 +529,7 @@ local osc_styles = {
     Ctrl1 = "{\\blur0\\bord0\\1c&HFFFFFF&\\3c&HFFFFFF&\\fs28\\fnFont Awesome 5 Free Solid}",
     Ctrl2 = "{\\blur0\\bord0\\1c&HFFFFFF&\\3c&HFFFFFF&\\fs24\\fnFont Awesome 5 Free Solid}",
     Ctrl3 = "{\\blur0\\bord0\\1c&HFFFFFF&\\3c&HFFFFFF&\\fs24\\fnFont Awesome 5 Free Solid}",
-    Time = "{\\blur0\\bord0\\1c&HFFFFFF&\\3c&H000000&\\fs20}",
+    Time = "{\\blur0\\bord0\\1c&HFFFFFF&\\3c&H000000&\\fs18}",
     Tooltip = "{\\blur1\\bord" .. user_opts.tooltipborder .. "\\1c&HFFFFFF&\\3c&H000000&\\fs20}",
     Title = "{\\blur1\\bord0.5\\1c&HFFFFFF&\\3c&H0\\fs32\\q2}",
     elementDown = "{\\1c&H999999&}",
@@ -1184,7 +1184,7 @@ function render_elements(master_ass)
 
             elem_ass:append(buttontext)
 
-            -- add tooltip
+            -- add tooltip for audio tracks
 			if not (element.tooltipF == nil) and element.enabled then
                 if mouse_hit(element) then
                     local tooltiplabel = element.tooltipF
