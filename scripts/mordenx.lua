@@ -520,9 +520,6 @@ local osc_param = { -- calculated by osc_init()
     display_aspect = 1,
     unscaled_y = 0,
     areas = {},
-    video_margins = {
-        l = 0, r = 0, t = 0, b = 0,         -- left/right/top/bottom
-    },
 }
 
 local osc_styles = {
@@ -1499,9 +1496,6 @@ function window_controls(topbar)
     if topbar then
         -- The title is already there as part of the top bar
         return
-    else
-        -- Apply boxvideo margins to the control bar
-        osc_param.video_margins.t = wc_geo.h / osc_param.playresy
     end
 
     -- Window Title
