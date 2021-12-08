@@ -526,14 +526,14 @@ local osc_styles = {
     TransBg = "{\\blur100\\bord150\\1c&H000000&\\3c&H000000&}",
     SeekbarBg = "{\\blur0\\bord0\\1c&HFFFFFF&}",
     SeekbarFg = "{\\blur1\\bord1\\1c&HE39C42&}",
-    Ctrl1 = "{\\blur0\\bord0\\1c&HFFFFFF&\\3c&HFFFFFF&\\fs36\\fnmaterial-design-iconic-font}",
-    Ctrl2 = "{\\blur0\\bord0\\1c&HFFFFFF&\\3c&HFFFFFF&\\fs24\\fnmaterial-design-iconic-font}",
-    Ctrl3 = "{\\blur0\\bord0\\1c&HFFFFFF&\\3c&HFFFFFF&\\fs24\\fnmaterial-design-iconic-font}",
+    Ctrl1 = "{\\blur0\\bord0\\1c&HFFFFFF&\\3c&HFFFFFF&\\fs28\\fnFont Awesome 5 Free Solid}",
+    Ctrl2 = "{\\blur0\\bord0\\1c&HFFFFFF&\\3c&HFFFFFF&\\fs24\\fnFont Awesome 5 Free Solid}",
+    Ctrl3 = "{\\blur0\\bord0\\1c&HFFFFFF&\\3c&HFFFFFF&\\fs24\\fnFont Awesome 5 Free Solid}",
     Time = "{\\blur0\\bord0\\1c&HFFFFFF&\\3c&H000000&\\fs20}",
     Tooltip = "{\\blur1\\bord" .. user_opts.tooltipborder .. "\\1c&HFFFFFF&\\3c&H000000&\\fs20}",
     Title = "{\\blur1\\bord0.5\\1c&HFFFFFF&\\3c&H0\\fs32\\q2}",
     elementDown = "{\\1c&H999999&}",
-    wcButtons = "{\\1c&HFFFFFF\\fs24\\fnmpv-osd-symbols}",
+    wcButtons = "{\\1c&HFFFFFF\\fs20\\fnFont Awesome 5 Free Regular}",
     wcTitle = "{\\1c&HFFFFFF\\fs24\\q2}",
     wcBar = "{\\1c&H000000}",
 }
@@ -1436,9 +1436,9 @@ function window_controls(topbar)
 
     local button_y = wc_geo.y - (wc_geo.h / 2)
     local first_geo =
-        {x = controlbox_left + 5, y = button_y, an = 4, w = 25, h = 25}
+        {x = controlbox_left - 5, y = button_y, an = 4, w = 25, h = 25}
     local second_geo =
-        {x = controlbox_left + 30, y = button_y, an = 4, w = 25, h = 25}
+        {x = controlbox_left + 25, y = button_y, an = 4, w = 25, h = 25}
     local third_geo =
         {x = controlbox_left + 55, y = button_y, an = 4, w = 25, h = 25}
 
@@ -1450,16 +1450,16 @@ function window_controls(topbar)
 
     -- Close: 🗙
     ne = new_element("close", "button")
-    ne.content = "\238\132\149"
+    ne.content = "\xEF\x80\x8D"
     ne.eventresponder["mbtn_left_up"] =
         function () mp.commandv("quit") end
     lo = add_layout("close")
     lo.geometry = alignment == "left" and first_geo or third_geo
-    lo.style = osc_styles.wcButtons
+    lo.style = "{\\1c&HFFFFFF\\fs24\\fnFont Awesome 5 Free Solid}"
 
     -- Minimize: 🗕
     ne = new_element("minimize", "button")
-    ne.content = "\238\132\146"
+    ne.content = "\xEF\x8B\x91"
     ne.eventresponder["mbtn_left_up"] =
         function () mp.commandv("cycle", "window-minimized") end
     lo = add_layout("minimize")
@@ -1469,9 +1469,9 @@ function window_controls(topbar)
     -- Maximize: 🗖 /🗗
     ne = new_element("maximize", "button")
     if state.maximized or state.fullscreen then
-        ne.content = "\238\132\148"
+        ne.content = "\xEF\x8B\x92"
     else
-        ne.content = "\238\132\147"
+        ne.content = "\xEF\x8B\x90"
     end
     ne.eventresponder["mbtn_left_up"] =
         function ()
@@ -1748,7 +1748,7 @@ function osc_init()
 
     --tog_info
     ne = new_element("tog_info", "button")
-    ne.content = ""
+    ne.content = "\xEF\x81\x9A"
     ne.visible = (osc_param.playresx >= 600)
     ne.eventresponder["mbtn_left_up"] =
         function () mp.commandv("script-binding", "stats/display-stats-toggle") end
@@ -1758,7 +1758,7 @@ function osc_init()
     -- prev
     ne = new_element("pl_prev", "button")
 
-    ne.content = "\xEF\x8E\xB5"
+    ne.content = "\xEF\x81\x88"
     ne.enabled = (pl_pos > 1) or (loop ~= "no")
     ne.eventresponder["mbtn_left_up"] =
         function ()
@@ -1775,7 +1775,7 @@ function osc_init()
     --next
     ne = new_element("pl_next", "button")
 
-    ne.content = "\xEF\x8E\xB4"
+    ne.content = "\xEF\x81\x91"
     ne.enabled = (have_pl and (pl_pos < pl_count)) or (loop ~= "no")
     ne.eventresponder["mbtn_left_up"] =
         function ()
@@ -1797,9 +1797,9 @@ function osc_init()
 
     ne.content = function ()
         if mp.get_property("pause") == "yes" then
-            return ("\xEF\x8E\xAA")
+            return ("\xEF\x81\x8B")
         else
-            return ("\xEF\x8E\xA7")
+            return ("\xEF\x81\x8C")
         end
     end
     ne.eventresponder["mbtn_left_up"] =
@@ -1811,7 +1811,7 @@ function osc_init()
     ne = new_element("skipback", "button")
 
     ne.softrepeat = true
-    ne.content = "\xEF\x8E\xA0"
+    ne.content = "\xEF\x81\x8A"
     ne.eventresponder["mbtn_left_down"] =
         function () mp.commandv("seek", -5, "relative", "keyframes") end
     ne.eventresponder["shift+mbtn_left_down"] =
@@ -1823,7 +1823,7 @@ function osc_init()
     ne = new_element("skipfrwd", "button")
 
     ne.softrepeat = true
-    ne.content = "\xEF\x8E\x9F"
+    ne.content = "\xEF\x81\x8E"
     ne.eventresponder["mbtn_left_down"] =
         function () mp.commandv("seek", 10, "relative", "keyframes") end
     ne.eventresponder["shift+mbtn_left_down"] =
@@ -1873,7 +1873,7 @@ function osc_init()
 
     ne.enabled = (#tracks_osc.audio > 0)
     ne.visible = (osc_param.playresx >= 540)
-    ne.content = "\xEF\x8E\xB7"
+    ne.content = "\xEF\x8A\x9E"
     ne.tooltip_style = osc_styles.Tooltip
     ne.tooltipF = function ()
 		local msg = "OFF"
@@ -1903,7 +1903,7 @@ function osc_init()
     ne = new_element("cy_sub", "button")
     ne.enabled = (#tracks_osc.sub > 0)
     ne.visible = (osc_param.playresx >= 600)
-    ne.content = "\xEF\x8F\x93"
+    ne.content = "\xEF\x88\x8A"
     ne.tooltip_style = osc_styles.Tooltip
     ne.tooltipF = function ()
 		local msg = texts.off
@@ -1933,9 +1933,9 @@ function osc_init()
     ne = new_element("tog_fs", "button")
     ne.content = function ()
         if (state.fullscreen) then
-            return ("\xEF\x85\xAC")
+            return ("\xEF\x81\xA6")
         else
-            return ("\xEF\x85\xAD")
+            return ("\xEF\x81\xA5")
         end
     end
     ne.visible = (osc_param.playresx >= 540)
@@ -2087,9 +2087,9 @@ function osc_init()
     ne.content = function()
         local volume = mp.get_property_number("volume", 0)
         local mute = mp.get_property_native("mute")
-        local volicon = {"\xEF\x8E\xBA", "\xEF\x8E\xB9", "\xEF\x8E\xBC"}
+        local volicon = {"\xEF\x80\xA6", "\xEF\x80\xA7", "\xEF\x80\xA8"}
         if volume == 0 or mute then
-            return "\xEF\x8E\xBB"
+            return "\xEF\x9A\xA9"
         else
             return volicon[math.min(3,math.ceil(volume / (100/3)))]
         end
