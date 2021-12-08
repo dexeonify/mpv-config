@@ -852,14 +852,14 @@ function set_track(type, next)
 
     mp.commandv("set", type, new_track_mpv)
 
---	if (new_track_osc == 0) then
---        show_message(nicetypes[type] .. " Track: none")
---    else
---        show_message(nicetypes[type]  .. " Track: "
---            .. new_track_osc .. "/" .. #tracks_osc[type]
---            .. " [".. (tracks_osc[type][new_track_osc].lang or "unknown") .."] "
---            .. (tracks_osc[type][new_track_osc].title or ""))
---    end
+    if (new_track_osc == 0) then
+        show_message(nicetypes[type] .. " Track: none")
+    else
+        show_message(nicetypes[type]  .. " Track: "
+            .. new_track_osc .. "/" .. #tracks_osc[type]
+            .. " [".. (tracks_osc[type][new_track_osc].lang or "unknown") .."] "
+            .. (tracks_osc[type][new_track_osc].title or ""))
+    end
 end
 
 -- get the currently selected track of <type>, OSC-style counted
