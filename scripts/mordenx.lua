@@ -2122,7 +2122,7 @@ function osc_init()
         if volume == 0 or mute then
             return "\xEF\x8E\xBB"
         else
-            return volicon[math.min(4,math.ceil(volume / (100/3)))]
+            return volicon[math.min(3,math.ceil(volume / (100/3)))]
         end
     end
     ne.eventresponder["mbtn_left_up"] =
