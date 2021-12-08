@@ -1150,6 +1150,7 @@ function render_elements(master_ass)
                     elem_ass:append(slider_lo.tooltip_style)
                     ass_append_alpha(elem_ass, slider_lo.alpha, 0)
                     elem_ass:append(tooltiplabel)
+
                     display_tn_osc(ty, sliderpos, elem_ass)
 				else
 					hide_thumbnail()
@@ -1746,13 +1747,6 @@ function osc_init()
     ne.eventresponder["mbtn_right_up"] =
         function () show_message(mp.get_property_osd("filename")) end
 
-    --tog_info
-    ne = new_element("tog_info", "button")
-    ne.content = "\xEF\x81\x9A"
-    ne.visible = (osc_param.playresx >= 600)
-    ne.eventresponder["mbtn_left_up"] =
-        function () mp.commandv("script-binding", "stats/display-stats-toggle") end
-
     -- playlist buttons
 
     -- prev
@@ -1804,8 +1798,6 @@ function osc_init()
     end
     ne.eventresponder["mbtn_left_up"] =
         function () mp.commandv("cycle", "pause") end
-    --ne.eventresponder["mbtn_right_up"] =
-    --    function () mp.commandv("script-binding", "open-file-dialog") end
 
     --skipback
     ne = new_element("skipback", "button")
@@ -1896,8 +1888,8 @@ function osc_init()
         function () set_track("audio", 1) end
     ne.eventresponder["mbtn_right_up"] =
         function () set_track("audio", -1) end
-    ne.eventresponder["mbtn_mid_up"] =
-        function () show_message(get_tracklist("audio")) end
+    ne.eventresponder["shift+mbtn_left_down"] =
+        function () show_message(get_tracklist("audio"), 2) end
 
     --cy_sub
     ne = new_element("cy_sub", "button")
@@ -1941,6 +1933,13 @@ function osc_init()
     ne.visible = (osc_param.playresx >= 540)
     ne.eventresponder["mbtn_left_up"] =
         function () mp.commandv("cycle", "fullscreen") end
+
+    -- toggle info
+    ne = new_element("tog_info", "button")
+    ne.content = "\xEF\x81\x9A"
+    ne.visible = (osc_param.playresx >= 600)
+    ne.eventresponder["mbtn_left_up"] =
+        function () mp.commandv("script-binding", "stats/display-stats-toggle") end
 
     --seekbar
     ne = new_element("seekbar", "slider")
