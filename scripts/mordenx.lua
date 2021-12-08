@@ -2552,7 +2552,7 @@ function tick()
         render()
     else
         -- Flush OSD
-        set_osd(osc_param.playresy, osc_param.playresy, "")
+        render_wipe()
     end
 
     state.tick_last_time = mp.get_time()
@@ -2739,6 +2739,16 @@ end
 -- mode can be auto/always/never/cycle
 -- the modes only affect internal variables and not stored on its own.
 function visibility_mode(mode, no_osd)
+    if mode == "cycle" then
+        if not state.enabled then
+            mode = "auto"
+        elseif user_opts.visibility ~= "always" then
+            mode = "always"
+        else
+            mode = "never"
+        end
+    end
+
     if mode == "auto" then
         always_on(false)
         enable_osc(true)
