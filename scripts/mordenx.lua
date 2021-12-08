@@ -1615,18 +1615,18 @@ layouts = function ()
     lo.geometry = {x = refX + 120, y = refY - 40 , an = 5, w = 30, h = 24}
     lo.style = osc_styles.Ctrl2
 
-    -- Cache
-    lo = add_layout("cache")
-    lo.geometry = {x = osc_geo.w - 117, y = refY - 50, an = 9, w = 64, h = 20}
-    lo.style = osc_styles.Time
-
-	-- Time
+    -- Time
     lo = add_layout("tc_left")
     lo.geometry = {x = 25, y = refY - 84, an = 7, w = 64, h = 20}
     lo.style = osc_styles.Time
 
     lo = add_layout("tc_right")
     lo.geometry = {x = osc_geo.w - 25 , y = refY -84, an = 9, w = 64, h = 20}
+    lo.style = osc_styles.Time
+
+    -- Cache
+    lo = add_layout("cache")
+    lo.geometry = {x = osc_geo.w - 117, y = refY - 50, an = 9, w = 64, h = 20}
     lo.style = osc_styles.Time
 
     -- Volume
