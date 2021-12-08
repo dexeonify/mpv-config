@@ -27,6 +27,8 @@ This is mainly just for backup and keeping track of changes.
 - [mordenx.lua](https://github.com/cyl0/mpv-osc-morden-x):
   A fork again of [mpv-osc-morden-x](https://github.com/cyl0/mpv-osc-morden-x),
   with added support of deus0ww's Thumbnailer.lua (see below).
+  Install [Font Awesome](https://fontawesome.com/v5.15/how-to-use/on-the-desktop/setup/getting-started)
+  for the custom icons.
 
 - [playlistmanager.lua](https://github.com/jonniek/mpv-playlistmanager):
   Create and manage playlists intuitively.
