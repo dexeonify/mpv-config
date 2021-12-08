@@ -1121,7 +1121,7 @@ function render_elements(master_ass)
                     local ty
 
                     if (an == 2) then
-                        ty = element.hitbox.y1
+                        ty = element.hitbox.y1 - slider_lo.border
                     else
                         ty = element.hitbox.y1 + elem_geo.h/2
                     end
@@ -1183,33 +1183,6 @@ function render_elements(master_ass)
             end
 
             elem_ass:append(buttontext)
-
-            -- add tooltip
-			if not (element.tooltipF == nil) and element.enabled then
-                if mouse_hit(element) then
-                    local tooltiplabel = element.tooltipF
-                    local an = 1
-                    local ty = element.hitbox.y1
-                    local tx = get_virt_mouse_pos()
-
-                    if ty < osc_param.playresy / 2 then
-						ty = element.hitbox.y2
-						an = 7
-					end
-
-                    -- tooltip label
-                    if type(element.tooltipF) == "function" then
-						tooltiplabel = element.tooltipF()
-					else
-						tooltiplabel = element.tooltipF
-					end
-                    elem_ass:new_event()
-                    elem_ass:pos(tx, ty)
-                    elem_ass:an(an)
-                    elem_ass:append(element.tooltip_style)
-                    elem_ass:append(tooltiplabel)
-                end
-			end
         end
 
         master_ass:merge(elem_ass)
