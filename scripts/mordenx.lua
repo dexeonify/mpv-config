@@ -1864,19 +1864,20 @@ function osc_init()
     ne = new_element("cy_audio", "button")
 
     ne.enabled = (#tracks_osc.audio > 0)
-    ne.visible = (osc_param.playresx >= 540)
     ne.content = "\xEF\x8A\x9E"
     ne.tooltip_style = osc_styles.Tooltip
     ne.tooltipF = function ()
 		local msg = "OFF"
         if not (get_track("audio") == 0) then
-            msg = ("Audio" .. " [" .. get_track("audio") .. " ∕ " .. #tracks_osc.audio .. "] ")
-            local prop = mp.get_property("current-tracks/audio/title") --("current-tracks/audio/lang")
+            msg = ("Audio" .. " [" .. get_track("audio") .. "∕" .. #tracks_osc.audio .. "] ")
+
+            local prop = mp.get_property("current-tracks/audio/lang")
             if not prop then
-				prop = "n/a"
+				prop = "N/A"
 			end
-			msg = msg .. "[" .. prop .. "]"
-			prop = mp.get_property("current-tracks/audio/lang") --("current-tracks/audio/title")
+			msg = msg .. "(" .. prop .. ")"
+
+			prop = mp.get_property("current-tracks/audio/title")
 			if prop then
 				msg = msg .. " " .. prop
 			end
@@ -1893,19 +1894,21 @@ function osc_init()
 
     --cy_sub
     ne = new_element("cy_sub", "button")
+
     ne.enabled = (#tracks_osc.sub > 0)
-    ne.visible = (osc_param.playresx >= 600)
     ne.content = "\xEF\x88\x8A"
     ne.tooltip_style = osc_styles.Tooltip
     ne.tooltipF = function ()
-		local msg = texts.off
+		local msg = "OFF"
         if not (get_track("sub") == 0) then
-            msg = (texts.subtitle .. " [" .. get_track("sub") .. " ∕ " .. #tracks_osc.sub .. "] ")
+            msg = ("Subtitle" .. " [" .. get_track("sub") .. "∕" .. #tracks_osc.sub .. "] ")
+
             local prop = mp.get_property("current-tracks/sub/lang")
             if not prop then
-				prop = texts.na
+				prop = "N/A"
 			end
-			msg = msg .. "[" .. prop .. "]"
+			msg = msg .. "(" .. prop .. ")"
+
 			prop = mp.get_property("current-tracks/sub/title")
 			if prop then
 				msg = msg .. " " .. prop
