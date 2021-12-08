@@ -1168,21 +1168,20 @@ function render_elements(master_ass)
                 buttontext = element.content -- text objects
             end
 
-			buttontext = buttontext:gsub(":%((.?.?.?)%) unknown ", ":%(%1%)")  --gsub("%) unknown %(\"", "")
-
             local maxchars = element.layout.button.maxchars
-            -- 认为1个中文字符约等于1.5个英文字符
-            -- local charcount = buttontext:len()-  (buttontext:len()-select(2, buttontext:gsub("[^\128-\193]", "")))/1.5
-            local charcount = (buttontext:len() + select(2, buttontext:gsub("[^\128-\193]", ""))*2) / 3
-            if not (maxchars == nil) and (charcount > maxchars) then
-                local limit = math.max(0, maxchars - 3)
-                if (charcount > limit) then
-                    while (charcount > limit) do
+            if not (maxchars == nil) and (#buttontext > maxchars) then
+                local max_ratio = 1.25  -- up to 25% more chars while shrinking
+                local limit = math.max(0, math.floor(maxchars * max_ratio) - 3)
+                if (#buttontext > limit) then
+                    while (#buttontext > limit) do
                         buttontext = buttontext:gsub(".[\128-\191]*$", "")
-						charcount = (buttontext:len() + select(2, buttontext:gsub("[^\128-\193]", ""))*2) / 3
                     end
                     buttontext = buttontext .. "..."
                 end
+                local _, nchars2 = buttontext:gsub(".[\128-\191]*", "")
+                local stretch = (maxchars/#buttontext)*100
+                buttontext = string.format("{\\fscx%f}",
+                    (maxchars/#buttontext)*100) .. buttontext
             end
 
             elem_ass:append(buttontext)
