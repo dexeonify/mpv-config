@@ -47,7 +47,7 @@ local user_opts = {
     iamaprogrammer = false,     -- use native mpv values and disable OSC
                                 -- internal track list management (and some
                                 -- functions that depend on it)
-    layout = "bottombar",
+    layout = "modernx",         -- set thumbnail layout
     seekbarhandlesize = 0.6,    -- size ratio of the diamond and knob handle
     seekrangealpha = 200,       -- transparency of seekranges
     seekbarkeyframes = true,    -- use keyframes when dragging the seekbar
@@ -257,6 +257,8 @@ local set_thumbnail_layout = {
 							set_mini_above() end,
 	slimbox   = function()	set_thumbnail_above(12)
 							set_mini_above() end,
+    modernx   = function()  set_thumbnail_above(20)
+                            set_mini_below() end,
 }
 
 local function update_tn_osc_params(seek_y)
@@ -512,7 +514,7 @@ end)
 
 
 -----------------
--- mordenx.lua --
+-- modernx.lua --
 -----------------
 
 local osc_param = { -- calculated by osc_init()
