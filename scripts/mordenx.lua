@@ -79,18 +79,18 @@ opt.read_options(user_opts, "osc", function(list) update_options(list) end)
 -- tn_osc --
 ------------
 local message = {
-	osc = {
-		registration  = "tn_osc_registration",
-		reset         = "tn_osc_reset",
-		update        = "tn_osc_update",
-		finish        = "tn_osc_finish",
-	},
-	debug = "Thumbnailer-debug",
+    osc = {
+        registration  = "tn_osc_registration",
+        reset         = "tn_osc_reset",
+        update        = "tn_osc_update",
+        finish        = "tn_osc_finish",
+    },
+    debug = "Thumbnailer-debug",
 
-	queued     = 1,
-	processing = 2,
-	ready      = 3,
-	failed     = 4,
+    queued     = 1,
+    processing = 2,
+    ready      = 3,
+    failed     = 4,
 }
 
 
@@ -99,36 +99,36 @@ local message = {
 -----------
 local OS_MAC, OS_WIN, OS_NIX = "MAC", "WIN", "NIX"
 local function get_os()
-	if jit and jit.os then
-		if jit.os == "Windows" then return OS_WIN
-		elseif jit.os == "OSX" then return OS_MAC
-		else return OS_NIX end
-	end
-	if (package.config:sub(1,1) ~= "/") then return OS_WIN end
-	local res = mp.command_native({ name = "subprocess", args = {"uname", "-s"}, playback_only = false, capture_stdout = true, capture_stderr = true, })
-	return (res and res.stdout and res.stdout:lower():find("darwin") ~= nil) and OS_MAC or OS_NIX
+    if jit and jit.os then
+        if jit.os == "Windows" then return OS_WIN
+        elseif jit.os == "OSX" then return OS_MAC
+        else return OS_NIX end
+    end
+    if (package.config:sub(1,1) ~= "/") then return OS_WIN end
+    local res = mp.command_native({ name = "subprocess", args = {"uname", "-s"}, playback_only = false, capture_stdout = true, capture_stderr = true, })
+    return (res and res.stdout and res.stdout:lower():find("darwin") ~= nil) and OS_MAC or OS_NIX
 end
 local OPERATING_SYSTEM = get_os()
 
 local function format_json(tab)
-	local json, err = utils.format_json(tab)
-	if err then msg.error("Formatting JSON failed:", err) end
-	if json then return json else return "" end
+    local json, err = utils.format_json(tab)
+    if err then msg.error("Formatting JSON failed:", err) end
+    if json then return json else return "" end
 end
 
 local function parse_json(json)
-	local tab, err = utils.parse_json(json, true)
-	if err then msg.error("Parsing JSON failed:", err) end
-	if tab then return tab else return {} end
+    local tab, err = utils.parse_json(json, true)
+    if err then msg.error("Parsing JSON failed:", err) end
+    if tab then return tab else return {} end
 end
 
 local function join_paths(...)
-	local sep = OPERATING_SYSTEM == OS_WIN and "\\" or "/"
-	local result = ""
-	for _, p in ipairs({...}) do
-		result = (result == "") and p or result .. sep .. p
-	end
-	return result
+    local sep = OPERATING_SYSTEM == OS_WIN and "\\" or "/"
+    local result = ""
+    for _, p in ipairs({...}) do
+        result = (result == "") and p or result .. sep .. p
+    end
+    return result
 end
 
 
@@ -140,323 +140,323 @@ local tn_thumbnails_indexed, tn_thumbnails_ready
 local tn_gen_time_start, tn_gen_duration
 
 local function reset_all()
-	tn_state              = nil
-	tn_osc = {
-		cursor            = {},
-		position          = {},
-		scale             = {},
-		osc_scale         = {},
-		spacer            = {},
-		osd               = {},
-		background        = {text = "︎✇",},
-		font_scale        = {},
-		display_progress  = {},
-		progress          = {},
-		mini              = {text = "⚆",},
-		thumbnail = {
-			visible       = false,
-			path_last     = nil,
-			x_last        = nil,
-			y_last        = nil,
-		},
-	}
-	tn_osc_options        = nil
-	tn_osc_stats = {
-		queued            = 0,
-		processing        = 0,
-		ready             = 0,
-		failed            = 0,
-		total             = 0,
-		total_expected    = 0,
-		percent           = 0,
-		timer             = 0,
-	}
-	tn_thumbnails_indexed = {}
-	tn_thumbnails_ready   = {}
-	tn_gen_time_start     = nil
-	tn_gen_duration       = nil
+    tn_state              = nil
+    tn_osc = {
+        cursor            = {},
+        position          = {},
+        scale             = {},
+        osc_scale         = {},
+        spacer            = {},
+        osd               = {},
+        background        = {text = "︎✇",},
+        font_scale        = {},
+        display_progress  = {},
+        progress          = {},
+        mini              = {text = "⚆",},
+        thumbnail = {
+            visible       = false,
+            path_last     = nil,
+            x_last        = nil,
+            y_last        = nil,
+        },
+    }
+    tn_osc_options        = nil
+    tn_osc_stats = {
+        queued            = 0,
+        processing        = 0,
+        ready             = 0,
+        failed            = 0,
+        total             = 0,
+        total_expected    = 0,
+        percent           = 0,
+        timer             = 0,
+    }
+    tn_thumbnails_indexed = {}
+    tn_thumbnails_ready   = {}
+    tn_gen_time_start     = nil
+    tn_gen_duration       = nil
 end
 
 ------------
 -- TN OSC --
 ------------
 local osc_reg = {
-	script_name = mp.get_script_name(),
-	osc_opts = {
-		scalewindowed   = user_opts.scalewindowed,
-		scalefullscreen = user_opts.scalefullscreen,
-	},
+    script_name = mp.get_script_name(),
+    osc_opts = {
+        scalewindowed   = user_opts.scalewindowed,
+        scalefullscreen = user_opts.scalefullscreen,
+    },
 }
 mp.command_native({"script-message", message.osc.registration, format_json(osc_reg)})
 
 local tn_palette = {
-	black        = "000000",
-	white        = "FFFFFF",
-	alpha_opaque = 0,
-	alpha_clear  = 255,
-	alpha_black  = min(255, user_opts.boxalpha),
-	alpha_white  = min(255, user_opts.boxalpha + (255 - user_opts.boxalpha) * 0.8),
+    black        = "000000",
+    white        = "FFFFFF",
+    alpha_opaque = 0,
+    alpha_clear  = 255,
+    alpha_black  = min(255, user_opts.boxalpha),
+    alpha_white  = min(255, user_opts.boxalpha + (255 - user_opts.boxalpha) * 0.8),
 }
 
 local tn_style_format = {
-	background     = "{\\bord0\\1c&H%s&\\1a&H%X&}",
-	subbackground  = "{\\bord0\\1c&H%s&\\1a&H%X&}",
-	spinner        = "{\\bord0\\fs%d\\fscx%f\\fscy%f",
-	spinner2       = "\\1c&%s&\\1a&H%X&\\frz%d}",
-	closest_index  = "{\\1c&H%s&\\1a&H%X&\\3c&H%s&\\3a&H%X&\\xbord%d\\ybord%d}",
-	progress_mini  = "{\\bord0\\1c&%s&\\1a&H%X&\\fs18\\fscx%f\\fscy%f",
-	progress_mini2 = "\\frz%d}",
-	progress_block = "{\\bord0\\1c&H%s&\\1a&H%X&}",
-	progress_text  = "{\\1c&%s&\\3c&H%s&\\1a&H%X&\\3a&H%X&\\blur0.25\\fs18\\fscx%f\\fscy%f\\xbord%f\\ybord%f}",
-	text_timer     = "%.2ds",
-	text_progress  = "%.3d/%.3d",
-	text_progress2 = "[%d]",
-	text_percent   = "%d%%",
+    background     = "{\\bord0\\1c&H%s&\\1a&H%X&}",
+    subbackground  = "{\\bord0\\1c&H%s&\\1a&H%X&}",
+    spinner        = "{\\bord0\\fs%d\\fscx%f\\fscy%f",
+    spinner2       = "\\1c&%s&\\1a&H%X&\\frz%d}",
+    closest_index  = "{\\1c&H%s&\\1a&H%X&\\3c&H%s&\\3a&H%X&\\xbord%d\\ybord%d}",
+    progress_mini  = "{\\bord0\\1c&%s&\\1a&H%X&\\fs18\\fscx%f\\fscy%f",
+    progress_mini2 = "\\frz%d}",
+    progress_block = "{\\bord0\\1c&H%s&\\1a&H%X&}",
+    progress_text  = "{\\1c&%s&\\3c&H%s&\\1a&H%X&\\3a&H%X&\\blur0.25\\fs18\\fscx%f\\fscy%f\\xbord%f\\ybord%f}",
+    text_timer     = "%.2ds",
+    text_progress  = "%.3d/%.3d",
+    text_progress2 = "[%d]",
+    text_percent   = "%d%%",
 }
 
 local tn_style = {
-	background     = (tn_style_format.background):format(tn_palette.black, tn_palette.alpha_black),
-	subbackground  = (tn_style_format.subbackground):format(tn_palette.white, tn_palette.alpha_white),
-	spinner        = (tn_style_format.spinner):format(0, 1, 1),
-	closest_index  = (tn_style_format.closest_index):format(tn_palette.white, tn_palette.alpha_black, tn_palette.black, tn_palette.alpha_black, -1, -1),
-	progress_mini  = (tn_style_format.progress_mini):format(tn_palette.white, tn_palette.alpha_opaque, 1, 1),
-	progress_block = (tn_style_format.progress_block):format(tn_palette.white, tn_palette.alpha_white),
-	progress_text  = (tn_style_format.progress_text):format(tn_palette.white, tn_palette.black, tn_palette.alpha_opaque, tn_palette.alpha_black, 1, 1, 2, 2),
+    background     = (tn_style_format.background):format(tn_palette.black, tn_palette.alpha_black),
+    subbackground  = (tn_style_format.subbackground):format(tn_palette.white, tn_palette.alpha_white),
+    spinner        = (tn_style_format.spinner):format(0, 1, 1),
+    closest_index  = (tn_style_format.closest_index):format(tn_palette.white, tn_palette.alpha_black, tn_palette.black, tn_palette.alpha_black, -1, -1),
+    progress_mini  = (tn_style_format.progress_mini):format(tn_palette.white, tn_palette.alpha_opaque, 1, 1),
+    progress_block = (tn_style_format.progress_block):format(tn_palette.white, tn_palette.alpha_white),
+    progress_text  = (tn_style_format.progress_text):format(tn_palette.white, tn_palette.black, tn_palette.alpha_opaque, tn_palette.alpha_black, 1, 1, 2, 2),
 }
 
 local function set_thumbnail_above(offset)
-	local tn_osc = tn_osc
-	tn_osc.background.bottom   = tn_osc.position.y - offset - tn_osc.spacer.bottom
-	tn_osc.background.top      = tn_osc.background.bottom - tn_osc.background.h
-	tn_osc.thumbnail.top       = tn_osc.background.bottom - tn_osc.thumbnail.h
-	tn_osc.progress.top        = tn_osc.background.bottom - tn_osc.background.h
-	tn_osc.progress.mid        = tn_osc.progress.top + tn_osc.progress.h * 0.5
-	tn_osc.background.rotation = -1
+    local tn_osc = tn_osc
+    tn_osc.background.bottom   = tn_osc.position.y - offset - tn_osc.spacer.bottom
+    tn_osc.background.top      = tn_osc.background.bottom - tn_osc.background.h
+    tn_osc.thumbnail.top       = tn_osc.background.bottom - tn_osc.thumbnail.h
+    tn_osc.progress.top        = tn_osc.background.bottom - tn_osc.background.h
+    tn_osc.progress.mid        = tn_osc.progress.top + tn_osc.progress.h * 0.5
+    tn_osc.background.rotation = -1
 end
 
 local function set_thumbnail_below(offset)
-	local tn_osc = tn_osc
-	tn_osc.background.top      = tn_osc.position.y + offset + tn_osc.spacer.top
-	tn_osc.thumbnail.top       = tn_osc.background.top
-	tn_osc.progress.top        = tn_osc.background.top + tn_osc.thumbnail.h + tn_osc.spacer.y
-	tn_osc.progress.mid        = tn_osc.progress.top + tn_osc.progress.h * 0.5
-	tn_osc.background.rotation = 1
+    local tn_osc = tn_osc
+    tn_osc.background.top      = tn_osc.position.y + offset + tn_osc.spacer.top
+    tn_osc.thumbnail.top       = tn_osc.background.top
+    tn_osc.progress.top        = tn_osc.background.top + tn_osc.thumbnail.h + tn_osc.spacer.y
+    tn_osc.progress.mid        = tn_osc.progress.top + tn_osc.progress.h * 0.5
+    tn_osc.background.rotation = 1
 end
 
 local function set_mini_above() tn_osc.mini.y = (tn_osc.background.top    - 12 * tn_osc.osc_scale.y) end
 local function set_mini_below() tn_osc.mini.y = (tn_osc.background.bottom + 12 * tn_osc.osc_scale.y) end
 
 local set_thumbnail_layout = {
-	topbar    = function()	tn_osc.spacer.top   = 0.25
-							set_thumbnail_below(38.75)
-							set_mini_above() end,
-	bottombar = function()	tn_osc.spacer.bottom = 0.25
-							set_thumbnail_above(38.75)
-							set_mini_below() end,
-	box       = function()	set_thumbnail_above(15)
-							set_mini_above() end,
-	slimbox   = function()	set_thumbnail_above(12)
-							set_mini_above() end,
+    topbar    = function()	tn_osc.spacer.top   = 0.25
+                            set_thumbnail_below(38.75)
+                            set_mini_above() end,
+    bottombar = function()	tn_osc.spacer.bottom = 0.25
+                            set_thumbnail_above(38.75)
+                            set_mini_below() end,
+    box       = function()	set_thumbnail_above(15)
+                            set_mini_above() end,
+    slimbox   = function()	set_thumbnail_above(12)
+                            set_mini_above() end,
     modernx   = function()  set_thumbnail_above(20)
                             set_mini_below() end,
 }
 
 local function update_tn_osc_params(seek_y)
-	local tn_state, tn_osc_stats, tn_osc, tn_style, tn_style_format = tn_state, tn_osc_stats, tn_osc, tn_style, tn_style_format
-	tn_osc.scale.x, tn_osc.scale.y   = get_virt_scale_factor()
-	tn_osc.osd.w, tn_osc.osd.h       = mp.get_osd_size()
-	tn_osc.cursor.x, tn_osc.cursor.y = get_virt_mouse_pos()
-	tn_osc.position.y                = seek_y
+    local tn_state, tn_osc_stats, tn_osc, tn_style, tn_style_format = tn_state, tn_osc_stats, tn_osc, tn_style, tn_style_format
+    tn_osc.scale.x, tn_osc.scale.y   = get_virt_scale_factor()
+    tn_osc.osd.w, tn_osc.osd.h       = mp.get_osd_size()
+    tn_osc.cursor.x, tn_osc.cursor.y = get_virt_mouse_pos()
+    tn_osc.position.y                = seek_y
 
-	local osc_changed = false
-	if     tn_osc.scale.x_last ~= tn_osc.scale.x or tn_osc.scale.y_last ~= tn_osc.scale.y
-		or tn_osc.w_last       ~= tn_state.width or tn_osc.h_last       ~= tn_state.height
-		or tn_osc.osd.w_last   ~= tn_osc.osd.w   or tn_osc.osd.h_last   ~= tn_osc.osd.h
-	then
-		tn_osc.scale.x_last, tn_osc.scale.y_last = tn_osc.scale.x, tn_osc.scale.y
-		tn_osc.w_last, tn_osc.h_last             = tn_state.width, tn_state.height
-		tn_osc.osd.w_last, tn_osc.osd.h_last     = tn_osc.osd.w, tn_osc.osd.h
-		osc_changed = true
-	end
+    local osc_changed = false
+    if     tn_osc.scale.x_last ~= tn_osc.scale.x or tn_osc.scale.y_last ~= tn_osc.scale.y
+        or tn_osc.w_last       ~= tn_state.width or tn_osc.h_last       ~= tn_state.height
+        or tn_osc.osd.w_last   ~= tn_osc.osd.w   or tn_osc.osd.h_last   ~= tn_osc.osd.h
+    then
+        tn_osc.scale.x_last, tn_osc.scale.y_last = tn_osc.scale.x, tn_osc.scale.y
+        tn_osc.w_last, tn_osc.h_last             = tn_state.width, tn_state.height
+        tn_osc.osd.w_last, tn_osc.osd.h_last     = tn_osc.osd.w, tn_osc.osd.h
+        osc_changed = true
+    end
 
-	if osc_changed then
-		tn_osc.osc_scale.x, tn_osc.osc_scale.y   = 1, 1
-		tn_osc.spacer.x, tn_osc.spacer.y         = tn_osc_options.spacer, tn_osc_options.spacer
-		tn_osc.font_scale.x, tn_osc.font_scale.y = 100, 100
-		tn_osc.progress.h                        = (16 + tn_osc_options.spacer)
-		if not user_opts.vidscale then
-			tn_osc.osc_scale.x  = tn_osc.scale.x     * tn_osc_options.scale
-			tn_osc.osc_scale.y  = tn_osc.scale.y     * tn_osc_options.scale
-			tn_osc.spacer.x     = tn_osc.osc_scale.x * tn_osc.spacer.x
-			tn_osc.spacer.y     = tn_osc.osc_scale.y * tn_osc.spacer.y
-			tn_osc.font_scale.x = tn_osc.osc_scale.x * tn_osc.font_scale.x
-			tn_osc.font_scale.y = tn_osc.osc_scale.y * tn_osc.font_scale.y
-			tn_osc.progress.h   = tn_osc.osc_scale.y * tn_osc.progress.h
-		end
-		tn_osc.spacer.top, tn_osc.spacer.bottom  = tn_osc.spacer.y, tn_osc.spacer.y
-		tn_osc.thumbnail.w, tn_osc.thumbnail.h   = tn_state.width * tn_osc.scale.x, tn_state.height * tn_osc.scale.y
-		tn_osc.osd.w_scaled, tn_osc.osd.h_scaled = tn_osc.osd.w * tn_osc.scale.x, tn_osc.osd.h * tn_osc.scale.y
-		tn_style.spinner                         = (tn_style_format.spinner):format(min(tn_osc.thumbnail.w, tn_osc.thumbnail.h) * 0.6667, tn_osc.font_scale.x, tn_osc.font_scale.y)
-		tn_style.closest_index                   = (tn_style_format.closest_index):format(tn_palette.white, tn_palette.alpha_black, tn_palette.black, tn_palette.alpha_black, -1 * tn_osc.scale.x, -1 * tn_osc.scale.y)
-		if tn_osc_stats.percent < 1 then
-			tn_style.progress_text = (tn_style_format.progress_text):format(tn_palette.white, tn_palette.black, tn_palette.alpha_opaque, tn_palette.alpha_black, tn_osc.font_scale.x, tn_osc.font_scale.y, 2 * tn_osc.scale.x, 2 * tn_osc.scale.y)
-			tn_style.progress_mini = (tn_style_format.progress_mini):format(tn_palette.white, tn_palette.alpha_opaque, tn_osc.font_scale.x, tn_osc.font_scale.y)
-		end
-	end
+    if osc_changed then
+        tn_osc.osc_scale.x, tn_osc.osc_scale.y   = 1, 1
+        tn_osc.spacer.x, tn_osc.spacer.y         = tn_osc_options.spacer, tn_osc_options.spacer
+        tn_osc.font_scale.x, tn_osc.font_scale.y = 100, 100
+        tn_osc.progress.h                        = (16 + tn_osc_options.spacer)
+        if not user_opts.vidscale then
+            tn_osc.osc_scale.x  = tn_osc.scale.x     * tn_osc_options.scale
+            tn_osc.osc_scale.y  = tn_osc.scale.y     * tn_osc_options.scale
+            tn_osc.spacer.x     = tn_osc.osc_scale.x * tn_osc.spacer.x
+            tn_osc.spacer.y     = tn_osc.osc_scale.y * tn_osc.spacer.y
+            tn_osc.font_scale.x = tn_osc.osc_scale.x * tn_osc.font_scale.x
+            tn_osc.font_scale.y = tn_osc.osc_scale.y * tn_osc.font_scale.y
+            tn_osc.progress.h   = tn_osc.osc_scale.y * tn_osc.progress.h
+        end
+        tn_osc.spacer.top, tn_osc.spacer.bottom  = tn_osc.spacer.y, tn_osc.spacer.y
+        tn_osc.thumbnail.w, tn_osc.thumbnail.h   = tn_state.width * tn_osc.scale.x, tn_state.height * tn_osc.scale.y
+        tn_osc.osd.w_scaled, tn_osc.osd.h_scaled = tn_osc.osd.w * tn_osc.scale.x, tn_osc.osd.h * tn_osc.scale.y
+        tn_style.spinner                         = (tn_style_format.spinner):format(min(tn_osc.thumbnail.w, tn_osc.thumbnail.h) * 0.6667, tn_osc.font_scale.x, tn_osc.font_scale.y)
+        tn_style.closest_index                   = (tn_style_format.closest_index):format(tn_palette.white, tn_palette.alpha_black, tn_palette.black, tn_palette.alpha_black, -1 * tn_osc.scale.x, -1 * tn_osc.scale.y)
+        if tn_osc_stats.percent < 1 then
+            tn_style.progress_text = (tn_style_format.progress_text):format(tn_palette.white, tn_palette.black, tn_palette.alpha_opaque, tn_palette.alpha_black, tn_osc.font_scale.x, tn_osc.font_scale.y, 2 * tn_osc.scale.x, 2 * tn_osc.scale.y)
+            tn_style.progress_mini = (tn_style_format.progress_mini):format(tn_palette.white, tn_palette.alpha_opaque, tn_osc.font_scale.x, tn_osc.font_scale.y)
+        end
+    end
 
-	if not tn_osc.position.y then return end
-	if (osc_changed or tn_osc.cursor.x_last ~= tn_osc.cursor.x) and tn_osc.osd.w_scaled >= (tn_osc.thumbnail.w + 2 * tn_osc.spacer.x) then
-		tn_osc.cursor.x_last  = tn_osc.cursor.x
-		if tn_osc_options.centered then
-			tn_osc.position.x = tn_osc.osd.w_scaled * 0.5
-		else
-			local limit_left  = tn_osc.spacer.x + tn_osc.thumbnail.w * 0.5
-			local limit_right = tn_osc.osd.w_scaled - limit_left
-			tn_osc.position.x = min(max(tn_osc.cursor.x, limit_left), limit_right)
-		end
-		tn_osc.thumbnail.left, tn_osc.thumbnail.right = tn_osc.position.x - tn_osc.thumbnail.w * 0.5, tn_osc.position.x + tn_osc.thumbnail.w * 0.5
-		tn_osc.mini.x = tn_osc.thumbnail.right - 6 * tn_osc.osc_scale.x
-	end
+    if not tn_osc.position.y then return end
+    if (osc_changed or tn_osc.cursor.x_last ~= tn_osc.cursor.x) and tn_osc.osd.w_scaled >= (tn_osc.thumbnail.w + 2 * tn_osc.spacer.x) then
+        tn_osc.cursor.x_last  = tn_osc.cursor.x
+        if tn_osc_options.centered then
+            tn_osc.position.x = tn_osc.osd.w_scaled * 0.5
+        else
+            local limit_left  = tn_osc.spacer.x + tn_osc.thumbnail.w * 0.5
+            local limit_right = tn_osc.osd.w_scaled - limit_left
+            tn_osc.position.x = min(max(tn_osc.cursor.x, limit_left), limit_right)
+        end
+        tn_osc.thumbnail.left, tn_osc.thumbnail.right = tn_osc.position.x - tn_osc.thumbnail.w * 0.5, tn_osc.position.x + tn_osc.thumbnail.w * 0.5
+        tn_osc.mini.x = tn_osc.thumbnail.right - 6 * tn_osc.osc_scale.x
+    end
 
-	if (osc_changed or tn_osc.display_progress.last ~= tn_osc.display_progress.current) then
-		tn_osc.display_progress.last = tn_osc.display_progress.current
-		tn_osc.background.h          = tn_osc.thumbnail.h + (tn_osc.display_progress.current and (tn_osc.progress.h + tn_osc.spacer.y) or 0)
-		set_thumbnail_layout[user_opts.layout]()
-	end
+    if (osc_changed or tn_osc.display_progress.last ~= tn_osc.display_progress.current) then
+        tn_osc.display_progress.last = tn_osc.display_progress.current
+        tn_osc.background.h          = tn_osc.thumbnail.h + (tn_osc.display_progress.current and (tn_osc.progress.h + tn_osc.spacer.y) or 0)
+        set_thumbnail_layout[user_opts.layout]()
+    end
 end
 
 local function find_closest(seek_index, round_up)
-	local tn_state, tn_thumbnails_indexed, tn_thumbnails_ready = tn_state, tn_thumbnails_indexed, tn_thumbnails_ready
-	if not (tn_thumbnails_indexed and tn_thumbnails_ready) then return nil, nil end
-	local time_index = floor(seek_index * tn_state.delta)
-	if tn_thumbnails_ready[time_index] then return seek_index + 1, tn_thumbnails_indexed[time_index] end
-	local direction, index = round_up and 1 or -1
-	for i = 1, tn_osc_stats.total_expected do
-		index        = seek_index + (i * direction)
-		time_index   = floor(index * tn_state.delta)
-		if tn_thumbnails_ready[time_index] then return index + 1, tn_thumbnails_indexed[time_index] end
-		index        = seek_index + (i * -direction)
-		time_index   = floor(index * tn_state.delta)
-		if tn_thumbnails_ready[time_index] then return index + 1, tn_thumbnails_indexed[time_index] end
-	end
-	return nil, nil
+    local tn_state, tn_thumbnails_indexed, tn_thumbnails_ready = tn_state, tn_thumbnails_indexed, tn_thumbnails_ready
+    if not (tn_thumbnails_indexed and tn_thumbnails_ready) then return nil, nil end
+    local time_index = floor(seek_index * tn_state.delta)
+    if tn_thumbnails_ready[time_index] then return seek_index + 1, tn_thumbnails_indexed[time_index] end
+    local direction, index = round_up and 1 or -1
+    for i = 1, tn_osc_stats.total_expected do
+        index        = seek_index + (i * direction)
+        time_index   = floor(index * tn_state.delta)
+        if tn_thumbnails_ready[time_index] then return index + 1, tn_thumbnails_indexed[time_index] end
+        index        = seek_index + (i * -direction)
+        time_index   = floor(index * tn_state.delta)
+        if tn_thumbnails_ready[time_index] then return index + 1, tn_thumbnails_indexed[time_index] end
+    end
+    return nil, nil
 end
 
 local draw_cmd = { name = "overlay-add",    id = 9, offset = 0, fmt = "bgra" }
 local hide_cmd = { name = "overlay-remove", id = 9}
 
 local function draw_thumbnail(x, y, path)
-	draw_cmd.x = x
-	draw_cmd.y = y
-	draw_cmd.file = path
-	mp.command_native(draw_cmd)
-	tn_osc.thumbnail.visible = true
+    draw_cmd.x = x
+    draw_cmd.y = y
+    draw_cmd.file = path
+    mp.command_native(draw_cmd)
+    tn_osc.thumbnail.visible = true
 end
 
 local function hide_thumbnail()
-	if tn_osc and tn_osc.thumbnail and tn_osc.thumbnail.visible then
-		mp.command_native(hide_cmd)
-		tn_osc.thumbnail.visible = false
-	end
+    if tn_osc and tn_osc.thumbnail and tn_osc.thumbnail.visible then
+        mp.command_native(hide_cmd)
+        tn_osc.thumbnail.visible = false
+    end
 end
 
 local function show_thumbnail(seek_percent)
-	if not seek_percent then return nil, nil end
-	local scale, thumbnail, total_expected, ready = tn_osc.scale, tn_osc.thumbnail, tn_osc_stats.total_expected, tn_osc_stats.ready
-	local seek = seek_percent * (total_expected - 1)
-	local seek_index = floor(seek + 0.5)
-	local closest_index, path = thumbnail.closest_index_last, thumbnail.path_last
-	if     thumbnail.seek_index_last     ~= seek_index
-		or thumbnail.ready_last          ~= ready
-		or thumbnail.total_expected_last ~= tn_osc_stats.total_expected
-	then
-		closest_index, path = find_closest(seek_index, seek_index < seek)
-		thumbnail.closest_index_last, thumbnail.total_expected_last, thumbnail.ready_last, thumbnail.seek_index_last = closest_index, total_expected, ready, seek_index
-	end
-	local x, y = floor((thumbnail.left or 0) / scale.x + 0.5), floor((thumbnail.top or 0) / scale.y + 0.5)
-	if path and not (thumbnail.visible and thumbnail.x_last == x and thumbnail.y_last == y and thumbnail.path_last == path) then
-		thumbnail.x_last, thumbnail.y_last, thumbnail.path_last  = x, y, path
-		draw_thumbnail(x, y, path)
-	end
-	return closest_index, path
+    if not seek_percent then return nil, nil end
+    local scale, thumbnail, total_expected, ready = tn_osc.scale, tn_osc.thumbnail, tn_osc_stats.total_expected, tn_osc_stats.ready
+    local seek = seek_percent * (total_expected - 1)
+    local seek_index = floor(seek + 0.5)
+    local closest_index, path = thumbnail.closest_index_last, thumbnail.path_last
+    if     thumbnail.seek_index_last     ~= seek_index
+        or thumbnail.ready_last          ~= ready
+        or thumbnail.total_expected_last ~= tn_osc_stats.total_expected
+    then
+        closest_index, path = find_closest(seek_index, seek_index < seek)
+        thumbnail.closest_index_last, thumbnail.total_expected_last, thumbnail.ready_last, thumbnail.seek_index_last = closest_index, total_expected, ready, seek_index
+    end
+    local x, y = floor((thumbnail.left or 0) / scale.x + 0.5), floor((thumbnail.top or 0) / scale.y + 0.5)
+    if path and not (thumbnail.visible and thumbnail.x_last == x and thumbnail.y_last == y and thumbnail.path_last == path) then
+        thumbnail.x_last, thumbnail.y_last, thumbnail.path_last  = x, y, path
+        draw_thumbnail(x, y, path)
+    end
+    return closest_index, path
 end
 
 local function ass_new(ass, x, y, align, style, text)
-	ass:new_event()
-	ass:pos(x, y)
-	if align then ass:an(align)     end
-	if style then ass:append(style) end
-	if text  then ass:append(text)  end
+    ass:new_event()
+    ass:pos(x, y)
+    if align then ass:an(align)     end
+    if style then ass:append(style) end
+    if text  then ass:append(text)  end
 end
 
 local function ass_rect(ass, x1, y1, x2, y2)
-	ass:draw_start()
-	ass:rect_cw(x1, y1, x2, y2)
-	ass:draw_stop()
+    ass:draw_start()
+    ass:rect_cw(x1, y1, x2, y2)
+    ass:draw_stop()
 end
 
 local draw_progress = {
-	[message.queued]     = function(ass, index, block_w, block_h) ass:rect_cw((index - 1) * block_w,             0, index * block_w, block_h) end,
-	[message.processing] = function(ass, index, block_w, block_h) ass:rect_cw((index - 1) * block_w, block_h * 0.2, index * block_w, block_h * 0.8) end,
-	[message.failed]     = function(ass, index, block_w, block_h) ass:rect_cw((index - 1) * block_w, block_h * 0.4, index * block_w, block_h * 0.6) end,
+    [message.queued]     = function(ass, index, block_w, block_h) ass:rect_cw((index - 1) * block_w,             0, index * block_w, block_h) end,
+    [message.processing] = function(ass, index, block_w, block_h) ass:rect_cw((index - 1) * block_w, block_h * 0.2, index * block_w, block_h * 0.8) end,
+    [message.failed]     = function(ass, index, block_w, block_h) ass:rect_cw((index - 1) * block_w, block_h * 0.4, index * block_w, block_h * 0.6) end,
 }
 
 local function display_tn_osc(seek_y, seek_percent, ass)
-	if not (seek_y and seek_percent and ass and tn_state and tn_osc_stats and tn_osc_options and tn_state.width and tn_state.height and tn_state.duration and tn_state.cache_dir) or not tn_osc_options.visible then hide_thumbnail() return end
+    if not (seek_y and seek_percent and ass and tn_state and tn_osc_stats and tn_osc_options and tn_state.width and tn_state.height and tn_state.duration and tn_state.cache_dir) or not tn_osc_options.visible then hide_thumbnail() return end
 
-	update_tn_osc_params(seek_y)
-	local tn_osc_stats, tn_osc, tn_style, tn_style_format, ass_new, ass_rect, seek_percent = tn_osc_stats, tn_osc, tn_style, tn_style_format, ass_new, ass_rect, seek_percent * 0.01
-	local closest_index, path = show_thumbnail(seek_percent)
+    update_tn_osc_params(seek_y)
+    local tn_osc_stats, tn_osc, tn_style, tn_style_format, ass_new, ass_rect, seek_percent = tn_osc_stats, tn_osc, tn_style, tn_style_format, ass_new, ass_rect, seek_percent * 0.01
+    local closest_index, path = show_thumbnail(seek_percent)
 
-	-- Background
-	ass_new(ass, tn_osc.thumbnail.left, tn_osc.background.top, 7, tn_style.background)
-	ass_rect(ass, -tn_osc.spacer.x, -tn_osc.spacer.top, tn_osc.thumbnail.w + tn_osc.spacer.x, tn_osc.background.h + tn_osc.spacer.bottom)
+    -- Background
+    ass_new(ass, tn_osc.thumbnail.left, tn_osc.background.top, 7, tn_style.background)
+    ass_rect(ass, -tn_osc.spacer.x, -tn_osc.spacer.top, tn_osc.thumbnail.w + tn_osc.spacer.x, tn_osc.background.h + tn_osc.spacer.bottom)
 
-	local spinner_color, spinner_alpha = tn_palette.white, tn_palette.alpha_white
-	if not path then
-		ass_new(ass, tn_osc.thumbnail.left, tn_osc.thumbnail.top, 7, tn_style.subbackground)
-		ass_rect(ass, 0, 0, tn_osc.thumbnail.w, tn_osc.thumbnail.h)
-		spinner_color, spinner_alpha = tn_palette.black, tn_palette.alpha_black
-	end
-	ass_new(ass, tn_osc.position.x, tn_osc.thumbnail.top + tn_osc.thumbnail.h * 0.5, 5, tn_style.spinner .. (tn_style_format.spinner2):format(spinner_color, spinner_alpha, tn_osc.background.rotation * seek_percent * 1080), tn_osc.background.text)
+    local spinner_color, spinner_alpha = tn_palette.white, tn_palette.alpha_white
+    if not path then
+        ass_new(ass, tn_osc.thumbnail.left, tn_osc.thumbnail.top, 7, tn_style.subbackground)
+        ass_rect(ass, 0, 0, tn_osc.thumbnail.w, tn_osc.thumbnail.h)
+        spinner_color, spinner_alpha = tn_palette.black, tn_palette.alpha_black
+    end
+    ass_new(ass, tn_osc.position.x, tn_osc.thumbnail.top + tn_osc.thumbnail.h * 0.5, 5, tn_style.spinner .. (tn_style_format.spinner2):format(spinner_color, spinner_alpha, tn_osc.background.rotation * seek_percent * 1080), tn_osc.background.text)
 
-	-- Mini Progress Spinner
-	if tn_osc.display_progress.current ~= nil and not tn_osc.display_progress.current and tn_osc_stats.percent < 1 then
-		ass_new(ass, tn_osc.mini.x, tn_osc.mini.y, 5, tn_style.progress_mini .. (tn_style_format.progress_mini2):format(tn_osc_stats.percent * -360 + 90), tn_osc.mini.text)
-	end
+    -- Mini Progress Spinner
+    if tn_osc.display_progress.current ~= nil and not tn_osc.display_progress.current and tn_osc_stats.percent < 1 then
+        ass_new(ass, tn_osc.mini.x, tn_osc.mini.y, 5, tn_style.progress_mini .. (tn_style_format.progress_mini2):format(tn_osc_stats.percent * -360 + 90), tn_osc.mini.text)
+    end
 
-	-- Progress Bar
-	if tn_osc.display_progress.current then
-		local block_w, index = tn_osc_stats.total_expected > 0 and tn_state.width * tn_osc.scale.y / tn_osc_stats.total_expected or 0, 0
-		if tn_thumbnails_indexed and block_w > 0 then
-			-- Loading bar
-			ass_new(ass, tn_osc.thumbnail.left, tn_osc.progress.top, 7, tn_style.progress_block)
-			ass:draw_start()
-			for time_index, status in pairs(tn_thumbnails_indexed) do
-				index = floor(time_index / tn_state.delta) + 1
-				if index ~= closest_index and not tn_thumbnails_ready[time_index] and index <= tn_osc_stats.total_expected and draw_progress[status] ~= nil then
-					draw_progress[status](ass, index, block_w, tn_osc.progress.h)
-				end
-			end
-			ass:draw_stop()
+    -- Progress Bar
+    if tn_osc.display_progress.current then
+        local block_w, index = tn_osc_stats.total_expected > 0 and tn_state.width * tn_osc.scale.y / tn_osc_stats.total_expected or 0, 0
+        if tn_thumbnails_indexed and block_w > 0 then
+            -- Loading bar
+            ass_new(ass, tn_osc.thumbnail.left, tn_osc.progress.top, 7, tn_style.progress_block)
+            ass:draw_start()
+            for time_index, status in pairs(tn_thumbnails_indexed) do
+                index = floor(time_index / tn_state.delta) + 1
+                if index ~= closest_index and not tn_thumbnails_ready[time_index] and index <= tn_osc_stats.total_expected and draw_progress[status] ~= nil then
+                    draw_progress[status](ass, index, block_w, tn_osc.progress.h)
+                end
+            end
+            ass:draw_stop()
 
-			if closest_index and closest_index <= tn_osc_stats.total_expected then
-				ass_new(ass, tn_osc.thumbnail.left, tn_osc.progress.top, 7, tn_style.closest_index)
-				ass_rect(ass, (closest_index - 1) * block_w, 0, closest_index * block_w, tn_osc.progress.h)
-			end
-		end
+            if closest_index and closest_index <= tn_osc_stats.total_expected then
+                ass_new(ass, tn_osc.thumbnail.left, tn_osc.progress.top, 7, tn_style.closest_index)
+                ass_rect(ass, (closest_index - 1) * block_w, 0, closest_index * block_w, tn_osc.progress.h)
+            end
+        end
 
-		-- Text: Timer
-		ass_new(ass, tn_osc.thumbnail.left + 3 * tn_osc.osc_scale.y, tn_osc.progress.mid, 4, tn_style.progress_text, (tn_style_format.text_timer):format(tn_osc_stats.timer))
+        -- Text: Timer
+        ass_new(ass, tn_osc.thumbnail.left + 3 * tn_osc.osc_scale.y, tn_osc.progress.mid, 4, tn_style.progress_text, (tn_style_format.text_timer):format(tn_osc_stats.timer))
 
-		-- Text: Number or Index of Thumbnail
-		local temp = tn_osc_stats.percent < 1 and tn_osc_stats.ready or closest_index
-		local processing = tn_osc_stats.processing > 0 and (tn_style_format.text_progress2):format(tn_osc_stats.processing) or ""
-		ass_new(ass, tn_osc.position.x, tn_osc.progress.mid, 5, tn_style.progress_text, (tn_style_format.text_progress):format(temp and temp or 0, tn_osc_stats.total_expected) .. processing)
+        -- Text: Number or Index of Thumbnail
+        local temp = tn_osc_stats.percent < 1 and tn_osc_stats.ready or closest_index
+        local processing = tn_osc_stats.processing > 0 and (tn_style_format.text_progress2):format(tn_osc_stats.processing) or ""
+        ass_new(ass, tn_osc.position.x, tn_osc.progress.mid, 5, tn_style.progress_text, (tn_style_format.text_progress):format(temp and temp or 0, tn_osc_stats.total_expected) .. processing)
 
-		-- Text: Percentage
-		ass_new(ass, tn_osc.thumbnail.right - 3 * tn_osc.osc_scale.y, tn_osc.progress.mid, 6, tn_style.progress_text, (tn_style_format.text_percent):format(min(100, tn_osc_stats.percent * 100)))
-	end
+        -- Text: Percentage
+        ass_new(ass, tn_osc.thumbnail.right - 3 * tn_osc.osc_scale.y, tn_osc.progress.mid, 6, tn_style.progress_text, (tn_style_format.text_percent):format(min(100, tn_osc_stats.percent * 100)))
+    end
 end
 
 
@@ -464,52 +464,52 @@ end
 -- Listeners --
 ---------------
 mp.register_script_message(message.osc.reset, function()
-	hide_thumbnail()
-	reset_all()
+    hide_thumbnail()
+    reset_all()
 end)
 
 local text_progress_format = { two_digits = "%.2d/%.2d", three_digits = "%.3d/%.3d" }
 
 mp.register_script_message(message.osc.update, function(json)
-	local new_data = parse_json(json)
-	if not new_data then return end
-	if new_data.state then
-		tn_state = new_data.state
-		if tn_state.is_rotated then tn_state.width, tn_state.height = tn_state.height, tn_state.width end
-		draw_cmd.w = tn_state.width
-		draw_cmd.h = tn_state.height
-		draw_cmd.stride = tn_state.width * 4
-	end
-	if new_data.osc_options then tn_osc_options = new_data.osc_options end
-	if new_data.osc_stats then
-		tn_osc_stats = new_data.osc_stats
-		if tn_osc_options and tn_osc_options.show_progress then
-			if     tn_osc_options.show_progress == 0 then tn_osc.display_progress.current = false
-			elseif tn_osc_options.show_progress == 1 then tn_osc.display_progress.current = tn_osc_stats.percent < 1
-			else                                          tn_osc.display_progress.current = true end
-		end
-		tn_style_format.text_progress = tn_osc_stats.total > 99 and text_progress_format.three_digits or text_progress_format.two_digits
-		if tn_osc_stats.percent >= 1 then mp.command_native({"script-message", message.osc.finish}) end
-	end
-	if new_data.thumbnails and tn_state then
-		local index, ready
-		for time_string, status in pairs(new_data.thumbnails) do
-			index, ready = tonumber(time_string), (status == message.ready)
-			tn_thumbnails_indexed[index] = ready and join_paths(tn_state.cache_dir, time_string) .. tn_state.cache_extension or status
-			tn_thumbnails_ready[index]   = ready
-		end
-	end
-	request_tick()
+    local new_data = parse_json(json)
+    if not new_data then return end
+    if new_data.state then
+        tn_state = new_data.state
+        if tn_state.is_rotated then tn_state.width, tn_state.height = tn_state.height, tn_state.width end
+        draw_cmd.w = tn_state.width
+        draw_cmd.h = tn_state.height
+        draw_cmd.stride = tn_state.width * 4
+    end
+    if new_data.osc_options then tn_osc_options = new_data.osc_options end
+    if new_data.osc_stats then
+        tn_osc_stats = new_data.osc_stats
+        if tn_osc_options and tn_osc_options.show_progress then
+            if     tn_osc_options.show_progress == 0 then tn_osc.display_progress.current = false
+            elseif tn_osc_options.show_progress == 1 then tn_osc.display_progress.current = tn_osc_stats.percent < 1
+            else                                          tn_osc.display_progress.current = true end
+        end
+        tn_style_format.text_progress = tn_osc_stats.total > 99 and text_progress_format.three_digits or text_progress_format.two_digits
+        if tn_osc_stats.percent >= 1 then mp.command_native({"script-message", message.osc.finish}) end
+    end
+    if new_data.thumbnails and tn_state then
+        local index, ready
+        for time_string, status in pairs(new_data.thumbnails) do
+            index, ready = tonumber(time_string), (status == message.ready)
+            tn_thumbnails_indexed[index] = ready and join_paths(tn_state.cache_dir, time_string) .. tn_state.cache_extension or status
+            tn_thumbnails_ready[index]   = ready
+        end
+    end
+    request_tick()
 end)
 
 mp.register_script_message(message.debug, function()
-	msg.info("Thumbnailer OSC Internal States:")
-	msg.info("tn_state:", tn_state and utils.to_string(tn_state) or "nil")
-	msg.info("tn_thumbnails_indexed:", tn_thumbnails_indexed and utils.to_string(tn_thumbnails_indexed) or "nil")
-	msg.info("tn_thumbnails_ready:", tn_thumbnails_ready and utils.to_string(tn_thumbnails_ready) or "nil")
-	msg.info("tn_osc_options:", tn_osc_options and utils.to_string(tn_osc_options) or "nil")
-	msg.info("tn_osc_stats:", tn_osc_stats and utils.to_string(tn_osc_stats) or "nil")
-	msg.info("tn_osc:", tn_osc and utils.to_string(tn_osc) or "nil")
+    msg.info("Thumbnailer OSC Internal States:")
+    msg.info("tn_state:", tn_state and utils.to_string(tn_state) or "nil")
+    msg.info("tn_thumbnails_indexed:", tn_thumbnails_indexed and utils.to_string(tn_thumbnails_indexed) or "nil")
+    msg.info("tn_thumbnails_ready:", tn_thumbnails_ready and utils.to_string(tn_thumbnails_ready) or "nil")
+    msg.info("tn_osc_options:", tn_osc_options and utils.to_string(tn_osc_options) or "nil")
+    msg.info("tn_osc_stats:", tn_osc_stats and utils.to_string(tn_osc_stats) or "nil")
+    msg.info("tn_osc:", tn_osc and utils.to_string(tn_osc) or "nil")
 end)
 
 
@@ -767,7 +767,7 @@ function ass_append_alpha(ass, alpha, modifier)
 end
 
 function ass_draw_cir_cw(ass, x, y, r)
-	ass:round_rect_cw(x-r, y-r, x+r, y+r, r)
+    ass:round_rect_cw(x-r, y-r, x+r, y+r, r)
 end
 
 function ass_draw_rr_h_cw(ass, x0, y0, x1, y1, r1, hexagon, r2)
@@ -951,15 +951,15 @@ function prepare_elements()
             --draw static slider parts
             local slider_lo = element.layout.slider
             -- calculate positions of min and max points
-			element.slider.min.ele_pos = user_opts.seekbarhandlesize * elem_geo.h / 2
-			element.slider.max.ele_pos = elem_geo.w - element.slider.min.ele_pos
+            element.slider.min.ele_pos = user_opts.seekbarhandlesize * elem_geo.h / 2
+            element.slider.max.ele_pos = elem_geo.w - element.slider.min.ele_pos
             element.slider.min.glob_pos = element.hitbox.x1 + element.slider.min.ele_pos
             element.slider.max.glob_pos = element.hitbox.x1 + element.slider.max.ele_pos
 
             static_ass:draw_start()
-			-- a hack which prepares the whole slider area to allow center placements such like an=5
-			static_ass:rect_cw(0, 0, elem_geo.w, elem_geo.h)
-			static_ass:rect_ccw(0, 0, elem_geo.w, elem_geo.h)
+            -- a hack which prepares the whole slider area to allow center placements such like an=5
+            static_ass:rect_cw(0, 0, elem_geo.w, elem_geo.h)
+            static_ass:rect_ccw(0, 0, elem_geo.w, elem_geo.h)
             -- marker nibbles
             if not (element.slider.markerF == nil) and (slider_lo.gap > 0) then
                 local markers = element.slider.markerF()
@@ -976,7 +976,7 @@ function prepare_elements()
                             --bottom
                             if (slider_lo.nibbles_bottom) then
                                 static_ass:move_to(s - 3, elem_geo.h - slider_lo.gap + 5)
-								static_ass:line_to(s, elem_geo.h - slider_lo.gap + 1)
+                                static_ass:line_to(s, elem_geo.h - slider_lo.gap + 1)
                                 static_ass:line_to(s + 3, elem_geo.h - slider_lo.gap + 5)
                             end
                         else -- draw 2x1px nibbles
@@ -1091,25 +1091,25 @@ function render_elements(master_ass)
             -- draw pos marker
             local pos = element.slider.posF()
             local seekRanges = element.slider.seekRangesF()
-			local rh = user_opts.seekbarhandlesize * elem_geo.h / 2 -- Handle radius
+            local rh = user_opts.seekbarhandlesize * elem_geo.h / 2 -- Handle radius
             local xp
 
             if pos then
                 xp = get_slider_ele_pos_for(element, pos)
-				ass_draw_cir_cw(elem_ass, xp, elem_geo.h/2, rh)
-				elem_ass:rect_cw(0, slider_lo.gap, xp, elem_geo.h - slider_lo.gap)
+                ass_draw_cir_cw(elem_ass, xp, elem_geo.h/2, rh)
+                elem_ass:rect_cw(0, slider_lo.gap, xp, elem_geo.h - slider_lo.gap)
             end
 
             if seekRanges then
-				elem_ass:draw_stop()
-				elem_ass:merge(element.style_ass)
-				ass_append_alpha(elem_ass, element.layout.alpha, user_opts.seekrangealpha)
-				elem_ass:merge(element.static_ass)
+                elem_ass:draw_stop()
+                elem_ass:merge(element.style_ass)
+                ass_append_alpha(elem_ass, element.layout.alpha, user_opts.seekrangealpha)
+                elem_ass:merge(element.static_ass)
 
                 for _,range in pairs(seekRanges) do
                     local pstart = get_slider_ele_pos_for(element, range["start"])
                     local pend = get_slider_ele_pos_for(element, range["end"])
-					elem_ass:rect_cw(pstart - rh, slider_lo.gap, pend + rh, elem_geo.h - slider_lo.gap)
+                    elem_ass:rect_cw(pstart - rh, slider_lo.gap, pend + rh, elem_geo.h - slider_lo.gap)
                 end
             end
 
@@ -1158,8 +1158,8 @@ function render_elements(master_ass)
                     elem_ass:append(tooltiplabel)
 
                     display_tn_osc(ty, sliderpos, elem_ass)
-				else
-					hide_thumbnail()
+                else
+                    hide_thumbnail()
                 end
             end
 
@@ -1191,7 +1191,7 @@ function render_elements(master_ass)
             elem_ass:append(buttontext)
 
             -- add tooltip for audio and subtitle tracks
-			if not (element.tooltipF == nil) and element.enabled then
+            if not (element.tooltipF == nil) and element.enabled then
                 if mouse_hit(element) then
                     local tooltiplabel = element.tooltipF
                     local an = 1
@@ -1199,23 +1199,23 @@ function render_elements(master_ass)
                     local tx = get_virt_mouse_pos()
 
                     if ty < osc_param.playresy / 2 then
-						ty = element.hitbox.y2
-						an = 7
-					end
+                        ty = element.hitbox.y2
+                        an = 7
+                    end
 
                     -- tooltip label
                     if type(element.tooltipF) == "function" then
-						tooltiplabel = element.tooltipF()
-					else
-						tooltiplabel = element.tooltipF
-					end
+                        tooltiplabel = element.tooltipF()
+                    else
+                        tooltiplabel = element.tooltipF
+                    end
                     elem_ass:new_event()
                     elem_ass:pos(tx, ty)
                     elem_ass:an(an)
                     elem_ass:append(element.tooltip_style)
                     elem_ass:append(tooltiplabel)
                 end
-			end
+            end
         end
 
         master_ass:merge(elem_ass)
@@ -1534,8 +1534,8 @@ layouts = function ()
 
     local osc_geo = {w, h}
 
-	osc_geo.w = osc_param.playresx
-	osc_geo.h = 180
+    osc_geo.w = osc_param.playresx
+    osc_geo.h = 180
 
     -- origin of the controllers, left/bottom corner
     local posX = 0
@@ -1559,24 +1559,24 @@ layouts = function ()
     local osc_w, osc_h=
         osc_geo.w, osc_geo.h
 
-	--
+    --
     -- Controller Background
     --
-	local lo
+    local lo
 
-	new_element("transBg", "box")
-	lo = add_layout("transBg")
-	lo.geometry = {x = posX, y = posY, an = 7, w = osc_w, h = 1}
-	lo.style = osc_styles.transBg
-	lo.layer = 10
-	lo.alpha[3] = 0
+    new_element("transBg", "box")
+    lo = add_layout("transBg")
+    lo.geometry = {x = posX, y = posY, an = 7, w = osc_w, h = 1}
+    lo.style = osc_styles.transBg
+    lo.layer = 10
+    lo.alpha[3] = 0
 
     --
     -- Alignment
     --
-	local refX = osc_w / 2
-	local refY = posY
-	local geo
+    local refX = osc_w / 2
+    local refY = posY
+    local geo
 
     --
     -- Seekbar
@@ -1591,7 +1591,7 @@ layouts = function ()
 
     lo = add_layout("seekbar")
     lo.geometry = {x = refX, y = refY - 100 , an = 5, w = osc_geo.w - 50, h = 16}
-	lo.style = osc_styles.seekbarFg
+    lo.style = osc_styles.seekbarFg
     lo.slider.gap = 7
     lo.slider.tooltip_style = osc_styles.tooltip
     lo.slider.tooltip_an = 2
@@ -1601,15 +1601,15 @@ layouts = function ()
     lo = add_layout("title")
     lo.geometry = {x = 25, y = refY - 132, an = 1, w = osc_geo.w - 50, h = 48}
     lo.style = string.format("%s{\\clip(%f,%f,%f,%f)}", osc_styles.vidTitle,
-								geo.x, geo.y - geo.h, geo.x + geo.w , geo.y)
-	lo.alpha[3] = 0
+                                geo.x, geo.y - geo.h, geo.x + geo.w , geo.y)
+    lo.alpha[3] = 0
 
-	-- Buttons
+    -- Buttons
     lo = add_layout("pl_prev")
     lo.geometry = {x = refX - 120, y = refY - 40 , an = 5, w = 30, h = 24}
     lo.style = osc_styles.mediumButtons
 
-	lo = add_layout("skipback")
+    lo = add_layout("skipback")
     lo.geometry = {x = refX - 60, y = refY - 40 , an = 5, w = 30, h = 24}
     lo.style = osc_styles.mediumButtons
 
@@ -1646,7 +1646,7 @@ layouts = function ()
 
     -- Audio tracks
     lo = add_layout("cy_audio")
-	lo.geometry = {x = 87, y = refY - 40, an = 5, w = 24, h = 24}
+    lo.geometry = {x = 87, y = refY - 40, an = 5, w = 24, h = 24}
     lo.style = osc_styles.smallButtons
 
     -- Subtitle tracks
@@ -1655,12 +1655,12 @@ layouts = function ()
     lo.style = osc_styles.smallButtons
 
     -- Toggle fullscreen
-	lo = add_layout("tog_fs")
+    lo = add_layout("tog_fs")
     lo.geometry = {x = osc_geo.w - 37, y = refY - 40, an = 5, w = 24, h = 24}
     lo.style = osc_styles.smallButtons
 
     -- Toggle info
-	lo = add_layout("tog_info")
+    lo = add_layout("tog_info")
     lo.geometry = {x = osc_geo.w - 87, y = refY - 40, an = 5, w = 24, h = 24}
     lo.style = osc_styles.smallButtons
 end
@@ -1875,21 +1875,21 @@ function osc_init()
     ne.content = "\xEF\x8A\x9E"
     ne.tooltip_style = osc_styles.tooltip
     ne.tooltipF = function ()
-		local msg = "OFF"
+        local msg = "OFF"
         if not (get_track("audio") == 0) then
             msg = ("Audio" .. " [" .. get_track("audio") .. "∕" .. #tracks_osc.audio .. "] ")
 
             local prop = mp.get_property("current-tracks/audio/lang")
             if not prop then
-				prop = "N/A"
-			end
-			msg = msg .. "(" .. prop .. ")"
+                prop = "N/A"
+            end
+            msg = msg .. "(" .. prop .. ")"
 
-			prop = mp.get_property("current-tracks/audio/title")
-			if prop then
-				msg = msg .. " " .. prop
-			end
-			return msg
+            prop = mp.get_property("current-tracks/audio/title")
+            if prop then
+                msg = msg .. " " .. prop
+            end
+            return msg
         end
         return msg
     end
@@ -1907,21 +1907,21 @@ function osc_init()
     ne.content = "\xEF\x88\x8A"
     ne.tooltip_style = osc_styles.tooltip
     ne.tooltipF = function ()
-		local msg = "OFF"
+        local msg = "OFF"
         if not (get_track("sub") == 0) then
             msg = ("Subtitle" .. " [" .. get_track("sub") .. "∕" .. #tracks_osc.sub .. "] ")
 
             local prop = mp.get_property("current-tracks/sub/lang")
             if not prop then
-				prop = "N/A"
-			end
-			msg = msg .. "(" .. prop .. ")"
+                prop = "N/A"
+            end
+            msg = msg .. "(" .. prop .. ")"
 
-			prop = mp.get_property("current-tracks/sub/title")
-			if prop then
-				msg = msg .. " " .. prop
-			end
-			return msg
+            prop = mp.get_property("current-tracks/sub/title")
+            if prop then
+                msg = msg .. " " .. prop
+            end
+            return msg
         end
         return msg
     end
@@ -2032,11 +2032,11 @@ function osc_init()
     ne = new_element("tc_left", "button")
 
     ne.content = function ()
-	if (state.tc_ms) then
-		return (mp.get_property_osd("playback-time/full"))
-	else
-		return (mp.get_property_osd("playback-time"))
-	end
+    if (state.tc_ms) then
+        return (mp.get_property_osd("playback-time/full"))
+    else
+        return (mp.get_property_osd("playback-time"))
+    end
     end
     ne.eventresponder["mbtn_left_up"] = function ()
         state.tc_ms = not state.tc_ms
@@ -2174,14 +2174,14 @@ end
 function pause_state(name, enabled)
     state.paused = enabled
     if user_opts.showonpause then
-		if enabled then
-			state.lastvisibility = user_opts.visibility
-			visibility_mode("always", true)
-			show_osc()
-		else
-			visibility_mode(state.lastvisibility, true)
-		end
-	end
+        if enabled then
+            state.lastvisibility = user_opts.visibility
+            visibility_mode("always", true)
+            show_osc()
+        else
+            visibility_mode(state.lastvisibility, true)
+        end
+    end
     request_tick()
 end
 
@@ -2393,7 +2393,7 @@ function render()
     if state.osc_visible then
         render_elements(ass)
     else
-    	hide_thumbnail()
+        hide_thumbnail()
     end
 
     -- submit
@@ -2764,7 +2764,7 @@ function visibility_mode(mode, no_osd)
         return
     end
 
-	user_opts.visibility = mode
+    user_opts.visibility = mode
     utils.shared_script_property_set("osc-visibility", mode)
 
     if not no_osd and tonumber(mp.get_property("osd-level")) >= 1 then
