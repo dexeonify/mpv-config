@@ -1403,7 +1403,7 @@ function add_layout(name)
 end
 
 -- Window Controls
-function window_controls(topbar)
+function window_controls()
     local wc_geo = {
         x = 0,
         y = 30 + user_opts.barmargin,
@@ -1499,11 +1499,6 @@ function window_controls(topbar)
                  get_align(1 - (2 * user_opts.deadzonesize),
                  osc_param.playresy - (wc_geo.y + (wc_geo.h / 2)), 0, 0)
     add_area("showhide_wc", wc_geo.x, sh_area_y0, wc_geo.w, sh_area_y1)
-
-    if topbar then
-        -- The title is already there as part of the top bar
-        return
-    end
 
     -- Window Title
     ne = new_element("wctitle", "button")
