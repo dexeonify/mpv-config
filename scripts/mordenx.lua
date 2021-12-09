@@ -1933,14 +1933,12 @@ function osc_init()
             return ("\xEF\x81\xA5")
         end
     end
-    ne.visible = (osc_param.playresx >= 540)
     ne.eventresponder["mbtn_left_up"] =
         function () mp.commandv("cycle", "fullscreen") end
 
     -- toggle info
     ne = new_element("tog_info", "button")
     ne.content = "\xEF\x81\x9A"
-    ne.visible = (osc_param.playresx >= 600)
     ne.eventresponder["mbtn_left_up"] =
         function () mp.commandv("script-binding", "stats/display-stats-toggle") end
 
