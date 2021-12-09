@@ -1551,8 +1551,14 @@ layouts = function ()
     -- area for active mouse input
     add_area("input", get_hitbox_coords(posX, posY, 1, osc_geo.w, osc_geo.h))
 
+    -- deadzone above OSC
+    local sh_area_y0, sh_area_y1
+    sh_area_y0 = get_align(-1 + (2*user_opts.deadzonesize),
+    posY - (osc_geo.h / 2), 0, 0)
+    sh_area_y1 = osc_param.playresy
+
     -- area for show/hide
-    add_area("showhide", 0, 0, osc_param.playresx, osc_param.playresy)
+    add_area("showhide", 0, sh_area_y0, osc_param.playresx, sh_area_y1)
 
     -- fetch values
     local osc_w, osc_h=
