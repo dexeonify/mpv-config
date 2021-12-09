@@ -1184,7 +1184,7 @@ function render_elements(master_ass)
 
             elem_ass:append(buttontext)
 
-            -- add tooltip for audio tracks
+            -- add tooltip for audio and subtitle tracks
 			if not (element.tooltipF == nil) and element.enabled then
                 if mouse_hit(element) then
                     local tooltiplabel = element.tooltipF
@@ -1589,6 +1589,14 @@ layouts = function ()
     lo.slider.tooltip_style = osc_styles.Tooltip
     lo.slider.tooltip_an = 2
 
+    -- Title
+    geo = {x = 25, y = refY - 132, an = 1, w = osc_geo.w - 50, h = 48}
+    lo = add_layout("title")
+    lo.geometry = {x = 25, y = refY - 132, an = 1, w = osc_geo.w - 50, h = 48}
+    lo.style = string.format("%s{\\clip(%f,%f,%f,%f)}", osc_styles.Title,
+								geo.x, geo.y - geo.h, geo.x + geo.w , geo.y)
+	lo.alpha[3] = 0
+
 	-- Buttons
     lo = add_layout("pl_prev")
     lo.geometry = {x = refX - 120, y = refY - 40 , an = 5, w = 30, h = 24}
@@ -1648,13 +1656,6 @@ layouts = function ()
 	lo = add_layout("tog_info")
     lo.geometry = {x = osc_geo.w - 87, y = refY - 40, an = 5, w = 24, h = 24}
     lo.style = osc_styles.Ctrl3
-
-    geo = { x = 25, y = refY - 132, an = 1, w = osc_geo.w - 50, h = 48 }
-    lo = add_layout("title")
-    lo.geometry = geo
-    lo.style = string.format("%s{\\clip(%f,%f,%f,%f)}", osc_styles.Title,
-								geo.x, geo.y - geo.h, geo.x + geo.w , geo.y)
-	lo.alpha[3] = 0
 end
 
 -- Validate string type user options
