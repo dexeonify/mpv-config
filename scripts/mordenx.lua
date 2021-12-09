@@ -529,8 +529,8 @@ local osc_styles = {
     Ctrl1 = "{\\blur0\\bord0\\1c&HFFFFFF&\\3c&HFFFFFF&\\fs28\\fnFont Awesome 5 Free Solid}",
     Ctrl2 = "{\\blur0\\bord0\\1c&HFFFFFF&\\3c&HFFFFFF&\\fs24\\fnFont Awesome 5 Free Solid}",
     Ctrl3 = "{\\blur0\\bord0\\1c&HFFFFFF&\\3c&HFFFFFF&\\fs24\\fnFont Awesome 5 Free Solid}",
-    Time = "{\\blur0\\bord0\\1c&HFFFFFF&\\3c&H000000&\\fs20}",
-    Tooltip = "{\\blur1\\bord" .. user_opts.tooltipborder .. "\\1c&HFFFFFF&\\3c&H000000&\\fs18}",
+    Time = "{\\blur0\\bord0\\1c&HFFFFFF&\\3c&H000000&\\fs22}",
+    Tooltip = "{\\blur1\\bord" .. user_opts.tooltipborder .. "\\1c&HFFFFFF&\\3c&H000000&\\fs20}",
     Title = "{\\blur1\\bord0.5\\1c&HFFFFFF&\\3c&H0\\fs32\\q2}",
     elementDown = "{\\1c&H999999&}",
     wcButtons = "{\\1c&HFFFFFF\\fs20\\fnFont Awesome 5 Free Regular}",
@@ -1576,14 +1576,14 @@ layouts = function ()
     --
     new_element("bgbar1", "box")
     lo = add_layout("bgbar1")
-    lo.geometry = {x = refX , y = refY - 96 , an = 5, w = osc_geo.w - 50, h = 2}
+    lo.geometry = {x = refX , y = refY - 100 , an = 5, w = osc_geo.w - 50, h = 2}
     lo.layer = 13
     lo.style = osc_styles.SeekbarBg
     lo.alpha[1] = 128
     lo.alpha[3] = 128
 
     lo = add_layout("seekbar")
-    lo.geometry = {x = refX, y = refY - 96 , an = 5, w = osc_geo.w - 50, h = 16}
+    lo.geometry = {x = refX, y = refY - 100 , an = 5, w = osc_geo.w - 50, h = 16}
 	lo.style = osc_styles.SeekbarFg
     lo.slider.gap = 7
     lo.slider.tooltip_style = osc_styles.Tooltip
@@ -1620,11 +1620,11 @@ layouts = function ()
 
     -- Time
     lo = add_layout("tc_left")
-    lo.geometry = {x = 25, y = refY - 84, an = 7, w = 64, h = 20}
+    lo.geometry = {x = 25, y = refY - 90, an = 7, w = 64, h = 20}
     lo.style = osc_styles.Time
 
     lo = add_layout("tc_right")
-    lo.geometry = {x = osc_geo.w - 25 , y = refY -84, an = 9, w = 64, h = 20}
+    lo.geometry = {x = osc_geo.w - 25 , y = refY -90, an = 9, w = 64, h = 20}
     lo.style = osc_styles.Time
 
     -- Cache
