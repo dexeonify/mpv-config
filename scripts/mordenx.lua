@@ -66,7 +66,7 @@ local user_opts = {
     chapters_osd = true,        -- whether to show chapters OSD on next/prev
     playlist_osd = true,        -- whether to show playlist OSD on next/prev
     chapter_fmt = "Chapter: %s", -- chapter print format for seekbar-hover. "no" to disable
-    titlefont = "sans"
+    titlefont = ""
 }
 
 -- read options from config and command-line
