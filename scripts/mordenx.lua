@@ -66,6 +66,7 @@ local user_opts = {
     chapters_osd = true,        -- whether to show chapters OSD on next/prev
     playlist_osd = true,        -- whether to show playlist OSD on next/prev
     chapter_fmt = "Chapter: %s", -- chapter print format for seekbar-hover. "no" to disable
+    titlefont = "sans"
 }
 
 -- read options from config and command-line
@@ -534,10 +535,10 @@ local osc_styles = {
 
     timecodes = "{\\blur0\\bord0\\1c&HFFFFFF&\\3c&H000000&\\fs22}",
     tooltip = "{\\blur1\\bord" .. user_opts.tooltipborder .. "\\1c&HFFFFFF&\\3c&H000000&\\fs20}",
-    vidTitle = "{\\blur1\\bord0.5\\1c&HFFFFFF&\\3c&H0\\fs32\\q2}",
+    vidTitle = "{\\blur1\\bord0.5\\1c&HFFFFFF&\\3c&H0\\fs32\\q2\\fn" .. user_opts.titlefont .. "}",
 
     wcButtons = "{\\1c&HFFFFFF\\fs20\\fnFont Awesome 5 Free Regular}",
-    wcTitle = "{\\1c&HFFFFFF\\fs24\\q2}",
+    wcTitle = "{\\1c&HFFFFFF\\fs24\\q2\\fn" .. user_opts.titlefont .. "}",
     wcBar = "{\\1c&H000000}",
 }
 
