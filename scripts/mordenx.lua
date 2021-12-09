@@ -1937,7 +1937,7 @@ function osc_init()
     ne.eventresponder["mbtn_left_up"] =
         function () mp.commandv("cycle", "fullscreen") end
 
-    -- toggle info
+    --tog_info
     ne = new_element("tog_info", "button")
     ne.content = "\xEF\x81\x9A"
     ne.eventresponder["mbtn_left_up"] =
