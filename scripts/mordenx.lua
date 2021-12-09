@@ -1554,7 +1554,7 @@ layouts = function ()
     -- deadzone above OSC
     local sh_area_y0, sh_area_y1
     sh_area_y0 = get_align(-1 + (2*user_opts.deadzonesize),
-                           PosY - (osc_geo.h / 2), 0, 0)
+                           posY - (osc_geo.h / 2), 0, 0)
     sh_area_y1 = osc_param.playresy - user_opts.barmargin
 
     -- area for show/hide
