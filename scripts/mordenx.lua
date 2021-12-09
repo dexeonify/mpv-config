@@ -1543,7 +1543,7 @@ layouts = function ()
     osc_param.areas = {} -- delete areas
 
     -- area for active mouse input
-    add_area("input", get_hitbox_coords(posX, posY, 1, osc_geo.w, 104))
+    add_area("input", get_hitbox_coords(posX, posY, 1, osc_geo.w, osc_geo.h))
 
     -- area for show/hide
     add_area("showhide", 0, 0, osc_param.playresx, osc_param.playresy)
