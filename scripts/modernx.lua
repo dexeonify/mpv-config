@@ -64,6 +64,7 @@ local user_opts = {
 
     titlefont = "",             -- font used for the title above OSC and
                                 -- in window controls bar
+    blur_intensity = 150,       -- adjust the strength of the blur
     seekbarfg_color = "E39C42", -- color for the seekbar progress and handle
     seekbarbg_color = "FFFFFF", -- color for the remaining seekbar
                                 -- do note that ASS tag's color code is used,
@@ -527,7 +528,7 @@ local osc_param = { -- calculated by osc_init()
 }
 
 local osc_styles = {
-    transBg = "{\\blur100\\bord150\\1c&H000000&\\3c&H000000&}",
+    transBg = "{\\blur100\\bord" .. user_opts.blur_intensity .. "\\1c&H000000&\\3c&H000000&}",
     seekbarBg = "{\\blur0\\bord0\\1c&H" .. user_opts.seekbarbg_color .. "&}",
     seekbarFg = "{\\blur1\\bord1\\1c&H" .. user_opts.seekbarfg_color .. "&}",
 
