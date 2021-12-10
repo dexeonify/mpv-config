@@ -6,12 +6,7 @@
 -- https://github.com/cyl0/mpv-osc-morden-x
 
 -- forked again by dexeonify
---
--- Add support for deus0ww"s thumbnailer
--- https://github.com/deus0ww/mpv-conf/blob/master/scripts/Thumbnailer.lua
---
--- TODO: Rewrite to reach parity with mpv"s default osc
--- https://github.com/mpv-player/mpv/blob/master/player/lua/osc.lua
+-- https://github.com/dexeonify/mpv-config/blob/main/scripts/modernx.lua
 
 local ipairs,loadfile,pairs,pcall,tonumber,tostring = ipairs,loadfile,pairs,pcall,tonumber,tostring
 local debug,io,math,os,string,table,utf8 = debug,io,math,os,string,table,utf8
