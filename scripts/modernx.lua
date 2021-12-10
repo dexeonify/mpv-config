@@ -1425,8 +1425,8 @@ function window_controls()
     local titlebox_right = wc_geo.w - controlbox_w
 
     if alignment == "left" then
-        controlbox_left = wc_geo.x
-        titlebox_left = wc_geo.x + controlbox_w
+        controlbox_left = wc_geo.x + 10
+        titlebox_left = wc_geo.x + controlbox_w + 10
         titlebox_right = wc_geo.w
     end
 
