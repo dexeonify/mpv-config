@@ -61,7 +61,13 @@ local user_opts = {
     chapters_osd = true,        -- whether to show chapters OSD on next/prev
     playlist_osd = true,        -- whether to show playlist OSD on next/prev
     chapter_fmt = "Chapter: %s", -- chapter print format for seekbar-hover. "no" to disable
-    titlefont = ""
+
+    titlefont = "",             -- font used for the title above OSC and
+                                -- in window controls bar
+    seekbarfg_color = "E39C42", -- color for the seekbar progress and handle
+    seekbarbg_color = "FFFFFF", -- color for the remaining seekbar
+                                -- do note that ASS tag's color code is used,
+                                -- which is BGR, instead of the standard RGB.
 }
 
 -- read options from config and command-line
@@ -522,8 +528,8 @@ local osc_param = { -- calculated by osc_init()
 
 local osc_styles = {
     transBg = "{\\blur100\\bord150\\1c&H000000&\\3c&H000000&}",
-    seekbarBg = "{\\blur0\\bord0\\1c&HFFFFFF&}",
-    seekbarFg = "{\\blur1\\bord1\\1c&HE39C42&}",
+    seekbarBg = "{\\blur0\\bord0\\1c&H" .. user_opts.seekbarbg_color .. "&}",
+    seekbarFg = "{\\blur1\\bord1\\1c&H" .. user_opts.seekbarfg_color .. "&}",
 
     elementDown = "{\\1c&H999999&}",
     bigButtons = "{\\blur0\\bord0\\1c&HFFFFFF&\\3c&HFFFFFF&\\fs28\\fnFont Awesome 5 Free Solid}",
