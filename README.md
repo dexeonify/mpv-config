@@ -28,8 +28,8 @@ This is mainly just for backup and keeping track of changes.
 
 - [modernx.lua](https://github.com/dexeonify/mpv-config/blob/main/scripts/modernx.lua):
   Another fork of [mpv-osc-morden-x](https://github.com/cyl0/mpv-osc-morden-x),
-  with added support of deus0ww's Thumbnailer.lua (see below) and porting
-  upstream fixes from mpv's [osc.lua](https://github.com/mpv-player/mpv/blob/master/player/lua/osc.lua).
+  with added support of deus0ww's Thumbnailer.lua (see below) and upstream fixes
+  ported from from mpv's [osc.lua](https://github.com/mpv-player/mpv/blob/master/player/lua/osc.lua).
 
 - [playlistmanager.lua](https://github.com/jonniek/mpv-playlistmanager):
   Create and manage playlists intuitively.
