@@ -534,15 +534,15 @@ local osc_styles = {
     seekbarFg = "{\\blur1\\bord1\\1c&H" .. user_opts.seekbarfg_color .. "&}",
 
     elementDown = "{\\1c&H999999&}",
-    bigButtons = "{\\blur0\\bord0\\1c&HFFFFFF&\\3c&HFFFFFF&\\fs28\\fnFont Awesome 5 Free Solid}",
-    mediumButtons = "{\\blur0\\bord0\\1c&HFFFFFF&\\3c&HFFFFFF&\\fs24\\fnFont Awesome 5 Free Solid}",
-    smallButtons = "{\\blur0\\bord0\\1c&HFFFFFF&\\3c&HFFFFFF&\\fs24\\fnFont Awesome 5 Free Solid}",
+    bigButtons = "{\\blur0\\bord0\\1c&HFFFFFF&\\3c&HFFFFFF&\\fs28\\fnmodernx-osc-icon}",
+    mediumButtons = "{\\blur0\\bord0\\1c&HFFFFFF&\\3c&HFFFFFF&\\fs24\\fnmodernx-osc-icon}",
+    smallButtons = "{\\blur0\\bord0\\1c&HFFFFFF&\\3c&HFFFFFF&\\fs24\\fnmodernx-osc-icon}",
 
     timecodes = "{\\blur0\\bord0\\1c&HFFFFFF&\\3c&H000000&\\fs22}",
     tooltip = "{\\blur1\\bord" .. user_opts.tooltipborder .. "\\1c&HFFFFFF&\\3c&H000000&\\fs20}",
     vidTitle = "{\\blur1\\bord0.5\\1c&HFFFFFF&\\3c&H0\\fs32\\q2\\fn" .. user_opts.titlefont .. "}",
 
-    wcButtons = "{\\1c&HFFFFFF\\fs20\\fnFont Awesome 5 Free Regular}",
+    wcButtons = "{\\1c&HFFFFFF\\fs20\\fnmodernx-osc-icon}",
     wcTitle = "{\\1c&HFFFFFF\\fs24\\q2\\fn" .. user_opts.titlefont .. "}",
     wcBar = "{\\1c&H" .. user_opts.osc_color .. "}",
 }
@@ -1460,16 +1460,16 @@ function window_controls()
 
     -- Close: 🗙
     ne = new_element("close", "button")
-    ne.content = "\xEF\x80\x8D"
+    ne.content = "\xEE\xA4\x81"
     ne.eventresponder["mbtn_left_up"] =
         function () mp.commandv("quit") end
     lo = add_layout("close")
     lo.geometry = alignment == "left" and first_geo or third_geo
-    lo.style = "{\\1c&HFFFFFF\\fs24\\fnFont Awesome 5 Free Solid}"
+    lo.style = osc_styles.wcButtons
 
     -- Minimize: 🗕
     ne = new_element("minimize", "button")
-    ne.content = "\xEF\x8B\x91"
+    ne.content = "\xEE\xA4\x84"
     ne.eventresponder["mbtn_left_up"] =
         function () mp.commandv("cycle", "window-minimized") end
     lo = add_layout("minimize")
@@ -1479,9 +1479,9 @@ function window_controls()
     -- Maximize: 🗖 /🗗
     ne = new_element("maximize", "button")
     if state.maximized or state.fullscreen then
-        ne.content = "\xEF\x8B\x92"
+        ne.content = "\xEE\xA4\x82"
     else
-        ne.content = "\xEF\x8B\x90"
+        ne.content = "\xEE\xA4\x83"
     end
     ne.eventresponder["mbtn_left_up"] =
         function ()
@@ -1763,7 +1763,7 @@ function osc_init()
     -- prev
     ne = new_element("pl_prev", "button")
 
-    ne.content = "\xEF\x81\x88"
+    ne.content = "\xEE\xA4\x94"
     ne.enabled = (pl_pos > 1) or (loop ~= "no")
     ne.eventresponder["mbtn_left_up"] =
         function ()
@@ -1780,7 +1780,7 @@ function osc_init()
     --next
     ne = new_element("pl_next", "button")
 
-    ne.content = "\xEF\x81\x91"
+    ne.content = "\xEE\xA4\x99"
     ne.enabled = (have_pl and (pl_pos < pl_count)) or (loop ~= "no")
     ne.eventresponder["mbtn_left_up"] =
         function ()
@@ -1802,9 +1802,9 @@ function osc_init()
 
     ne.content = function ()
         if mp.get_property("pause") == "yes" then
-            return ("\xEF\x81\x8B")
+            return ("\xEE\xA4\x96")
         else
-            return ("\xEF\x81\x8C")
+            return ("\xEE\xA4\x97")
         end
     end
     ne.eventresponder["mbtn_left_up"] =
@@ -1814,7 +1814,7 @@ function osc_init()
     ne = new_element("skipback", "button")
 
     ne.softrepeat = true
-    ne.content = "\xEF\x81\x8A"
+    ne.content = "\xEE\xA4\x95"
     ne.eventresponder["mbtn_left_down"] =
         function () mp.commandv("seek", -5, "relative", "keyframes") end
     ne.eventresponder["shift+mbtn_left_down"] =
@@ -1826,7 +1826,7 @@ function osc_init()
     ne = new_element("skipfrwd", "button")
 
     ne.softrepeat = true
-    ne.content = "\xEF\x81\x8E"
+    ne.content = "\xEE\xA4\x98"
     ne.eventresponder["mbtn_left_down"] =
         function () mp.commandv("seek", 10, "relative", "keyframes") end
     ne.eventresponder["shift+mbtn_left_down"] =
@@ -1875,7 +1875,7 @@ function osc_init()
     ne = new_element("cy_audio", "button")
 
     ne.enabled = (#tracks_osc.audio > 0)
-    ne.content = "\xEF\x8A\x9E"
+    ne.content = "\xEE\xA4\x89"
     ne.tooltip_style = osc_styles.tooltip
     ne.tooltipF = function ()
         local msg = "OFF"
@@ -1907,7 +1907,7 @@ function osc_init()
     ne = new_element("cy_sub", "button")
 
     ne.enabled = (#tracks_osc.sub > 0)
-    ne.content = "\xEF\x88\x8A"
+    ne.content = "\xEE\xA4\x90"
     ne.tooltip_style = osc_styles.tooltip
     ne.tooltipF = function ()
         local msg = "OFF"
@@ -1939,9 +1939,9 @@ function osc_init()
     ne = new_element("tog_fs", "button")
     ne.content = function ()
         if (state.fullscreen) then
-            return ("\xEF\x81\xA6")
+            return ("\xEE\xA4\x93")
         else
-            return ("\xEF\x81\xA5")
+            return ("\xEE\xA4\x92")
         end
     end
     ne.eventresponder["mbtn_left_up"] =
@@ -1949,7 +1949,7 @@ function osc_init()
 
     --tog_info
     ne = new_element("tog_info", "button")
-    ne.content = "\xEF\x81\x9A"
+    ne.content = "\xEE\xA4\x91"
     ne.eventresponder["mbtn_left_up"] =
         function () mp.commandv("script-binding", "stats/display-stats-toggle") end
 
@@ -2098,9 +2098,9 @@ function osc_init()
     ne.content = function()
         local volume = mp.get_property_number("volume", 0)
         local mute = mp.get_property_native("mute")
-        local volicon = {"\xEF\x80\xA6", "\xEF\x80\xA7", "\xEF\x80\xA8"}
+        local volicon = {"\xEE\xA4\x86", "\xEE\xA4\x87", "\xEE\xA4\x88"}
         if volume == 0 or mute then
-            return "\xEF\x9A\xA9"
+            return "\xEE\xA4\x85"
         else
             return volicon[math.min(3,math.ceil(volume / (100/3)))]
         end
