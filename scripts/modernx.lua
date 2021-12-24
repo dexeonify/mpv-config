@@ -1479,9 +1479,9 @@ function window_controls()
     -- Maximize: 🗖 /🗗
     ne = new_element("maximize", "button")
     if state.maximized or state.fullscreen then
-        ne.content = "\xEE\xA4\x82"
-    else
         ne.content = "\xEE\xA4\x83"
+    else
+        ne.content = "\xEE\xA4\x82"
     end
     ne.eventresponder["mbtn_left_up"] =
         function ()
