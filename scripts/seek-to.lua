@@ -95,9 +95,7 @@ function seek_to()
 end
 
 function backspace()
-    if cursor_position ~= 10 then
-        shift_cursor(true)
-    end
+    shift_cursor(true)
     if history[history_position][cursor_position] ~= 0 then
         copy_history_to_last()
         history[#history][cursor_position] = 0
