@@ -1,10 +1,4 @@
 -- Original script from https://github.com/occivink/mpv-scripts/blob/master/scripts/seek-to.lua
---
--- I've modified line 95 of this script to prevent the script from crashing
--- if you backspace at the last position.
--- Though it's more of a workaround, as I do not know Lua.
--- As a result, you can't delete the last number using backspace,
--- it has to be overwritten by pressing '0' manually.
 
 local assdraw = require 'mp.assdraw'
 local utils = require 'mp.utils'
@@ -101,8 +95,6 @@ function seek_to()
 end
 
 function backspace()
-    -- Original:
-    -- if cursor_position ~= 9 or current_time[9] == 0 then
     if cursor_position ~= 10 then
         shift_cursor(true)
     end
