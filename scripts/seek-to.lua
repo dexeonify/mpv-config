@@ -7,6 +7,7 @@
 -- it has to be overwritten by pressing '0' manually.
 
 local assdraw = require 'mp.assdraw'
+local utils = require 'mp.utils'
 local active = false
 local cursor_position = 1
 local time_scale = {60*60*10, 60*60, 60*10, 60, 10, 1, 0.1, 0.01, 0.001}
@@ -163,5 +164,28 @@ function set_inactive()
     active = false
 end
 
-mp.add_key_binding(nil, "toggle-seeker", function() if active then set_inactive() else set_active() end end)
+function paste_timestamp()
+    -- get timestamp from clipboard
+    local clipboard = utils.subprocess({
+        args = { "powershell", "-Command", "Get-Clipboard", "-Raw" },
+        playback_only = false,
+        capture_stdout = true,
+        capture_stderr = true
+    })
 
+    if not clipboard.error then
+        timestamp = clipboard.stdout
+    end
+
+    -- trim whitespace
+    timestamp = timestamp:gsub("%s+", "")
+
+    -- check for timestamp
+   if timestamp:match("%d%d:%d%d:%d%d%.%d%d%d") then
+        mp.osd_message("Timestamp pasted: " .. timestamp)
+        mp.commandv("osd-bar", "seek", timestamp, "absolute")
+    end
+end
+
+mp.add_key_binding(nil, "toggle-seeker", function() if active then set_inactive() else set_active() end end)
+mp.add_key_binding("Ctrl+v", "paste-timestamp", paste_timestamp)
