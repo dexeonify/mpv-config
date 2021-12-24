@@ -1,17 +1,19 @@
 # mpv-config
 
-My personal [mpv](https://github.com/mpv-player/mpv/) config and user scripts :)
+My personal [mpv](https://github.com/mpv-player/mpv) config and user scripts :)
 
-Nothing special, not even any fancy shaders or anything,
-since I only have an integrated GPU.
-This is mainly just for backup and keeping track of changes.
+Nothing special, not even any fancy shaders or anything, since I only have an
+integrated GPU. This is mainly just for backup and keeping track of changes.
 
 ## Fonts
 
 - [Cascadia Code](https://github.com/microsoft/cascadia-code) (OSC)
-- [Font Awesome](https://fontawesome.com/v5.15/how-to-use/on-the-desktop/setup/getting-started) (Custom OSC Icons)
 - [Open Sans](https://fonts.google.com/specimen/Open+Sans) (Title)
 - [Manrope](https://github.com/sharanda/manrope) (Subtitles)
+
+⚠️ Note:
+Install my custom-made [icon font](https://github.com/dexeonify/mpv-config/blob/main/modernx-osc-icon.ttf)
+for custom OSC icons.
 
 ## User scripts
 
