@@ -2176,6 +2176,7 @@ end
 
 function pause_state(name, enabled)
     state.paused = enabled
+    mp.add_timeout(0.1, function() state.osd:update() end)
     if user_opts.showonpause then
         if enabled then
             state.lastvisibility = user_opts.visibility
