@@ -1630,11 +1630,11 @@ layouts = function ()
 
     -- Time
     lo = add_layout("tc_left")
-    lo.geometry = {x = 25, y = refY - 90, an = 7, w = 64, h = 20}
+    lo.geometry = {x = 25, y = refY - 90, an = 7, w = 120, h = 20}
     lo.style = osc_styles.timecodes
 
     lo = add_layout("tc_right")
-    lo.geometry = {x = osc_geo.w - 25 , y = refY -90, an = 9, w = 64, h = 20}
+    lo.geometry = {x = osc_geo.w - 25 , y = refY - 90, an = 9, w = 120, h = 20}
     lo.style = osc_styles.timecodes
 
     -- Cache
