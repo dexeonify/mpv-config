@@ -155,7 +155,7 @@ function set_inactive()
 end
 
 function paste_timestamp()
-    -- get timestamp from clipboard
+    -- get clipboard data
     local clipboard = utils.subprocess({
         args = { "powershell", "-Command", "Get-Clipboard", "-Raw" },
         playback_only = false,
@@ -167,13 +167,13 @@ function paste_timestamp()
         timestamp = clipboard.stdout
     end
 
-    -- trim whitespace
-    timestamp = timestamp:gsub("%s+", "")
+    -- find timestamp from clipboard
+    match = timestamp:match("%d?%d?:?%d%d:%d%d%.?%d*")
 
-    -- check for timestamp
-   if timestamp:match("%d%d:%d%d:%d%d%.%d%d%d") then
-        mp.osd_message("Timestamp pasted: " .. timestamp)
-        mp.commandv("osd-bar", "seek", timestamp, "absolute")
+    -- paste and seek to timestamp
+    if match ~= nil then
+        mp.osd_message("Timestamp pasted: " .. match)
+        mp.commandv("osd-bar", "seek", match, "absolute")
     end
 end
 
