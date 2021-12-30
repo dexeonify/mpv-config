@@ -1,4 +1,4 @@
-local OSC_PEEK_SEC = 2
+local OSC_PEEK_SEC = 0.5
 local CLEAR_OSD_TIMEOUT = .01 -- Hack for clearing OSD message upon OSC toggle
 
 -- Assume initial mode is 'auto', actual mode is in osc.lua and cannot be read
