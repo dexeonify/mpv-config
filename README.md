@@ -30,8 +30,12 @@ for the OSC icons.
 
 - [modernx.lua](https://github.com/dexeonify/mpv-config/blob/main/scripts/modernx.lua):
   Another fork of [mpv-osc-morden-x](https://github.com/cyl0/mpv-osc-morden-x),
-  with added support of deus0ww's Thumbnailer.lua (see below) and upstream fixes
-  ported from from mpv's [osc.lua](https://github.com/mpv-player/mpv/blob/master/player/lua/osc.lua).
+  with added support of deus0ww's `Thumbnailer.lua` (see below) and upstream
+  fixes ported from from mpv's [osc.lua](https://github.com/mpv-player/mpv/blob/master/player/lua/osc.lua).
+
+  **Note:**
+  If you want a version with `mpv_thumbnail_script`, you can check out
+  ThomasEricB's fork [MpvNet-HQ-Config](https://github.com/ThomasEricB/MpvNet-HQ-Config).
 
 - [playlistmanager.lua](https://github.com/jonniek/mpv-playlistmanager):
   Create and manage playlists intuitively.
@@ -49,7 +53,9 @@ for the OSC icons.
 ## References
 
 - [Kokomins's mpv Configuration Guide for Watching Videos](https://kokomins.wordpress.com/2019/10/14/mpv-config-guide/)
+- [I Am Scum's Guide](https://iamscum.wordpress.com/guides/videoplayback-guide/mpv-conf/)
 - [Tsubajashi/mpv-settings](https://github.com/Tsubajashi/mpv-settings/)
+- [ThomasEricB/MpvNet-HQ-Config](https://github.com/ThomasEricB/MpvNet-HQ-Config)
 
 If you are interested in high quality scaling:
 
