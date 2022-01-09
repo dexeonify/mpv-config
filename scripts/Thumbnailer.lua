@@ -688,8 +688,9 @@ local function start(paused)
 end
 
 local function osc_set_visibility(is_visible)
-    if is_visible and not initialized then start(true) end
-    if osc_name then osc_update(nil, osc_set_options(is_visible), nil) end
+    if is_visible and not initialized then start(true)
+    elseif osc_name then osc_update(nil, osc_set_options(is_visible), nil)
+    else return end
 end
 
 
