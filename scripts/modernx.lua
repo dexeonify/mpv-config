@@ -250,15 +250,15 @@ local function set_mini_above() tn_osc.mini.y = (tn_osc.background.top    - 12 *
 local function set_mini_below() tn_osc.mini.y = (tn_osc.background.bottom + 12 * tn_osc.osc_scale.y) end
 
 local set_thumbnail_layout = {
-    topbar    = function()	tn_osc.spacer.top   = 0.25
+    topbar    = function()  tn_osc.spacer.top   = 0.25
                             set_thumbnail_below(38.75)
                             set_mini_above() end,
-    bottombar = function()	tn_osc.spacer.bottom = 0.25
+    bottombar = function()  tn_osc.spacer.bottom = 0.25
                             set_thumbnail_above(38.75)
                             set_mini_below() end,
-    box       = function()	set_thumbnail_above(15)
+    box       = function()  set_thumbnail_above(15)
                             set_mini_above() end,
-    slimbox   = function()	set_thumbnail_above(12)
+    slimbox   = function()  set_thumbnail_above(12)
                             set_mini_above() end,
     modernx   = function()  set_thumbnail_above(20)
                             set_mini_below() end,
@@ -578,7 +578,7 @@ local state = {
     border = true,
     maximized = false,
     osd = mp.create_osd_overlay("ass-events"),
-    lastvisibility = user_opts.visibility,	-- save last visibility on pause if showonpause
+    lastvisibility = user_opts.visibility,  -- save last visibility on pause if showonpause
 }
 
 local window_control_box_width = 80
