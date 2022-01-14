@@ -35,7 +35,7 @@ for the OSC icons.
 
   **Note:**
   If you want a version with `mpv_thumbnail_script`, you can check out
-  ThomasEricB's fork [MpvNet-HQ-Config](https://github.com/ThomasEricB/MpvNet-HQ-Config).
+  ThomasEricB's fork [Mpv.Net-HQ-Config](https://github.com/ThomasEricB/Mpv.Net-HQ-Config).
 
 - [playlistmanager.lua](https://github.com/jonniek/mpv-playlistmanager):
   Create and manage playlists intuitively.
@@ -55,7 +55,7 @@ for the OSC icons.
 - [Kokomins's mpv Configuration Guide for Watching Videos](https://kokomins.wordpress.com/2019/10/14/mpv-config-guide/)
 - [I Am Scum's Guide](https://iamscum.wordpress.com/guides/videoplayback-guide/mpv-conf/)
 - [Tsubajashi/mpv-settings](https://github.com/Tsubajashi/mpv-settings/)
-- [ThomasEricB/MpvNet-HQ-Config](https://github.com/ThomasEricB/MpvNet-HQ-Config)
+- [ThomasEricB/Mpv.Net-HQ-Config](https://github.com/ThomasEricB/Mpv.Net-HQ-Config)
 
 If you are interested in high quality scaling:
 
