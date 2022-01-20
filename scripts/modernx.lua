@@ -967,29 +967,42 @@ function prepare_elements()
             if not (element.slider.markerF == nil) and (slider_lo.gap > 0) then
                 local markers = element.slider.markerF()
                 for _,marker in pairs(markers) do
-                    if (marker >= element.slider.min.value) and (marker <= element.slider.max.value) then
+                    if (marker >= element.slider.min.value) and
+                        (marker <= element.slider.max.value) then
+
                         local s = get_slider_ele_pos_for(element, marker)
+
                         if (slider_lo.gap > 5) then -- draw triangles
+
                             --top
                             if (slider_lo.nibbles_top) then
                                 static_ass:move_to(s - 3, slider_lo.gap - 5)
                                 static_ass:line_to(s + 3, slider_lo.gap - 5)
                                 static_ass:line_to(s, slider_lo.gap - 1)
                             end
+
                             --bottom
                             if (slider_lo.nibbles_bottom) then
-                                static_ass:move_to(s - 3, elem_geo.h - slider_lo.gap + 5)
-                                static_ass:line_to(s, elem_geo.h - slider_lo.gap + 1)
-                                static_ass:line_to(s + 3, elem_geo.h - slider_lo.gap + 5)
+                                static_ass:move_to(s - 3,
+                                    elem_geo.h - slider_lo.gap + 5)
+                                static_ass:line_to(s,
+                                    elem_geo.h - slider_lo.gap + 1)
+                                static_ass:line_to(s + 3,
+                                    elem_geo.h - slider_lo.gap + 5)
                             end
+
                         else -- draw 2x1px nibbles
+
                             --top
                             if (slider_lo.nibbles_top) then
                                 static_ass:rect_cw(s - 1, 0, s + 1, slider_lo.gap);
                             end
+
                             --bottom
                             if (slider_lo.nibbles_bottom) then
-                                static_ass:rect_cw(s - 1, elem_geo.h-slider_lo.gap, s + 1, elem_geo.h);
+                                static_ass:rect_cw(s - 1,
+                                    elem_geo.h - slider_lo.gap,
+                                    s + 1, elem_geo.h);
                             end
                         end
                     end
@@ -1559,13 +1572,13 @@ layouts = function ()
     add_area("showhide", 0, sh_area_y0, osc_param.playresx, sh_area_y1)
 
     -- fetch values
-    local osc_w, osc_h=
-        osc_geo.w, osc_geo.h
+    local osc_w, osc_h = osc_geo.w, osc_geo.h
+
+    local lo
 
     --
     -- Controller Background
     --
-    local lo
 
     new_element("transBg", "box")
     lo = add_layout("transBg")
@@ -1634,7 +1647,7 @@ layouts = function ()
     lo.style = osc_styles.timecodes
 
     lo = add_layout("tc_right")
-    lo.geometry = {x = osc_geo.w - 25 , y = refY - 90, an = 9, w = 120, h = 20}
+    lo.geometry = {x = osc_geo.w - 25, y = refY - 90, an = 9, w = 120, h = 20}
     lo.style = osc_styles.timecodes
 
     -- Cache
@@ -1787,8 +1800,8 @@ function osc_init()
             mp.commandv("playlist-next", "weak")
             if user_opts.playlist_osd then
                 show_message(get_playlist(), 3)
-                end
             end
+        end
     ne.eventresponder["shift+mbtn_left_up"] =
         function () show_message(get_playlist(), 3) end
     ne.eventresponder["mbtn_right_up"] =
@@ -2035,11 +2048,11 @@ function osc_init()
     ne = new_element("tc_left", "button")
 
     ne.content = function ()
-    if (state.tc_ms) then
-        return (mp.get_property_osd("playback-time/full"))
-    else
-        return (mp.get_property_osd("playback-time"))
-    end
+        if (state.tc_ms) then
+            return (mp.get_property_osd("playback-time/full"))
+        else
+            return (mp.get_property_osd("playback-time"))
+        end
     end
     ne.eventresponder["mbtn_left_up"] = function ()
         state.tc_ms = not state.tc_ms
