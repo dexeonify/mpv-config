@@ -44,7 +44,7 @@ local user_opts = {
                                 -- functions that depend on it)
     layout = "modernx",         -- set thumbnail layout
     seekbarhandlesize = 0.6,    -- size ratio of the diamond and knob handle
-    seekrangealpha = 200,       -- transparency of seekranges
+    seekrangealpha = 64,        -- transparency of seekranges
     seekbarkeyframes = true,    -- use keyframes when dragging the seekbar
     title = "${media-title}",   -- string compatible with property-expansion
                                 -- to be shown as OSC title
