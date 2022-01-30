@@ -47,9 +47,6 @@ for the OSC icons.
   A more streamlined thumbnailer than [mpv_thumbnail_script](https://github.com/TheAMM/mpv_thumbnail_script),
   also comes with additional features.
 
-- [toggle_osc.lua](https://www.reddit.com/r/mpv/comments/ib0bo9/comment/g1v12ku):
-  Quickly hide, show or peek the OSC.
-
 ## References
 
 - [Kokomins's mpv Configuration Guide for Watching Videos](https://kokomins.wordpress.com/2019/10/14/mpv-config-guide/)
