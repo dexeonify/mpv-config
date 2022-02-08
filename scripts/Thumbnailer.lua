@@ -198,7 +198,7 @@ local user_opts = {
     -- Paths
     cache_dir             = default_cache_dir,  -- Note: Files are not cleaned afterward, by default
     worker_script_path    = '',                 -- Only needed if the script can't auto-locate the file to load more workers
-    exec_path            = '',                 -- This is appended to PATH to search for mpv, ffmpeg, and other executables.
+    exec_path             = '',                 -- This is appended to PATH to search for mpv, ffmpeg, and other executables.
 
     -- Thumbnail
     dimension             = 320,                -- Max width and height before scaling
