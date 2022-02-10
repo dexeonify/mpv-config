@@ -176,18 +176,16 @@ end
 
 local function delete_dir(path)
     if is_empty(path) then return end
-    msg.warn('Deleting Dir:', path)
     return run_subprocess( OPERATING_SYSTEM == OS_WIN and {'cmd', '/e:on', '/c', 'rd', '/s', '/q', path} or {'rm', '-r', path} )
 end
 
 local function delete_file(path)
     if not file_exists(path) then return end
-    msg.warn('Deleting File:', path)
     return os.remove(path)
 end
 
 local function add_lock(path)
-    msg.debug('Add file lock to:', path)
+    msg.debug('Adding File Lock to:', path)
     local file = io.open(join_paths(path, tostring(utils.getpid())), 'w')
     if file then
         file:close()
@@ -197,12 +195,12 @@ local function add_lock(path)
 end
 
 local function remove_lock(path)
-    msg.debug('Remove file lock from:', path)
+    msg.warn('Removing File Lock from:', path)
     return delete_file(join_paths(path, tostring(utils.getpid())))
 end
 
 local function is_locked(path)
-    return #utils.readdir(path,'files') ~= 0
+    return #utils.readdir(path, 'files') ~= 0
 end
 
 
@@ -659,11 +657,11 @@ local function delete_cache_dir()
     if auto_delete == nil then auto_delete = user_opts.auto_delete end
     if auto_delete > 0 then
         if not is_locked(path) then
-            msg.debug('Clearing Cache on Shutdown:', path)
+            msg.warn('Deleting Thumbnailer folder:', path)
             if path:len() < 16 then return end
             delete_dir(path)
         else
-            msg.debug('Clearing Cache on Shutdown:ignore ', path, '- Locked')
+            msg.warn('Can\'t Delete Thumbnailer folder:', path, '- Locked')
         end
     end
 end
@@ -676,11 +674,11 @@ local function delete_cache_subdir()
     if auto_delete == nil then auto_delete = user_opts.auto_delete end
     if auto_delete == 1 then
         if not is_locked(path) then
-            msg.debug('Clearing Cache for File:', path)
+            msg.warn('Clearing Cache for Current File:', path)
             if path:len() < 16 then return end
             delete_dir(path)
         else
-            msg.debug('Clearing Cache for File:ignore ', path, '- Locked')
+            msg.warn('Can\'t Clear Cache for Current File:', path, '- Locked')
         end
     end
 end
