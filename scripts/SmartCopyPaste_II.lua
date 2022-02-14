@@ -289,12 +289,22 @@ function file_exists(name)
 end
 
 function format_time(duration)
-	local total_seconds = math.floor(duration)
+	local total_seconds = duration
 	local hours = (math.floor(total_seconds / 3600))
 	total_seconds = (total_seconds % 3600)
 	local minutes = (math.floor(total_seconds / 60))
 	local seconds = (total_seconds % 60)
-	return string.format("%02d:%02d:%02d", hours, minutes, seconds)
+	local milliseconds = (truncate(seconds):match("%.(%d+)"))
+
+	if milliseconds == nil then
+		return string.format("%02d:%02d:%02d", hours, minutes, seconds)
+	else
+		return string.format("%02d:%02d:%02d.%s", hours, minutes, seconds, milliseconds)
+	end
+end
+
+function truncate(seconds)
+	return string.format("%.03f", seconds):gsub("%.0+$", "")
 end
 
 function get_path()
@@ -1552,7 +1562,7 @@ function write_log(target_time, update_seekTime, entry_limit, action)
 	end
 	if seekTime < 0 then seekTime = 0 end
 	
-	delete_log_entry(false, true, filePath, math.floor(seekTime), entry_limit)
+	delete_log_entry(false, true, filePath, truncate(seekTime), entry_limit)
 
 	f = io.open(log_fullpath, "a+")
 	if o.file_title_logging == 'all' then
@@ -1829,8 +1839,8 @@ function copy_specific(action)
 			if o.osd_messages == true then
 				mp.osd_message("Copied"..o.time_seperator..format_time(video_time))
 			end
-			set_clipboard(pre_attribute..math.floor(video_time)..after_attribute)
-			msg.info('Copied the below into clipboard:\n'..pre_attribute..math.floor(video_time)..after_attribute)
+			set_clipboard(truncate(video_time))
+			msg.info('Copied the below into clipboard:\n'..truncate(video_time))
 		end
 		if action == 'path&timestamp' then
 			local pre_attribute, after_attribute = get_specific_attribute(filePath)
@@ -1838,8 +1848,8 @@ function copy_specific(action)
 			if o.osd_messages == true then
 				mp.osd_message("Copied:\n" .. fileTitle .. o.time_seperator .. format_time(video_time))
 			end
-			set_clipboard(filePath..pre_attribute..math.floor(video_time)..after_attribute)
-			msg.info('Copied and logged the below into clipboard:\n'..filePath..pre_attribute..math.floor(video_time)..after_attribute)
+			set_clipboard(filePath..pre_attribute..truncate(video_time)..after_attribute)
+			msg.info('Copied and logged the below into clipboard:\n'..filePath..pre_attribute..truncate(video_time)..after_attribute)
 			write_log(false, false, o.same_entry_limit, 'copy')
 		end
 	end
