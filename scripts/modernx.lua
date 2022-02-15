@@ -1477,7 +1477,7 @@ function window_controls()
 
     -- Close: 🗙
     ne = new_element("close", "button")
-    ne.content = "\xEE\xA4\x81"
+    ne.content = "\xEE\xA4\x80"
     ne.eventresponder["mbtn_left_up"] =
         function () mp.commandv("quit") end
     lo = add_layout("close")
@@ -1486,7 +1486,7 @@ function window_controls()
 
     -- Minimize: 🗕
     ne = new_element("minimize", "button")
-    ne.content = "\xEE\xA4\x84"
+    ne.content = "\xEE\xA4\x81"
     ne.eventresponder["mbtn_left_up"] =
         function () mp.commandv("cycle", "window-minimized") end
     lo = add_layout("minimize")
@@ -1496,9 +1496,9 @@ function window_controls()
     -- Maximize: 🗖 /🗗
     ne = new_element("maximize", "button")
     if state.maximized or state.fullscreen then
-        ne.content = "\xEE\xA4\x83"
-    else
         ne.content = "\xEE\xA4\x82"
+    else
+        ne.content = "\xEE\xA4\x83"
     end
     ne.eventresponder["mbtn_left_up"] =
         function ()
@@ -1780,7 +1780,7 @@ function osc_init()
     -- prev
     ne = new_element("pl_prev", "button")
 
-    ne.content = "\xEE\xA4\x94"
+    ne.content = "\xEE\xA4\x93"
     ne.enabled = (pl_pos > 1) or (loop ~= "no")
     ne.eventresponder["mbtn_left_up"] =
         function ()
@@ -1797,7 +1797,7 @@ function osc_init()
     --next
     ne = new_element("pl_next", "button")
 
-    ne.content = "\xEE\xA4\x99"
+    ne.content = "\xEE\xA4\x94"
     ne.enabled = (have_pl and (pl_pos < pl_count)) or (loop ~= "no")
     ne.eventresponder["mbtn_left_up"] =
         function ()
@@ -1819,9 +1819,9 @@ function osc_init()
 
     ne.content = function ()
         if mp.get_property("pause") == "yes" then
-            return ("\xEE\xA4\x96")
-        else
             return ("\xEE\xA4\x97")
+        else
+            return ("\xEE\xA4\x98")
         end
     end
     ne.eventresponder["mbtn_left_up"] =
@@ -1843,7 +1843,7 @@ function osc_init()
     ne = new_element("skipfrwd", "button")
 
     ne.softrepeat = true
-    ne.content = "\xEE\xA4\x98"
+    ne.content = "\xEE\xA4\x96"
     ne.eventresponder["mbtn_left_down"] =
         function () mp.commandv("seek", 10, "relative", "keyframes") end
     ne.eventresponder["shift+mbtn_left_down"] =
@@ -1893,7 +1893,7 @@ function osc_init()
 
     ne.enabled = (#tracks_osc.audio > 0)
     ne.off = (get_track('audio') == 0)
-    ne.content = "\xEE\xA4\x89"
+    ne.content = "\xEE\xA4\x88"
     ne.tooltip_style = osc_styles.tooltip
     ne.tooltipF = function ()
         local msg = "OFF"
@@ -1926,7 +1926,7 @@ function osc_init()
 
     ne.enabled = (#tracks_osc.sub > 0)
     ne.off = (get_track('audio') == 0)
-    ne.content = "\xEE\xA4\x90"
+    ne.content = "\xEE\xA4\x89"
     ne.tooltip_style = osc_styles.tooltip
     ne.tooltipF = function ()
         local msg = "OFF"
@@ -1958,7 +1958,7 @@ function osc_init()
     ne = new_element("tog_fs", "button")
     ne.content = function ()
         if (state.fullscreen) then
-            return ("\xEE\xA4\x93")
+            return ("\xEE\xA4\x91")
         else
             return ("\xEE\xA4\x92")
         end
@@ -1968,7 +1968,7 @@ function osc_init()
 
     --tog_info
     ne = new_element("tog_info", "button")
-    ne.content = "\xEE\xA4\x91"
+    ne.content = "\xEE\xA4\x90"
     ne.eventresponder["mbtn_left_up"] =
         function () mp.commandv("script-binding", "stats/display-stats-toggle") end
 
@@ -2117,9 +2117,9 @@ function osc_init()
     ne.content = function()
         local volume = mp.get_property_number("volume", 0)
         local mute = mp.get_property_native("mute")
-        local volicon = {"\xEE\xA4\x86", "\xEE\xA4\x87", "\xEE\xA4\x88"}
+        local volicon = {"\xEE\xA4\x85", "\xEE\xA4\x86", "\xEE\xA4\x87"}
         if volume == 0 or mute then
-            return "\xEE\xA4\x85"
+            return "\xEE\xA4\x84"
         else
             return volicon[math.min(3,math.ceil(volume / (100/3)))]
         end
