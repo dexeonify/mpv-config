@@ -178,4 +178,4 @@ function paste_timestamp()
 end
 
 mp.add_key_binding(nil, "toggle-seeker", function() if active then set_inactive() else set_active() end end)
-mp.add_key_binding("Ctrl+v", "paste-timestamp", paste_timestamp)
+mp.add_key_binding("ctrl+alt+v", "paste-timestamp", paste_timestamp)
