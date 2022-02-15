@@ -167,9 +167,9 @@ function paste_timestamp()
     if not clipboard.error then
         timestamp = clipboard.stdout
     else
-		msg.error("Error getting data from clipboard:")
-		msg.error("  stderr: " .. clipboard.stderr)
-		msg.error("  stdout: " .. clipboard.stdout)
+        msg.error("Error getting data from clipboard:")
+        msg.error("  stderr: " .. clipboard.stderr)
+        msg.error("  stdout: " .. clipboard.stdout)
         return
     end
 

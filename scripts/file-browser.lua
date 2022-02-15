@@ -661,7 +661,7 @@ end
 --saves the directory and name of the currently playing file
 local function update_current_directory(_, filepath)
     --if we're in idle mode then we want to open the working directory
-    if filepath == nil then 
+    if filepath == nil then
         current_file.directory = fix_path( mp.get_property("working-directory", ""), true)
         current_file.name = nil
         current_file.path = nil
@@ -1604,7 +1604,7 @@ end
 
 --we don't want to add any overhead when the browser isn't open
 mp.observe_property('path', 'string', function(_,path)
-    if not state.hidden then 
+    if not state.hidden then
         update_current_directory(_,path)
         update_ass()
     else state.flag_update = true end
