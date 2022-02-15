@@ -21,10 +21,6 @@ for the OSC icons.
   Periodically saves "watch later" data during playback, rather than only
   saving on quit.
 
-- [copyTime.lua](https://github.com/Arieleg/mpv-copyTime):
-  Get the current time of the video and copy it to the clipboard with the
-  format HH:MM:SS.MS.
-
 - [crop.lua](https://github.com/occivink/mpv-scripts#croplua):
   Crop the video by defining the target rectangle with the cursor.
 
