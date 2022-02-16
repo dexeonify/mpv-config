@@ -1633,9 +1633,17 @@ layouts = function ()
     lo.geometry = {x = refX - 120, y = refY - 40 , an = 5, w = 30, h = 24}
     lo.style = osc_styles.mediumButtons
 
+    lo = add_layout('skipback')
+    lo.geometry = {x = refX - 60, y = refY - 40 , an = 5, w = 30, h = 24}
+    lo.style = osc_styles.mediumButtons
+
     lo = add_layout("playpause")
     lo.geometry = {x = refX, y = refY - 40 , an = 5, w = 45, h = 45}
     lo.style = osc_styles.bigButtons
+
+    lo = add_layout('skipfrwd')
+    lo.geometry = {x = refX + 60, y = refY - 40 , an = 5, w = 30, h = 24}
+    lo.style = osc_styles.mediumButtons
 
     lo = add_layout("ch_next")
     lo.geometry = {x = refX + 120, y = refY - 40 , an = 5, w = 30, h = 24}
@@ -1831,7 +1839,7 @@ function osc_init()
     ne = new_element("skipback", "button")
 
     ne.softrepeat = true
-    ne.content = "\xEE\xA4\x95"
+    ne.content = "\xEE\xA4\x99"
     ne.eventresponder["mbtn_left_down"] =
         function () mp.commandv("seek", -5, "relative", "keyframes") end
     ne.eventresponder["shift+mbtn_left_down"] =
@@ -1843,7 +1851,7 @@ function osc_init()
     ne = new_element("skipfrwd", "button")
 
     ne.softrepeat = true
-    ne.content = "\xEE\xA4\x96"
+    ne.content = "\xEE\xA4\xA0"
     ne.eventresponder["mbtn_left_down"] =
         function () mp.commandv("seek", 10, "relative", "keyframes") end
     ne.eventresponder["shift+mbtn_left_down"] =
