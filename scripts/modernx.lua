@@ -3,7 +3,7 @@
 -- https://github.com/maoiscat/mpv-osc-morden
 
 -- fork by cyl0
--- https://github.com/cyl0/mpv-osc-morden-x
+-- https://github.com/cyl0/MordenX
 
 -- forked again by dexeonify
 -- https://github.com/dexeonify/mpv-config/blob/main/scripts/modernx.lua
