@@ -1043,7 +1043,6 @@ function get_chapter(possec)
             return cl[n]
         end
     end
-    return ch
 end
 
 function render_elements(master_ass)
@@ -2154,9 +2153,6 @@ function osc_init()
     prepare_elements()
 end
 
-function shutdown()
-
-end
 
 --
 -- Other important stuff
@@ -2655,7 +2651,6 @@ end
 validate_user_opts()
 update_duration_watch()
 
-mp.register_event("shutdown", shutdown)
 mp.register_event("start-file", request_init)
 mp.observe_property("track-list", nil, request_init)
 mp.observe_property("playlist", nil, request_init)
