@@ -1537,7 +1537,7 @@ function window_controls()
     lo.style = string.format("%s{\\clip(%f,%f,%f,%f)}",
         osc_styles.wcTitle,
         titlebox_left + left_pad, wc_geo.y - wc_geo.h,
-        titlebox_right - right_pad , wc_geo.y + wc_geo.h)
+        titlebox_right - right_pad, wc_geo.y + wc_geo.h)
 
     add_area("window-controls-title",
              titlebox_left, 0, titlebox_right, wc_geo.h)
@@ -1548,14 +1548,18 @@ end
 --
 
 function layout()
-    local osc_geo = {w, h}
+    local osc_geo = {
+        w = osc_param.playresx,
+        h = 180
+    }
 
-    osc_geo.w = osc_param.playresx
-    osc_geo.h = 180
-
-    -- origin of the controllers, left/bottom corner
+    -- origin of the controllers, bottom left corner
     local posX = 0
     local posY = osc_param.playresy
+
+    -- alignment
+    local refX = osc_geo.w / 2
+    local refY = posY
 
     osc_param.areas = {} -- delete areas
 
@@ -1571,42 +1575,27 @@ function layout()
     -- area for show/hide
     add_area("showhide", 0, sh_area_y0, osc_param.playresx, sh_area_y1)
 
-    -- fetch values
-    local osc_w, osc_h = osc_geo.w, osc_geo.h
+    local lo, geo
 
-    local lo
-
-    --
     -- Controller Background
-    --
-
     new_element("transBg", "box")
     lo = add_layout("transBg")
-    lo.geometry = {x = posX, y = posY, an = 7, w = osc_w, h = 1}
+    lo.geometry = {x = posX, y = posY, an = 7, w = osc_geo.w, h = 1}
     lo.style = osc_styles.transBg
     lo.layer = 10
     lo.alpha[3] = 0
 
-    --
-    -- Alignment
-    --
-    local refX = osc_w / 2
-    local refY = posY
-    local geo
-
-    --
     -- Seekbar
-    --
-    new_element("bgbar1", "box")
-    lo = add_layout("bgbar1")
-    lo.geometry = {x = refX , y = refY - 100 , an = 5, w = osc_geo.w - 50, h = 2}
-    lo.layer = 13
+    new_element("bgBar", "box")
+    lo = add_layout("bgBar")
+    lo.geometry = {x = refX, y = refY - 100, an = 5, w = osc_geo.w - 50, h = 2}
     lo.style = osc_styles.seekbarBg
+    lo.layer = 13
     lo.alpha[1] = 128
     lo.alpha[3] = 128
 
     lo = add_layout("seekbar")
-    lo.geometry = {x = refX, y = refY - 100 , an = 5, w = osc_geo.w - 50, h = 16}
+    lo.geometry = {x = refX, y = refY - 100, an = 5, w = osc_geo.w - 50, h = 16}
     lo.style = osc_styles.seekbarFg
     lo.slider.gap = 7
     lo.slider.tooltip_style = osc_styles.tooltip
@@ -1615,41 +1604,41 @@ function layout()
     -- Title
     geo = {x = 25, y = refY - 132, an = 1, w = osc_geo.w - 50, h = 48}
     lo = add_layout("title")
-    lo.geometry = {x = 25, y = refY - 132, an = 1, w = osc_geo.w - 50, h = 48}
+    lo.geometry = geo
     lo.style = string.format("%s{\\clip(%f,%f,%f,%f)}", osc_styles.vidTitle,
-                                geo.x, geo.y - geo.h, geo.x + geo.w , geo.y)
+                             geo.x, geo.y - geo.h, geo.x + geo.w, geo.y)
     lo.alpha[3] = 0
 
-    -- Buttons
+    -- Playback control buttons
     lo = add_layout("pl_prev")
-    lo.geometry = {x = refX - 180, y = refY - 40 , an = 5, w = 30, h = 24}
+    lo.geometry = {x = refX - 180, y = refY - 40, an = 5, w = 30, h = 24}
     lo.style = osc_styles.mediumButtons
 
     lo = add_layout("ch_prev")
-    lo.geometry = {x = refX - 120, y = refY - 40 , an = 5, w = 30, h = 24}
+    lo.geometry = {x = refX - 120, y = refY - 40, an = 5, w = 30, h = 24}
     lo.style = osc_styles.mediumButtons
 
     lo = add_layout('skipback')
-    lo.geometry = {x = refX - 60, y = refY - 40 , an = 5, w = 30, h = 24}
+    lo.geometry = {x = refX - 60, y = refY - 40, an = 5, w = 30, h = 24}
     lo.style = osc_styles.mediumButtons
 
     lo = add_layout("playpause")
-    lo.geometry = {x = refX, y = refY - 40 , an = 5, w = 45, h = 45}
+    lo.geometry = {x = refX, y = refY - 40, an = 5, w = 45, h = 45}
     lo.style = osc_styles.bigButtons
 
     lo = add_layout('skipfrwd')
-    lo.geometry = {x = refX + 60, y = refY - 40 , an = 5, w = 30, h = 24}
+    lo.geometry = {x = refX + 60, y = refY - 40, an = 5, w = 30, h = 24}
     lo.style = osc_styles.mediumButtons
 
     lo = add_layout("ch_next")
-    lo.geometry = {x = refX + 120, y = refY - 40 , an = 5, w = 30, h = 24}
+    lo.geometry = {x = refX + 120, y = refY - 40, an = 5, w = 30, h = 24}
     lo.style = osc_styles.mediumButtons
 
     lo = add_layout("pl_next")
-    lo.geometry = {x = refX + 180, y = refY - 40 , an = 5, w = 30, h = 24}
+    lo.geometry = {x = refX + 180, y = refY - 40, an = 5, w = 30, h = 24}
     lo.style = osc_styles.mediumButtons
 
-    -- Time
+    -- Timecode
     lo = add_layout("tc_left")
     lo.geometry = {x = 25, y = refY - 90, an = 7, w = 120, h = 20}
     lo.style = osc_styles.timecodes
@@ -1698,6 +1687,7 @@ function validate_user_opts()
                 user_opts.windowcontrols .. "\". Ignoring.")
         user_opts.windowcontrols = "auto"
     end
+
     if user_opts.windowcontrols_alignment ~= "right" and
        user_opts.windowcontrols_alignment ~= "left" then
         msg.warn("windowcontrols_alignment cannot be \"" ..
@@ -1779,7 +1769,9 @@ function osc_init()
     ne.eventresponder["mbtn_right_up"] =
         function () show_message(mp.get_property_osd("filename")) end
 
+    --
     -- playlist buttons
+    --
 
     -- prev
     ne = new_element("pl_prev", "button")
@@ -1798,7 +1790,7 @@ function osc_init()
     ne.eventresponder["mbtn_right_up"] =
         function () show_message(get_playlist(), 3) end
 
-    --next
+    -- next
     ne = new_element("pl_next", "button")
 
     ne.content = "\xEE\xA4\x94"
@@ -1815,10 +1807,11 @@ function osc_init()
     ne.eventresponder["mbtn_right_up"] =
         function () show_message(get_playlist(), 3) end
 
-
+    --
     -- big buttons
+    --
 
-    --play control buttons
+    -- playpause
     ne = new_element("playpause", "button")
 
     ne.content = function ()
@@ -1831,7 +1824,7 @@ function osc_init()
     ne.eventresponder["mbtn_left_up"] =
         function () mp.commandv("cycle", "pause") end
 
-    --skipback
+    -- skipback
     ne = new_element("skipback", "button")
 
     ne.softrepeat = true
@@ -1843,7 +1836,7 @@ function osc_init()
     ne.eventresponder["mbtn_right_down"] =
         function () mp.commandv("seek", -30, "relative", "keyframes") end
 
-    --skipfrwd
+    -- skipfrwd
     ne = new_element("skipfrwd", "button")
 
     ne.softrepeat = true
@@ -1855,7 +1848,7 @@ function osc_init()
     ne.eventresponder["mbtn_right_down"] =
         function () mp.commandv("seek", 60, "relative", "keyframes") end
 
-    --ch_prev
+    -- ch_prev
     ne = new_element("ch_prev", "button")
 
     ne.enabled = have_ch
@@ -1872,7 +1865,7 @@ function osc_init()
     ne.eventresponder["mbtn_right_up"] =
         function () show_message(get_chapterlist(), 3) end
 
-    --ch_next
+    -- ch_next
     ne = new_element("ch_next", "button")
 
     ne.enabled = have_ch
@@ -1889,10 +1882,9 @@ function osc_init()
     ne.eventresponder["mbtn_right_up"] =
         function () show_message(get_chapterlist(), 3) end
 
-    --
     update_tracklist()
 
-    --cy_audio
+    -- cy_audio
     ne = new_element("cy_audio", "button")
 
     ne.enabled = (#tracks_osc.audio > 0)
@@ -1902,18 +1894,10 @@ function osc_init()
     ne.tooltipF = function ()
         local msg = "OFF"
         if not (get_track("audio") == 0) then
-            msg = ("Audio" .. " [" .. get_track("audio") .. "∕" .. #tracks_osc.audio .. "] ")
-
-            local prop = mp.get_property("current-tracks/audio/lang")
-            if not prop then
-                prop = "N/A"
-            end
-            msg = msg .. "(" .. prop .. ")"
-
-            prop = mp.get_property("current-tracks/audio/title")
-            if prop then
-                msg = msg .. " " .. prop
-            end
+            msg = "Audio ["..get_track("audio").."∕"..#tracks_osc.audio.."] "
+            local lang = mp.get_property("current-tracks/audio/lang") or "N/A"
+            local title = mp.get_property("current-tracks/audio/title") or ""
+            msg = msg .. "(" .. lang .. ")" .. " " .. title
             return msg
         end
         return msg
@@ -1925,7 +1909,7 @@ function osc_init()
     ne.eventresponder["shift+mbtn_left_down"] =
         function () show_message(get_tracklist("audio"), 2) end
 
-    --cy_sub
+    -- cy_sub
     ne = new_element("cy_sub", "button")
 
     ne.enabled = (#tracks_osc.sub > 0)
@@ -1935,18 +1919,10 @@ function osc_init()
     ne.tooltipF = function ()
         local msg = "OFF"
         if not (get_track("sub") == 0) then
-            msg = ("Subtitle" .. " [" .. get_track("sub") .. "∕" .. #tracks_osc.sub .. "] ")
-
-            local prop = mp.get_property("current-tracks/sub/lang")
-            if not prop then
-                prop = "N/A"
-            end
-            msg = msg .. "(" .. prop .. ")"
-
-            prop = mp.get_property("current-tracks/sub/title")
-            if prop then
-                msg = msg .. " " .. prop
-            end
+            msg = "Subtitle ["..get_track("sub").."∕"..#tracks_osc.sub.."] "
+            local lang = mp.get_property("current-tracks/sub/lang") or "N/A"
+            local title = mp.get_property("current-tracks/sub/title") or ""
+            msg = msg .. "(" .. prop .. ")" .. " " .. title
             return msg
         end
         return msg
@@ -1958,8 +1934,9 @@ function osc_init()
     ne.eventresponder["shift+mbtn_left_down"] =
         function () show_message(get_tracklist("sub"), 2) end
 
-    --tog_fs
+    -- tog_fs
     ne = new_element("tog_fs", "button")
+
     ne.content = function ()
         if (state.fullscreen) then
             return ("\xEE\xA4\x91")
@@ -1970,13 +1947,14 @@ function osc_init()
     ne.eventresponder["mbtn_left_up"] =
         function () mp.commandv("cycle", "fullscreen") end
 
-    --tog_info
+    -- tog_info
     ne = new_element("tog_info", "button")
+
     ne.content = "\xEE\xA4\x90"
     ne.eventresponder["mbtn_left_up"] =
         function () mp.commandv("script-binding", "stats/display-stats-toggle") end
 
-    --seekbar
+    -- seekbar
     ne = new_element("seekbar", "slider")
 
     ne.enabled = not (mp.get_property("percent-pos") == nil)
@@ -2052,7 +2030,6 @@ function osc_init()
             "absolute-percent", "exact") end
     ne.eventresponder["reset"] =
         function (element) element.state.lastseek = nil end
-
 
     -- tc_left (current pos)
     ne = new_element("tc_left", "button")
@@ -2145,7 +2122,7 @@ function osc_init()
         window_controls()
     end
 
-    --do something with the elements
+    -- do something with the elements
     prepare_elements()
 end
 
@@ -2153,7 +2130,6 @@ end
 --
 -- Other important stuff
 --
-
 
 function show_osc()
     -- show when disabled can happen (e.g. mouse_move) due to async/delayed unbinding
@@ -2329,7 +2305,7 @@ function render()
         kill_animation()
     end
 
-    --mouse show/hide area
+    -- mouse show/hide area
     for k,cords in pairs(osc_param.areas["showhide"]) do
         set_virt_mouse_area(cords.x1, cords.y1, cords.x2, cords.y2, "showhide")
     end
@@ -2342,7 +2318,7 @@ function render()
     end
     do_enable_keybindings()
 
-    --mouse input area
+    -- mouse input area
     local mouse_over_osc = false
 
     for _,cords in ipairs(osc_param.areas["input"]) do
@@ -2426,7 +2402,7 @@ function render()
 end
 
 --
--- Eventhandling
+-- Event handling
 --
 
 local function element_has_action(element, action)
