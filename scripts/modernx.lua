@@ -1544,14 +1544,10 @@ function window_controls()
 end
 
 --
--- Layouts
+-- Modernx Layout
 --
 
-local layouts = {}
-
--- Default layout
-layouts = function ()
-
+function layout()
     local osc_geo = {w, h}
 
     osc_geo.w = osc_param.playresx
@@ -2142,7 +2138,7 @@ function osc_init()
 
 
     -- load layout
-    layouts()
+    layout()
 
     -- load window controls
     if window_controls_enabled() then
