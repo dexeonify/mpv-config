@@ -1922,7 +1922,7 @@ function osc_init()
             msg = "Subtitle ["..get_track("sub").."∕"..#tracks_osc.sub.."] "
             local lang = mp.get_property("current-tracks/sub/lang") or "N/A"
             local title = mp.get_property("current-tracks/sub/title") or ""
-            msg = msg .. "(" .. prop .. ")" .. " " .. title
+            msg = msg .. "(" .. lang .. ")" .. " " .. title
             return msg
         end
         return msg
