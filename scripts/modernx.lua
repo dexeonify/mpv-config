@@ -43,7 +43,7 @@ local user_opts = {
                                 -- internal track list management (and some
                                 -- functions that depend on it)
     layout = "modernx",         -- set thumbnail layout
-    seekbarhandlesize = 0.6,    -- size ratio of the diamond and knob handle
+    seekbarhandlesize = 0.6,    -- size ratio of the knob handle
     seekrangealpha = 64,        -- transparency of seekranges
     seekbarkeyframes = true,    -- use keyframes when dragging the seekbar
     title = "${media-title}",   -- string compatible with property-expansion
@@ -52,8 +52,6 @@ local user_opts = {
     timetotal = false,          -- display total time instead of remaining time?
     timems = false,             -- display timecodes with milliseconds?
     visibility = "auto",        -- only used at init to set visibility_mode(...)
-    showtitle = true,           -- show title in OSC
-    showonpause = true,         -- whether to disable the hide timeout on pause
     windowcontrols = "auto",    -- whether to show window controls
     windowcontrols_alignment = "right", -- which side to show window controls on
     greenandgrumpy = false,     -- disable santa hat
@@ -62,8 +60,10 @@ local user_opts = {
     playlist_osd = true,        -- whether to show playlist OSD on next/prev
     chapter_fmt = "Chapter: %s", -- chapter print format for seekbar-hover. "no" to disable
 
+    showtitle = true,           -- show title in OSC
+    showonpause = true,         -- whether to disable the hide timeout on pause
     titlefont = "",             -- font used for the title above OSC and
-                                -- in the windows controls bar
+                                -- in the window controls bar
     blur_intensity = 150,       -- adjust the strength of the OSC blur
     osc_color = "000000",       -- accent of the OSC and the title bar
     seekbarfg_color = "E39C42", -- color of the seekbar progress and handle
