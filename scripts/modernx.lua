@@ -1561,6 +1561,10 @@ function layout()
     local refX = osc_geo.w / 2
     local refY = posY
 
+    -- padding to decrease when player window is tall or small
+    local min = ((osc_param.display_aspect > 0) and (osc_param.playresx < 480))
+    local pad = min and -10 or 0
+
     osc_param.areas = {} -- delete areas
 
     -- area for active mouse input
@@ -1619,7 +1623,7 @@ function layout()
     lo.style = osc_styles.mediumButtons
 
     lo = add_layout('skipback')
-    lo.geometry = {x = refX - 60, y = refY - 40, an = 5, w = 30, h = 24}
+    lo.geometry = {x = refX - 60 - pad, y = refY - 40, an = 5, w = 30, h = 24}
     lo.style = osc_styles.mediumButtons
 
     lo = add_layout("playpause")
@@ -1627,7 +1631,7 @@ function layout()
     lo.style = osc_styles.bigButtons
 
     lo = add_layout('skipfrwd')
-    lo.geometry = {x = refX + 60, y = refY - 40, an = 5, w = 30, h = 24}
+    lo.geometry = {x = refX + 60 + pad, y = refY - 40, an = 5, w = 30, h = 24}
     lo.style = osc_styles.mediumButtons
 
     lo = add_layout("ch_next")
@@ -1652,15 +1656,21 @@ function layout()
     lo.geometry = {x = 37, y = refY - 40, an = 5, w = 24, h = 24}
     lo.style = osc_styles.smallButtons
 
+    if min then lo.geometry.x = osc_geo.w - 87 end
+
     -- Audio tracks
     lo = add_layout("cy_audio")
     lo.geometry = {x = 87, y = refY - 40, an = 5, w = 24, h = 24}
     lo.style = osc_styles.smallButtons
 
+    if min then lo.geometry.x = 37 end
+
     -- Subtitle tracks
     lo = add_layout("cy_sub")
     lo.geometry = {x = 137, y = refY - 40, an = 5, w = 24, h = 24}
     lo.style = osc_styles.smallButtons
+
+    if min then lo.geometry.x = 87 end
 
     -- Cache
     lo = add_layout("cache")
@@ -1777,6 +1787,7 @@ function osc_init()
     ne = new_element("pl_prev", "button")
 
     ne.content = "\xEE\xA4\x93"
+    ne.visible = (osc_param.playresx >= 480)
     ne.enabled = (pl_pos > 1) or (loop ~= "no")
     ne.eventresponder["mbtn_left_up"] =
         function ()
@@ -1794,6 +1805,7 @@ function osc_init()
     ne = new_element("pl_next", "button")
 
     ne.content = "\xEE\xA4\x94"
+    ne.visible = (osc_param.playresx >= 480)
     ne.enabled = (have_pl and (pl_pos < pl_count)) or (loop ~= "no")
     ne.eventresponder["mbtn_left_up"] =
         function ()
@@ -1853,6 +1865,7 @@ function osc_init()
 
     ne.enabled = have_ch
     ne.content = "\xEE\xA4\x95"
+    ne.visible = (osc_param.playresx >= 480)
     ne.eventresponder["mbtn_left_up"] =
         function ()
             mp.commandv("add", "chapter", -1)
@@ -1870,6 +1883,7 @@ function osc_init()
 
     ne.enabled = have_ch
     ne.content = "\xEE\xA4\x96"
+    ne.visible = (osc_param.playresx >= 480)
     ne.eventresponder["mbtn_left_up"] =
         function ()
             mp.commandv("add", "chapter", 1)
@@ -1951,6 +1965,7 @@ function osc_init()
     ne = new_element("tog_info", "button")
 
     ne.content = "\xEE\xA4\x90"
+    ne.visible = (osc_param.playresx >= 480)
     ne.eventresponder["mbtn_left_up"] =
         function () mp.commandv("script-binding", "stats/display-stats-toggle") end
 
@@ -2071,6 +2086,7 @@ function osc_init()
     -- cache
     ne = new_element("cache", "button")
 
+    ne.visible = (osc_param.playresx >= 480)
     ne.content = function ()
         local cache_state = state.cache_state
         if not (cache_state and cache_state["seekable-ranges"] and
