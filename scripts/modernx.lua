@@ -1647,11 +1647,6 @@ function layout()
     lo.geometry = {x = osc_geo.w - 25, y = refY - 90, an = 9, w = 120, h = 20}
     lo.style = osc_styles.timecodes
 
-    -- Cache
-    lo = add_layout("cache")
-    lo.geometry = {x = osc_geo.w - 117, y = refY - 50, an = 9, w = 64, h = 20}
-    lo.style = osc_styles.timecodes
-
     -- Volume
     lo = add_layout("volume")
     lo.geometry = {x = 37, y = refY - 40, an = 5, w = 24, h = 24}
@@ -1667,14 +1662,19 @@ function layout()
     lo.geometry = {x = 137, y = refY - 40, an = 5, w = 24, h = 24}
     lo.style = osc_styles.smallButtons
 
-    -- Toggle fullscreen
-    lo = add_layout("tog_fs")
-    lo.geometry = {x = osc_geo.w - 37, y = refY - 40, an = 5, w = 24, h = 24}
-    lo.style = osc_styles.smallButtons
+    -- Cache
+    lo = add_layout("cache")
+    lo.geometry = {x = osc_geo.w - 187, y = refY - 40, an = 5, w = 64, h = 20}
+    lo.style = osc_styles.timecodes
 
     -- Toggle info
     lo = add_layout("tog_info")
     lo.geometry = {x = osc_geo.w - 87, y = refY - 40, an = 5, w = 24, h = 24}
+    lo.style = osc_styles.smallButtons
+
+    -- Toggle fullscreen
+    lo = add_layout("tog_fs")
+    lo.geometry = {x = osc_geo.w - 37, y = refY - 40, an = 5, w = 24, h = 24}
     lo.style = osc_styles.smallButtons
 end
 
