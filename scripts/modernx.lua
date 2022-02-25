@@ -1656,7 +1656,7 @@ function layout()
     lo.geometry = {x = 37, y = refY - 40, an = 5, w = 24, h = 24}
     lo.style = osc_styles.smallButtons
 
-    if min then lo.geometry.x = osc_geo.w - 87 end
+    if min then lo.geometry.x = osc_geo.w - 87 - pad end
 
     -- Audio tracks
     lo = add_layout("cy_audio")
@@ -1670,7 +1670,7 @@ function layout()
     lo.geometry = {x = 137, y = refY - 40, an = 5, w = 24, h = 24}
     lo.style = osc_styles.smallButtons
 
-    if min then lo.geometry.x = 87 end
+    if min then lo.geometry.x = 87 + pad end
 
     -- Cache
     lo = add_layout("cache")
