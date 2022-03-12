@@ -1759,6 +1759,7 @@ function osc_init()
     -- title
     ne = new_element("title", "button")
 
+    ne.visible = user_opts.showtitle
     ne.content = function ()
         local title = state.forced_title or
                       mp.command_native({"expand-text", user_opts.title})
