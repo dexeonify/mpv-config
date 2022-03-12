@@ -62,6 +62,9 @@ local user_opts = {
 
     showtitle = true,           -- show title in OSC
     showonpause = true,         -- whether to disable the hide timeout on pause
+    showonstart = true,         -- show OSC on startup or when the next file in
+                                -- playlist starts playing
+    showonseek = false,         -- show OSC when seeking
     titlefont = "",             -- font used for the title above OSC and
                                 -- in the window controls bar
     blur_intensity = 150,       -- adjust the strength of the OSC blur
@@ -2641,6 +2644,9 @@ validate_user_opts()
 update_duration_watch()
 
 mp.register_event("start-file", request_init)
+if user_opts.showonstart then mp.register_event("file-loaded", show_osc) end
+if user_opts.showonseek then mp.register_event("seek", show_osc) end
+
 mp.observe_property("track-list", nil, request_init)
 mp.observe_property("playlist", nil, request_init)
 mp.observe_property("chapter-list", "native", function(_, list)
