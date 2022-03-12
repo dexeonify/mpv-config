@@ -12,7 +12,7 @@ local function rename(text, error)
     if filepath == nil then return end
 
     local directory, filename = utils.split_path(filepath)
-    local name, extension = filename:match("(%a*)%.([^%./]+)$")
+    local name, extension = filename:match("(.*)%.([^%./]+)$")
     local newfilepath = directory..text
 
     msg.info( string.format("renaming '%s.%s' to '%s'", name, extension, text) )
