@@ -1,4 +1,4 @@
--- deus0ww - 2021-05-07
+-- deus0ww - 2022-03-24
 
 local ipairs,loadfile,pairs,pcall,tonumber,tostring = ipairs,loadfile,pairs,pcall,tonumber,tostring
 local debug,io,math,os,string,table,utf8 = debug,io,math,os,string,table,utf8
@@ -170,7 +170,7 @@ end
 ------------
 -- Worker --
 ------------
-mp.command_native({'script-message', message.worker.registration, format_json({name = script_name, script_path = debug.getinfo(1).source})})
+mp.command_native({'script-message', message.worker.registration, format_json({name = script_name, script_path = debug.getinfo(1).source:gsub('^@', '')})})
 
 local function stop_file_exist()
     local file = io.open(join_paths(state.cache_dir, 'stop'), 'r')
