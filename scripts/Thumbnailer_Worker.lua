@@ -253,7 +253,7 @@ local pix_fmt   = 'bgra'
 local scale_ff  = 'scale=w=%d:h=%d:sws_flags=%s:dst_format=' .. pix_fmt
 local scale_mpv = 'scale=w=%d:h=%d:flags=%s'
 local vf_format = ',format=fmt=' .. pix_fmt
-local transpose = {    [-360] = '',
+local transpose = { [-360] = '',
                     [-270] = ',transpose=1',
                     [-180] = ',transpose=2,transpose=2',
                     [ -90] = ',transpose=2',
@@ -481,15 +481,15 @@ local function process_thumbnail()
         return
     end
     -- Switch to MPV when FFMPEG fails
---    if worker_options.encoder == 'ffmpeg' then
---        set_encoder('mpv')
---        if create_thumbnail(time, fullpath) then
---            worker_stats.success = worker_stats.success + 1
---            worker_stats.queued = worker_stats.queued - 1
---            report_progress (time, message.ready)
---            return
---        end
---    end
+    --if worker_options.encoder == 'ffmpeg' then
+    --    set_encoder('mpv')
+    --    if create_thumbnail(time, fullpath) then
+    --        worker_stats.success = worker_stats.success + 1
+    --        worker_stats.queued = worker_stats.queued - 1
+    --        report_progress (time, message.ready)
+    --        return
+    --    end
+    --end
     -- If the thumbnail is incomplete, pad it
     if not check_existing(fullpath) then pad_file(fullpath) end
     -- Final check
