@@ -1236,6 +1236,18 @@ function render_elements(master_ass)
                     elem_ass:append(tooltiplabel)
                 end
             end
+
+            -- add hover effect
+            -- source: https://github.com/Zren/mpvz/issues/13
+            local button_lo = element.layout.button
+            if mouse_hit(element) and element.enabled then
+                buttontext = button_lo.hoverstyle .. buttontext
+
+                local shadow_ass = assdraw.ass_new()
+                shadow_ass:merge(style_ass)
+                shadow_ass:append("{\\blur5}" .. buttontext)
+                elem_ass:merge(shadow_ass)
+            end
         end
 
         master_ass:merge(elem_ass)
