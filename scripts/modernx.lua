@@ -1411,6 +1411,7 @@ function add_layout(name)
         if (elements[name].type == "button") then
             elements[name].layout.button = {
                 maxchars = nil,
+                hoverstyle = "{\\c&FFFFFF&}",
             }
         elseif (elements[name].type == "slider") then
             -- slider defaults
@@ -1495,6 +1496,7 @@ function window_controls()
     lo = add_layout("close")
     lo.geometry = alignment == "left" and first_geo or third_geo
     lo.style = osc_styles.wcButtons
+    lo.button.hoverstyle = "{\\c&H2311e8&}"
 
     -- Minimize: 🗕
     ne = new_element("minimize", "button")
