@@ -1240,7 +1240,7 @@ function render_elements(master_ass)
             -- add hover effect
             -- source: https://github.com/Zren/mpvz/issues/13
             local button_lo = element.layout.button
-            if mouse_hit(element) and element.enabled then
+            if mouse_hit(element) and element.hoverable and element.enabled then
                 buttontext = button_lo.hoverstyle .. buttontext
 
                 local shadow_ass = assdraw.ass_new()
@@ -1389,12 +1389,12 @@ function new_element(name, type)
     elements[name].enabled = true
     elements[name].softrepeat = false
     elements[name].styledown = (type == "button")
+    elements[name].hoverable = (type == "button")
     elements[name].state = {}
 
     if (type == "slider") then
         elements[name].slider = {min = {value = 0}, max = {value = 100}}
     end
-
 
     return elements[name]
 end
@@ -1542,6 +1542,7 @@ function window_controls()
         title = title:gsub("\\n", " "):gsub("\\$", ""):gsub("{","\\{")
         return not (title == "") and title or "mpv"
     end
+    ne.hoverable = false
     local left_pad = 5
     local right_pad = 10
     lo = add_layout("wctitle")
@@ -1774,6 +1775,7 @@ function osc_init()
     ne = new_element("title", "button")
 
     ne.visible = user_opts.showtitle
+    ne.hoverable = false
     ne.content = function ()
         local title = state.forced_title or
                       mp.command_native({"expand-text", user_opts.title})
@@ -2102,6 +2104,7 @@ function osc_init()
     ne = new_element("cache", "button")
 
     ne.visible = (osc_param.playresx >= 480)
+    ne.hoverable = false
     ne.content = function ()
         local cache_state = state.cache_state
         if not (cache_state and cache_state["seekable-ranges"] and
