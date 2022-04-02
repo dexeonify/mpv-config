@@ -543,8 +543,8 @@ local osc_styles = {
     tooltip = "{\\blur1\\bord" .. user_opts.tooltipborder .. "\\1c&HFFFFFF&\\3c&H000000&\\fs20}",
     vidTitle = "{\\blur1\\bord0.5\\1c&HFFFFFF&\\3c&H0\\fs32\\q2\\fn" .. user_opts.titlefont .. "}",
 
-    wcButtons = "{\\1c&HFFFFFF\\fs20\\fnmodernx-osc-icon}",
-    wcTitle = "{\\1c&HFFFFFF\\fs24\\q2\\fn" .. user_opts.titlefont .. "}",
+    wcButtons = "{\\1c&HFFFFFF&\\fs20\\fnmodernx-osc-icon}",
+    wcTitle = "{\\1c&HFFFFFF&\\fs24\\q2\\fn" .. user_opts.titlefont .. "}",
     wcBar = "{\\1c&H" .. user_opts.osc_color .. "}",
 }
 
@@ -1411,7 +1411,7 @@ function add_layout(name)
         if (elements[name].type == "button") then
             elements[name].layout.button = {
                 maxchars = nil,
-                hoverstyle = "{\\c&FFFFFF&}",
+                hoverstyle = "{\\c&HFFFFFF&}",
             }
         elseif (elements[name].type == "slider") then
             -- slider defaults
@@ -1496,7 +1496,7 @@ function window_controls()
     lo = add_layout("close")
     lo.geometry = alignment == "left" and first_geo or third_geo
     lo.style = osc_styles.wcButtons
-    lo.button.hoverstyle = "{\\c&H2311e8&}"
+    lo.button.hoverstyle = "{\\c&H2311E8&}"
 
     -- Minimize: 🗕
     ne = new_element("minimize", "button")
