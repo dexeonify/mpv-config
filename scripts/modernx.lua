@@ -534,7 +534,6 @@ local osc_styles = {
     seekbarBg = "{\\blur0\\bord0\\1c&H" .. user_opts.seekbarbg_color .. "&}",
     seekbarFg = "{\\blur1\\bord1\\1c&H" .. user_opts.seekbarfg_color .. "&}",
 
-    elementDown = "{\\1c&H999999&}",
     bigButtons = "{\\blur0\\bord0\\1c&HFFFFFF&\\3c&HFFFFFF&\\fs28\\fnmodernx-osc-icon}",
     mediumButtons = "{\\blur0\\bord0\\1c&HFFFFFF&\\3c&HFFFFFF&\\fs24\\fnmodernx-osc-icon}",
     smallButtons = "{\\blur0\\bord0\\1c&HFFFFFF&\\3c&HFFFFFF&\\fs24\\fnmodernx-osc-icon}",
@@ -546,6 +545,9 @@ local osc_styles = {
     wcButtons = "{\\1c&HFFFFFF&\\fs20\\fnmodernx-osc-icon}",
     wcTitle = "{\\1c&HFFFFFF&\\fs24\\q2\\fn" .. user_opts.titlefont .. "}",
     wcBar = "{\\1c&H" .. user_opts.osc_color .. "}",
+
+    elementDown = "{\\1c&H999999&}",
+    elementHover = "{\\blur5\\1c&HFFFFFF&}"
 }
 
 -- internal states, do not touch
@@ -1241,11 +1243,9 @@ function render_elements(master_ass)
             -- source: https://github.com/Zren/mpvz/issues/13
             local button_lo = element.layout.button
             if mouse_hit(element) and element.hoverable and element.enabled then
-                buttontext = button_lo.hoverstyle .. buttontext
-
                 local shadow_ass = assdraw.ass_new()
                 shadow_ass:merge(style_ass)
-                shadow_ass:append("{\\blur5}" .. buttontext)
+                shadow_ass:append(button_lo.hoverstyle .. buttontext)
                 elem_ass:merge(shadow_ass)
             end
         end
@@ -1411,7 +1411,7 @@ function add_layout(name)
         if (elements[name].type == "button") then
             elements[name].layout.button = {
                 maxchars = nil,
-                hoverstyle = "{\\c&HFFFFFF&}",
+                hoverstyle = osc_styles.elementHover,
             }
         elseif (elements[name].type == "slider") then
             -- slider defaults
