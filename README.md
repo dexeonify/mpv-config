@@ -51,8 +51,8 @@ for the OSC icons.
   Seek to an absolute timestamp specified via keyboard input or
   pasted from clipboard.
 
-- **[SmartCopyPaste_II.lua](https://github.com/Eisa01/mpv-scripts#smartcopypaste_ii):**
-  Powerful copy paste and clipboard list features using a log file.
+- **[SmartCopyPaste.lua](https://github.com/Eisa01/mpv-scripts#smartcopypaste):**
+  Add the capability to copy and paste while being smart and customizable.
 
 - **[Thumbnailer.lua](https://github.com/deus0ww/mpv-conf):**
   A more streamlined thumbnailer than [mpv_thumbnail_script](https://github.com/marzzzello/mpv_thumbnail_script),
