@@ -793,6 +793,11 @@ function ass_draw_rr_h_ccw(ass, x0, y0, x1, y1, r1, hexagon, r2)
     end
 end
 
+function round(number, decimals)
+    local power = 10^(decimals or 0)
+    return math.floor(number * power + 0.5) / power
+end
+
 
 --
 -- Tracklist Management
@@ -1577,7 +1582,7 @@ function layout()
     local refY = posY
 
     -- padding to decrease when player window is tall or small
-    local min = osc_param.display_aspect <= 0.6
+    local min = round(osc_param.display_aspect, 1) <= 0.6
     local pad = min and -10 or 0
 
     osc_param.areas = {} -- delete areas
@@ -1804,7 +1809,7 @@ function osc_init()
     ne = new_element("pl_prev", "button")
 
     ne.content = "\xEE\xA4\x93"
-    ne.visible = (osc_param.display_aspect > 1.1)
+    ne.visible = (round(osc_param.display_aspect, 1) > 1.1)
     ne.enabled = (pl_pos > 1) or (loop ~= "no")
     ne.eventresponder["mbtn_left_up"] =
         function ()
@@ -1822,7 +1827,7 @@ function osc_init()
     ne = new_element("pl_next", "button")
 
     ne.content = "\xEE\xA4\x94"
-    ne.visible = (osc_param.display_aspect > 1.1)
+    ne.visible = (round(osc_param.display_aspect, 1) > 1.1)
     ne.enabled = (have_pl and (pl_pos < pl_count)) or (loop ~= "no")
     ne.eventresponder["mbtn_left_up"] =
         function ()
@@ -1882,7 +1887,7 @@ function osc_init()
 
     ne.enabled = have_ch
     ne.content = "\xEE\xA4\x95"
-    ne.visible = (osc_param.display_aspect > 0.9)
+    ne.visible = (round(osc_param.display_aspect, 1) > 0.9)
     ne.eventresponder["mbtn_left_up"] =
         function ()
             mp.commandv("add", "chapter", -1)
@@ -1900,7 +1905,7 @@ function osc_init()
 
     ne.enabled = have_ch
     ne.content = "\xEE\xA4\x96"
-    ne.visible = (osc_param.display_aspect > 0.9)
+    ne.visible = (round(osc_param.display_aspect, 1) > 0.9)
     ne.eventresponder["mbtn_left_up"] =
         function ()
             mp.commandv("add", "chapter", 1)
@@ -1982,7 +1987,7 @@ function osc_init()
     ne = new_element("tog_info", "button")
 
     ne.content = "\xEE\xA4\x90"
-    ne.visible = (osc_param.display_aspect > 0.6)
+    ne.visible = (round(osc_param.display_aspect, 1) > 0.6)
     ne.eventresponder["mbtn_left_up"] =
         function () mp.commandv("script-binding", "stats/display-stats-toggle") end
 
@@ -2103,7 +2108,7 @@ function osc_init()
     -- cache
     ne = new_element("cache", "button")
 
-    ne.visible = (osc_param.display_aspect > 1.3)
+    ne.visible = (round(osc_param.display_aspect, 1) > 1.3)
     ne.hoverable = false
     ne.content = function ()
         local cache_state = state.cache_state
