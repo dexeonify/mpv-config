@@ -2110,6 +2110,11 @@ function osc_init()
     end
     ne.eventresponder["mouse_move"] = --keyframe seeking when mouse is dragged
         function (element)
+            -- allow drag for mbtnleft only
+            if not element.state.mbtnleft then
+                return
+            end
+
             -- mouse move events may pile up during seeking and may still get
             -- sent when the user is done seeking, so we need to throw away
             -- identical seeks
@@ -2126,8 +2131,32 @@ function osc_init()
 
         end
     ne.eventresponder["mbtn_left_down"] = --exact seeks on single clicks
-        function (element) mp.commandv("seek", get_slider_value(element),
-            "absolute-percent", "exact") end
+        function (element)
+            element.state.mbtnleft = true
+            mp.commandv("seek", get_slider_value(element), "absolute-percent", "exact")
+        end
+    ne.eventresponder["mbtn_left_up"] =
+        function (element)
+            element.state.mbtnleft = false
+        end
+    ne.eventresponder["mbtn_right_down"] = --seeks to closest chapter
+        function (element)
+            if (mp.get_property_native("chapter-list/count") > 0) then
+                local pos = get_slider_value(element)
+                local markers = element.slider.markerF()
+
+                -- Compares the difference between the right-clicked position
+                -- and the iterated marker to determine the closest chapter
+                local ch, diff
+                for i, marker in ipairs(markers) do
+                    if not diff or (math.abs(pos - marker) < diff) then
+                        diff = math.abs(pos - marker)
+                        ch = i - 1 --chapter index starts from 0
+                    end
+                end
+                mp.commandv("set", "chapter", ch)
+            end
+        end
     ne.eventresponder["reset"] =
         function (element) element.state.lastseek = nil end
 
