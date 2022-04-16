@@ -552,6 +552,33 @@ local osc_styles = {
     elementHover = "{\\blur5\\1c&HFFFFFF&}"
 }
 
+local osc_icons = {
+    close = "\xEE\xA4\x80",
+    minimize = "\xEE\xA4\x81",
+    restore = "\xEE\xA4\x82",
+    maximize = "\xEE\xA4\x83",
+
+    volume_mute = "\xEE\xA4\x84",
+    volume_low = "\xEE\xA4\x85",
+    volume_med = "\xEE\xA4\x86",
+    volume_high = "\xEE\xA4\x87",
+
+    audio = "\xEE\xA4\x88",
+    subtitle = "\xEE\xA4\x89",
+    info = "\xEE\xA4\x90",
+    fullscreen_exit = "\xEE\xA4\x91",
+    fullscreen = "\xEE\xA4\x92",
+
+    playlist_prev = "\xEE\xA4\x93",
+    playlist_next = "\xEE\xA4\x94",
+    chapter_prev = "\xEE\xA4\x95",
+    chapter_next = "\xEE\xA4\x96",
+    play = "\xEE\xA4\x97",
+    pause = "\xEE\xA4\x98",
+    skipback = "\xEE\xA4\x99",
+    skipforward = "\xEE\xA4\xA0",
+}
+
 -- internal states, do not touch
 local state = {
     showtime,                               -- time of last invocation (last mouse move)
@@ -1497,7 +1524,7 @@ function window_controls()
 
     -- Close: 🗙
     ne = new_element("close", "button")
-    ne.content = "\xEE\xA4\x80"
+    ne.content = osc_icons.close
     ne.eventresponder["mbtn_left_up"] =
         function () mp.commandv("quit") end
     lo = add_layout("close")
@@ -1507,7 +1534,7 @@ function window_controls()
 
     -- Minimize: 🗕
     ne = new_element("minimize", "button")
-    ne.content = "\xEE\xA4\x81"
+    ne.content = osc_icons.minimize
     ne.eventresponder["mbtn_left_up"] =
         function () mp.commandv("cycle", "window-minimized") end
     lo = add_layout("minimize")
@@ -1517,9 +1544,9 @@ function window_controls()
     -- Maximize: 🗖 /🗗
     ne = new_element("maximize", "button")
     if state.maximized or state.fullscreen then
-        ne.content = "\xEE\xA4\x82"
+        ne.content = osc_icons.restore
     else
-        ne.content = "\xEE\xA4\x83"
+        ne.content = osc_icons.maximize
     end
     ne.eventresponder["mbtn_left_up"] =
         function ()
@@ -1810,7 +1837,7 @@ function osc_init()
     -- prev
     ne = new_element("pl_prev", "button")
 
-    ne.content = "\xEE\xA4\x93"
+    ne.content = osc_icons.playlist_prev
     ne.visible = (round(osc_param.display_aspect) > 1.1)
     ne.enabled = (pl_pos > 1) or (loop ~= "no")
     ne.eventresponder["mbtn_left_up"] =
@@ -1828,7 +1855,7 @@ function osc_init()
     -- next
     ne = new_element("pl_next", "button")
 
-    ne.content = "\xEE\xA4\x94"
+    ne.content = osc_icons.playlist_next
     ne.visible = (round(osc_param.display_aspect) > 1.1)
     ne.enabled = (have_pl and (pl_pos < pl_count)) or (loop ~= "no")
     ne.eventresponder["mbtn_left_up"] =
@@ -1852,9 +1879,9 @@ function osc_init()
 
     ne.content = function ()
         if mp.get_property("pause") == "yes" then
-            return ("\xEE\xA4\x97")
+            return (osc_icons.play)
         else
-            return ("\xEE\xA4\x98")
+            return (osc_icons.pause)
         end
     end
     ne.eventresponder["mbtn_left_up"] =
@@ -1864,7 +1891,7 @@ function osc_init()
     ne = new_element("skipback", "button")
 
     ne.softrepeat = true
-    ne.content = "\xEE\xA4\x99"
+    ne.content = osc_icons.skipback
     ne.eventresponder["mbtn_left_down"] =
         function () mp.commandv("seek", -5, "relative", "keyframes") end
     ne.eventresponder["shift+mbtn_left_down"] =
@@ -1876,7 +1903,7 @@ function osc_init()
     ne = new_element("skipfrwd", "button")
 
     ne.softrepeat = true
-    ne.content = "\xEE\xA4\xA0"
+    ne.content = osc_icons.skipforward
     ne.eventresponder["mbtn_left_down"] =
         function () mp.commandv("seek", 10, "relative", "keyframes") end
     ne.eventresponder["shift+mbtn_left_down"] =
@@ -1888,7 +1915,7 @@ function osc_init()
     ne = new_element("ch_prev", "button")
 
     ne.enabled = have_ch
-    ne.content = "\xEE\xA4\x95"
+    ne.content = osc_icons.chapter_prev
     ne.visible = (round(osc_param.display_aspect) > 0.9)
     ne.eventresponder["mbtn_left_up"] =
         function ()
@@ -1906,7 +1933,7 @@ function osc_init()
     ne = new_element("ch_next", "button")
 
     ne.enabled = have_ch
-    ne.content = "\xEE\xA4\x96"
+    ne.content = osc_icons.chapter_next
     ne.visible = (round(osc_param.display_aspect) > 0.9)
     ne.eventresponder["mbtn_left_up"] =
         function ()
@@ -1927,7 +1954,7 @@ function osc_init()
 
     ne.enabled = (#tracks_osc.audio > 0)
     ne.off = (get_track('audio') == 0)
-    ne.content = "\xEE\xA4\x88"
+    ne.content = osc_icons.audio
     ne.tooltip_style = osc_styles.tooltip
     ne.tooltipF = function ()
         local msg = "OFF"
@@ -1952,7 +1979,7 @@ function osc_init()
 
     ne.enabled = (#tracks_osc.sub > 0)
     ne.off = (get_track('audio') == 0)
-    ne.content = "\xEE\xA4\x89"
+    ne.content = osc_icons.subtitle
     ne.tooltip_style = osc_styles.tooltip
     ne.tooltipF = function ()
         local msg = "OFF"
@@ -1977,9 +2004,9 @@ function osc_init()
 
     ne.content = function ()
         if (state.fullscreen) then
-            return ("\xEE\xA4\x91")
+            return (osc_icons.fullscreen_exit)
         else
-            return ("\xEE\xA4\x92")
+            return (osc_icons.fullscreen)
         end
     end
     ne.eventresponder["mbtn_left_up"] =
@@ -1988,7 +2015,7 @@ function osc_init()
     -- tog_info
     ne = new_element("tog_info", "button")
 
-    ne.content = "\xEE\xA4\x90"
+    ne.content = osc_icons.info
     ne.visible = (round(osc_param.display_aspect) > 0.6)
     ne.eventresponder["mbtn_left_up"] =
         function () mp.commandv("script-binding", "stats/display-stats-toggle") end
@@ -2139,9 +2166,11 @@ function osc_init()
     ne.content = function()
         local volume = mp.get_property_number("volume", 0)
         local mute = mp.get_property_native("mute")
-        local volicon = {"\xEE\xA4\x85", "\xEE\xA4\x86", "\xEE\xA4\x87"}
+        local volicon = {
+            osc_icons.volume_low, osc_icons.volume_med, osc_icons.volume_high
+        }
         if volume == 0 or mute then
-            return "\xEE\xA4\x84"
+            return osc_icons.volume_mute
         else
             return volicon[math.min(3,math.ceil(volume / (100/3)))]
         end
