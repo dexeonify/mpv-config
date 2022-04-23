@@ -1081,6 +1081,14 @@ function get_chapter(possec)
     end
 end
 
+function update_subpos(is_visible)
+    -- source: https://github.com/Zren/mpv-osc-tethys/commit/5173241
+    local max_subpos = 78  -- as the starting point for decrementing
+    local new_subpos = max_subpos - 150 / 12.5
+    local final_pos = is_visible and new_subpos or max_subpos
+    mp.set_property_number("sub-pos", final_pos)
+end
+
 function render_elements(master_ass)
 
     -- when the slider is dragged or hovered and we have a target chapter name
@@ -2236,6 +2244,7 @@ end
 function osc_visible(visible)
     if state.osc_visible ~= visible then
         state.osc_visible = visible
+        update_subpos(visible)
     end
     request_tick()
 end
