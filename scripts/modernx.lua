@@ -612,6 +612,7 @@ local state = {
     osd = mp.create_osd_overlay("ass-events"),
     chapter_list = {},                      -- sorted by time
     lastvisibility = user_opts.visibility,  -- save last visibility on pause if showonpause
+    subpos = mp.get_property_number("sub-pos")  -- remember the value of sub-pos set by the user
 }
 
 local window_control_box_width = 80
@@ -1084,9 +1085,13 @@ end
 function update_subpos(is_visible)
     -- source: https://github.com/Zren/mpv-osc-tethys/commit/5173241
     local max_subpos = 78  -- as the starting point for decrementing
-    local new_subpos = max_subpos - 150 / 12.5
-    local final_pos = is_visible and new_subpos or max_subpos
-    mp.set_property_number("sub-pos", final_pos)
+    local osc_height = math.max(150, user_opts.blur_intensity)
+    local new_subpos = max_subpos - (osc_height - 150) / 12.5
+
+    if (state.subpos > new_subpos) then
+        local final_pos = is_visible and new_subpos or state.subpos
+        mp.set_property_number("sub-pos", round(final_pos, 0))
+    end
 end
 
 function render_elements(master_ass)
@@ -2244,8 +2249,8 @@ end
 function osc_visible(visible)
     if state.osc_visible ~= visible then
         state.osc_visible = visible
-        update_subpos(visible)
     end
+    update_subpos(visible)
     request_tick()
 end
 
