@@ -1671,7 +1671,7 @@ function layout()
     lo.geometry = {x = refX - 120, y = refY - 40, an = 5, w = 30, h = 24}
     lo.style = osc_styles.mediumButtons
 
-    lo = add_layout('skipback')
+    lo = add_layout("skipback")
     lo.geometry = {x = refX - 60 - pad, y = refY - 40, an = 5, w = 30, h = 24}
     lo.style = osc_styles.mediumButtons
 
@@ -1679,7 +1679,7 @@ function layout()
     lo.geometry = {x = refX, y = refY - 40, an = 5, w = 45, h = 45}
     lo.style = osc_styles.bigButtons
 
-    lo = add_layout('skipfrwd')
+    lo = add_layout("skipfrwd")
     lo.geometry = {x = refX + 60 + pad, y = refY - 40, an = 5, w = 30, h = 24}
     lo.style = osc_styles.mediumButtons
 
@@ -1953,7 +1953,7 @@ function osc_init()
     ne = new_element("cy_audio", "button")
 
     ne.enabled = (#tracks_osc.audio > 0)
-    ne.off = (get_track('audio') == 0)
+    ne.off = (get_track("audio") == 0)
     ne.content = osc_icons.audio
     ne.tooltip_style = osc_styles.tooltip
     ne.tooltipF = function ()
@@ -2847,7 +2847,7 @@ function visibility_mode(mode, no_osd)
     end
 
     -- Reset the input state on a mode change. The input state will be
-    -- recalcuated on the next render cycle, except in 'never' mode where it
+    -- recalculated on the next render cycle, except in 'never' mode where it
     -- will just stay disabled.
     mp.disable_key_bindings("input")
     mp.disable_key_bindings("window-controls")

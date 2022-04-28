@@ -554,7 +554,7 @@ end
 --saves the directory and name of the currently playing file
 local function update_current_directory(_, filepath)
     --if we're in idle mode then we want to open the working directory
-    if filepath == nil then 
+    if filepath == nil then
         current_file.directory = API.fix_path( mp.get_property("working-directory", ""), true)
         current_file.name = nil
         current_file.path = nil
@@ -1510,7 +1510,7 @@ end
 
 --a wrapper around coroutine.yield that aborts the coroutine if
 --the parse request was cancelled by the user
---the coroutine is 
+--the coroutine is
 function parse_state_API:yield(...)
     local co = coroutine.running()
     local is_browser = co == state.co
@@ -1765,7 +1765,7 @@ end
 
 --we don't want to add any overhead when the browser isn't open
 mp.observe_property('path', 'string', function(_,path)
-    if not state.hidden then 
+    if not state.hidden then
         update_current_directory(_,path)
         update_ass()
     else state.flag_update = true end
@@ -1789,4 +1789,3 @@ mp.register_script_message("get-directory-contents", function(directory, respons
     local co = coroutine.create(scan_directory_json)
     API.coroutine.resume_err(co, directory, response_str)
 end)
-
