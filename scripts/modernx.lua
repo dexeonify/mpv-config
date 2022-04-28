@@ -1978,7 +1978,7 @@ function osc_init()
     ne = new_element("cy_sub", "button")
 
     ne.enabled = (#tracks_osc.sub > 0)
-    ne.off = (get_track('audio') == 0)
+    ne.off = (get_track("sub") == 0)
     ne.content = osc_icons.subtitle
     ne.tooltip_style = osc_styles.tooltip
     ne.tooltipF = function ()
