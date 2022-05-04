@@ -612,7 +612,7 @@ local state = {
     osd = mp.create_osd_overlay("ass-events"),
     chapter_list = {},                      -- sorted by time
     lastvisibility = user_opts.visibility,  -- save last visibility on pause if showonpause
-    subpos = mp.get_property_number("sub-pos")  -- remember the value of sub-pos set by the user
+    subpos = 100,                           -- last value of sub-pos set by the user
 }
 
 local window_control_box_width = 80
@@ -1079,6 +1079,16 @@ function get_chapter(possec)
         if possec >= cl[n].time then
             return cl[n]
         end
+    end
+end
+
+function observe_subpos(visible, pos)
+    if not visible then
+        mp.observe_property("sub-pos", "number", observe_subpos)
+    elseif visible == "sub-pos" then
+        state.subpos = pos
+    else
+        mp.unobserve_property(observe_subpos)
     end
 end
 
@@ -2250,6 +2260,7 @@ function osc_visible(visible)
     if state.osc_visible ~= visible then
         state.osc_visible = visible
     end
+    observe_subpos(visible)
     update_subpos(visible)
     request_tick()
 end
@@ -2720,6 +2731,7 @@ mp.observe_property("chapter-list", "native", function(_, list)
     update_duration_watch()
     request_init()
 end)
+mp.observe_property("sub-pos", "number", observe_subpos)
 
 mp.register_script_message("osc-message", show_message)
 mp.register_script_message("osc-chapterlist", function(dur)
