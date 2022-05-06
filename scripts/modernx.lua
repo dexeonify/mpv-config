@@ -65,6 +65,7 @@ local user_opts = {
     showonstart = true,         -- show OSC on startup or when the next file in
                                 -- playlist starts playing
     showonseek = false,         -- show OSC when seeking
+    movesub = true,             -- move subtitles when the OSC is visible
     titlefont = "",             -- font used for the title above OSC and
                                 -- in the window controls bar
     blur_intensity = 150,       -- adjust the strength of the OSC blur
@@ -2260,8 +2261,10 @@ function osc_visible(visible)
     if state.osc_visible ~= visible then
         state.osc_visible = visible
     end
-    observe_subpos(visible)
-    update_subpos(visible)
+    if user_opts.movesub then
+        observe_subpos(visible)
+        update_subpos(visible)
+    end
     request_tick()
 end
 
