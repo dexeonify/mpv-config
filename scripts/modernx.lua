@@ -530,6 +530,9 @@ local osc_param = { -- calculated by osc_init()
     display_aspect = 1,
     unscaled_y = 0,
     areas = {},
+    video_margins = {
+        l = 0, r = 0, t = 0, b = 0,         -- left/right/top/bottom
+    },
 }
 
 local osc_styles = {
@@ -594,6 +597,7 @@ local state = {
     tc_ms = user_opts.timems,               -- Should the timecodes display their time with milliseconds
     mp_screen_sizeX, mp_screen_sizeY,       -- last screen-resolution, to detect resolution changes to issue reINITs
     initREQ = false,                        -- is a re-init request pending?
+    marginsREQ = false,                     -- is a margins update pending?
     last_mouseX, last_mouseY,               -- last mouse position, to detect significant mouse movement
     mouse_in_window = false,
     message_text,
@@ -1626,6 +1630,10 @@ function layout()
         h = 180
     }
 
+    -- update bottom margin
+    osc_param.video_margins.b =
+        math.max(180, user_opts.blur_intensity) / osc_param.playresy
+
     -- origin of the controllers, bottom left corner
     local posX = 0
     local posY = osc_param.playresy
@@ -2220,6 +2228,20 @@ function osc_init()
     prepare_elements()
 end
 
+function update_margins()
+    local margins = osc_param.video_margins
+
+    -- Don't use margins if it's visible only temporarily.
+    if (not state.osc_visible) or
+       (state.fullscreen and not user_opts.showfullscreen) or
+       (not state.fullscreen and not user_opts.showwindowed)
+    then
+        margins = {l = 0, r = 0, t = 0, b = 0}
+    end
+
+    utils.shared_script_property_set("osc-margins",
+        string.format("%f,%f,%f,%f", margins.l, margins.r, margins.t, margins.b))
+end
 
 --
 -- Other important stuff
@@ -2265,6 +2287,7 @@ function osc_visible(visible)
         observe_subpos(visible)
         update_subpos(visible)
     end
+    update_margins()
     request_tick()
 end
 
@@ -2608,6 +2631,11 @@ local santa_hat_lines = {
 
 -- called by mpv on every frame
 function tick()
+    if state.marginsREQ == true then
+        update_margins()
+        state.marginsREQ = false
+    end
+
     if (not state.enabled) then return end
 
     if (state.idle) then
@@ -2754,6 +2782,7 @@ end)
 mp.observe_property("fullscreen", "bool",
     function(name, val)
         state.fullscreen = val
+        state.marginsREQ = true
         request_init_resize()
     end
 )
@@ -2882,6 +2911,7 @@ function visibility_mode(mode, no_osd)
     mp.disable_key_bindings("window-controls")
     state.input_enabled = false
 
+    update_margins()
     request_tick()
 end
 
