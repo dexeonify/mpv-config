@@ -17,7 +17,7 @@ for the OSC icons.
 
 ## User scripts
 
-- **[autosave.lua](https://gist.github.com/CyberShadow/2f71a97fb85ed42146f6d9f522bc34ef):**
+- **[auto-save-state.lua](https://github.com/AN3223/dotfiles/blob/master/.config/mpv/scripts/auto-save-state.lua):**
   Periodically saves "watch later" data during playback, rather than only
   saving on quit.
 
