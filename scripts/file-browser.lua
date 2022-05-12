@@ -17,8 +17,8 @@ local o = {
     --root directories
     root = "~/",
 
-    --characters to use as seperators
-    root_seperators = ",;",
+    --characters to use as separators
+    root_separators = ",;",
 
     --number of entries to show on the screen at once
     num_entries = 20,
@@ -39,15 +39,11 @@ local o = {
     --add extra file extensions
     extension_whitelist = "",
 
-    --files with these extensions will be added as additional audio tracks instead of appended to the playlist
-    audio_extension_blacklist = "",
-
-    audio_extension_whitelist = "",
+    --files with these extensions will be added as additional audio tracks for the current file instead of appended to the playlist
+    audio_extensions = "mka,dts,dtshd,dts-hd,truehd,true-hd",
 
     --files with these extensions will be added as additional subtitle tracks instead of appended to the playlist
-    sub_extension_blacklist = "",
-
-    sub_extension_whitelist = "",
+    subtitle_extensions = "etf,etf8,utf-8,idx,sub,srt,rt,ssa,ass,mks,vtt,sup,scc,smi,lrc,pgs",
 
     --filter dot directories like .config
     --most useful on linux systems
@@ -113,6 +109,7 @@ local o = {
 }
 
 opt.read_options(o, 'file_browser')
+utils.shared_script_property_set("file_browser-open", "no")
 
 
 
@@ -122,7 +119,7 @@ opt.read_options(o, 'file_browser')
 --------------------------------------------------------------------------------------------------------
 
 --sets the version for the file-browser API
-API_VERSION = "1.1.0"
+API_VERSION = "1.3.0"
 
 --switch the main script to a different environment so that the
 --executed lua code cannot access our global variales
@@ -225,16 +222,6 @@ local compatible_file_extensions = {
     "wv","x264","x265","xvid","y4m","yuv"
 }
 
---creating a set of subtitle extensions for custom subtitle loading behaviour
-local subtitle_extension_list = {
-    "etf","etf8","utf-8","idx","sub","srt","rt","ssa","ass","mks","vtt","sup","scc","smi","lrc","pgs"
-}
-
---creating a set of audio extensions for custom audio loading behaviour
-local audio_extension_list = {
-    "mka","dts","dtshd","dts-hd","truehd","true-hd"
-}
-
 --------------------------------------------------------------------------------------------------------
 --------------------------------------Cache Implementation----------------------------------------------
 --------------------------------------------------------------------------------------------------------
@@ -283,6 +270,9 @@ local cache = setmetatable({}, { __index = __cache })
 --------------------------------------------------------------------------------------------------------
 
 API.coroutine = {}
+local ABORT_ERROR = {
+    msg = "browser is no longer waiting for list - aborting parse"
+}
 
 --implements table.pack if on lua 5.1
 if not table.pack then
@@ -298,14 +288,15 @@ end
 --unlike the next function this one still returns the results of coroutine.resume()
 function API.coroutine.resume_catch(...)
     local returns = table.pack(coroutine.resume(...))
-    if not returns[1] then msg.error(returns[2]) end
+    if not returns[1] and returns[2] ~= ABORT_ERROR then msg.error(returns[2]) end
     return table.unpack(returns, 1, returns.n)
 end
 
 --resumes a coroutine and prints an error if it was not sucessful
 function API.coroutine.resume_err(...)
     local success, err = coroutine.resume(...)
-    if not success then msg.error(err) end
+    if not success and err ~= ABORT_ERROR then msg.error(err) end
+    return success
 end
 
 --in lua 5.1 there is only one return value which will be nil if run from the main thread
@@ -446,6 +437,11 @@ function API.filter(t)
     return t
 end
 
+--returns a string iterator that uses the root separators
+function API.iterate_opt(str)
+    return string.gmatch(str, "([^"..API.pattern_escape(o.root_separators).."]+)")
+end
+
 --sorts a table into an array of selected items in the correct order
 --if a predicate function is passed, then the item will only be added to
 --the table if the function returns true
@@ -469,7 +465,7 @@ local function copy_table_recursive(t, references)
     if type(t) ~= "table" then return t end
     if references[t] then return references[t] end
 
-    local copy = {}
+    local copy = setmetatable( {}, { __original = t } )
     references[t] = copy
 
     for key, value in pairs(t) do
@@ -705,41 +701,46 @@ local function enable_select_mode()
 end
 
 --calculates what drag behaviour is required for that specific movement
-local function drag_select(direction)
+local function drag_select(direction, original_pos, new_pos)
+    if original_pos - new_pos == 0 then return end
+
     local setting = state.selection[state.multiselect_start]
-    local offset = state.multiselect_start - state.selected
-    local below = offset < 0
+    for i = original_pos, new_pos, direction > 0 and 1 or -1 do
+        --if we're moving the cursor away from the starting point then set the selection
+        --otherwise restore the original selection
+        if i > state.multiselect_start then
+            if new_pos > original_pos then
+                state.selection[i] = setting
+            else
+                state.selection[i] = state.initial_selection[i]
+            end
+        elseif i < state.multiselect_start then
+            if new_pos < original_pos then
+                state.selection[i] = setting
+            else
+                state.selection[i] = state.initial_selection[i]
+            end
+        end
+    end
+end
 
-    if below == (direction == 1) and offset ~= 0 then
-        state.selection[state.selected] = setting
+--moves the selector up and down the list by the entered amount
+local function scroll(n, wrap)
+    local num_items = #state.list
+    if num_items == 0 then return end
+
+    local original_pos = state.selected
+
+    if original_pos + n > num_items then
+        state.selected = wrap and 1 or num_items
+    elseif original_pos + n < 1 then
+        state.selected = wrap and num_items or 1
     else
-        state.selection[state.selected - direction] = state.initial_selection[state.selected-direction]
+        state.selected = original_pos + n
     end
+
+    if state.multiselect_start then drag_select(n, original_pos, state.selected) end
     update_ass()
-end
-
---moves the selector down the list
-local function scroll_down()
-    if state.selected < #state.list then
-        state.selected = state.selected + 1
-        update_ass()
-    elseif o.wrap then
-        state.selected = 1
-        update_ass()
-    end
-    if state.multiselect_start then drag_select(1) end
-end
-
---moves the selector up the list
-local function scroll_up()
-    if state.selected > 1 then
-        state.selected = state.selected - 1
-        update_ass()
-    elseif o.wrap then
-        state.selected = #state.list
-        update_ass()
-    end
-    if state.multiselect_start then drag_select(-1) end
 end
 
 --toggles the selection
@@ -886,7 +887,7 @@ local function update_list()
     --if the running coroutine isn't the one stored in the state variable, then the user
     --changed directories while the coroutine was paused, and this operation should be aborted
     if coroutine.running() ~= state.co then
-        msg.verbose("current coroutine does not match browser's expected coroutine - aborting the parse")
+        msg.verbose(ABORT_ERROR.msg)
         msg.debug("expected:", state.directory, "received:", directory)
         return
     end
@@ -1019,6 +1020,7 @@ local function open()
         mp.add_forced_key_binding(v[1], 'dynamic/'..v[2], v[3], v[4])
     end
 
+    utils.shared_script_property_set("file_browser-open", "yes")
     state.hidden = false
     if state.directory == nil then
         local path = mp.get_property('path')
@@ -1028,7 +1030,6 @@ local function open()
     end
 
     if state.flag_update then update_current_directory(nil, mp.get_property('path')) end
-    state.hidden = false
     if not state.flag_update then ass:update()
     else state.flag_update = false ; update_ass() end
 end
@@ -1039,6 +1040,7 @@ local function close()
         mp.remove_key_binding('dynamic/'..v[2])
     end
 
+    utils.shared_script_property_set("file_browser-open", "no")
     state.hidden = true
     ass:remove()
 end
@@ -1097,39 +1099,43 @@ local function custom_loadlist_recursive(directory, flag, prev_dirs)
     if list == nil then
         msg.warn("Could not parse", directory, "appending to playlist anyway")
         mp.commandv("loadfile", directory, flag)
-        flag = "append"
+        flag = "append-play"
         return true
     end
 
     directory = opts.directory or directory
     if directory == "" then return end
 
+    --this item appending logic is very sensitive as it impacts how multiselected items are added to the playlist
+    local item_appended = false
     for _, item in ipairs(list) do
         if not sub_extensions[ API.get_extension(item.name, "") ]
         and not audio_extensions[ API.get_extension(item.name, "") ]
         then
             if item.type == "dir" or parseable_extensions[API.get_extension(item.name, "")] then
                 if custom_loadlist_recursive( API.get_new_directory(item, directory) , flag, prev_dirs) then
-                    flag = "append"
+                    flag = "append-play"
+                    item_appended = true
                 end
             else
                 local path = API.get_full_path(item, directory)
 
                 msg.verbose("Appending", path, "to the playlist")
                 mp.commandv("loadfile", path, flag)
-                flag = "append"
+                flag = "append-play"
+                item_appended = true
             end
         end
     end
-    return flag == "append"
+    return item_appended
 end
 
 
 --a wrapper for the custom_loadlist_recursive function to handle the flags
 local function loadlist(directory, flag)
-    flag = custom_loadlist_recursive(directory, flag, {})
-    if not flag then msg.warn(directory, "contained no valid files") end
-    return flag
+    local item_appended = custom_loadlist_recursive(directory, flag, {})
+    if not item_appended then msg.warn(directory, "contained no valid files") end
+    return item_appended
 end
 
 --load playlist entries before and after the currently playing file
@@ -1183,6 +1189,11 @@ local function open_file_coroutine(flag, autoload)
     if flag == 'replace' then close() end
     local directory = state.directory
 
+    --we want to set the idle option to yes to ensure that if the first item
+    --fails to load then the player has a chance to attempt to load further items (for async append operations)
+    local idle = mp.get_property("idle", "once")
+    mp.set_property("idle", "yes")
+
     --handles multi-selection behaviour
     if next(state.selection) then
         local selection = API.sort_keys(state.selection)
@@ -1195,7 +1206,7 @@ local function open_file_coroutine(flag, autoload)
         --the currently selected file will be loaded according to the flag
         --the flag variable will be switched to append once a file is loaded
         for i=1, #selection do
-            if loadfile(selection[i], flag, autoload, directory) then flag = "append" end
+            if loadfile(selection[i], flag, autoload, directory) then flag = "append-play" end
         end
 
     elseif flag == 'replace' then
@@ -1205,6 +1216,8 @@ local function open_file_coroutine(flag, autoload)
     else
         loadfile(state.list[state.selected], flag, false, directory)
     end
+
+    if mp.get_property("idle") == "yes" then mp.set_property("idle", idle) end
 end
 
 --opens the selelected file(s)
@@ -1226,8 +1239,12 @@ state.keybinds = {
     {'ESC', 'close', escape, {}},
     {'RIGHT', 'down_dir', down_dir, {}},
     {'LEFT', 'up_dir', up_dir, {}},
-    {'DOWN', 'scroll_down', scroll_down, {repeatable = true}},
-    {'UP', 'scroll_up', scroll_up, {repeatable = true}},
+    {'DOWN', 'scroll_down', function() scroll(1, o.wrap) end, {repeatable = true}},
+    {'UP', 'scroll_up', function() scroll(-1, o.wrap) end, {repeatable = true}},
+    {'PGDWN', 'page_down', function() scroll(o.num_entries) end, {repeatable = true}},
+    {'PGUP', 'page_up', function() scroll(-o.num_entries) end, {repeatable = true}},
+    {'Shift+PGDWN', 'list_bottom', function() scroll(#state.list) end, {}},
+    {'Shift+PGUP', 'list_top', function() scroll(-#state.list) end, {}},
     {'HOME', 'goto_current', goto_current_dir, {}},
     {'Shift+HOME', 'goto_root', goto_root, {}},
     {'Ctrl+r', 'reload', function() cache:clear(); update() end, {}},
@@ -1462,8 +1479,8 @@ end
 --------------------------------------------------------------------------------------------------------
 
 --these functions we'll provide as-is
-API.update_ass = update_ass
-API.rescan_directory = update
+API.redraw = update_ass
+API.rescan = update
 API.browse_directory = browse_directory
 
 function API.clear_cache()
@@ -1488,7 +1505,7 @@ end
 --add a compatible extension to show through the filter, only applies if run during the setup() method
 function API.add_default_extension(ext)
     table.insert(compatible_file_extensions, ext)
- end
+end
 
 --add item to root at position pos
 function API.insert_root_item(item, pos)
@@ -1500,6 +1517,7 @@ end
 
 --providing getter and setter functions so that addons can't modify things directly
 function API.get_script_opts() return API.copy_table(o) end
+function API.get_opt(key) return o[key] end
 function API.get_extensions() return API.copy_table(extensions) end
 function API.get_sub_extensions() return API.copy_table(sub_extensions) end
 function API.get_audio_extensions() return API.copy_table(audio_extensions) end
@@ -1520,7 +1538,7 @@ function API.get_parse_state(co) return parse_states[co or coroutine.running() o
 
 function API.set_empty_text(str)
     state.empty_text = str
-    API.update_ass()
+    API.redraw()
 end
 
 function API.set_selected_index(index)
@@ -1528,7 +1546,7 @@ function API.set_selected_index(index)
     if index < 1 then index = 1 end
     if index > #state.list then index = #state.list end
     state.selected = index
-    API.update_ass()
+    API.redraw()
     return index
 end
 
@@ -1556,8 +1574,8 @@ function parse_state_API:yield(...)
 
     local result = table.pack(coroutine.yield(...))
     if is_browser and co ~= state.co then
-        msg.verbose("browser no longer waiting for list - aborting parse")
-        error("browser is no longer waiting for list - aborting parse")
+        msg.verbose("browser no longer waiting for list - aborting parse for", self.directory)
+        error(ABORT_ERROR)
     end
     return unpack(result, 1, result.n)
 end
@@ -1695,44 +1713,30 @@ end
 
 --sets up the compatible extensions list
 local function setup_extensions_list()
-    if not o.filter_files then return end
-
-    --adding file extensions to the set
-    for i=1, #compatible_file_extensions do
-        extensions[compatible_file_extensions[i]] = true
+    --setting up subtitle extensions
+    for ext in API.iterate_opt(o.subtitle_extensions:lower()) do
+        sub_extensions[ext] = true
+        extensions[ext] = true
     end
 
-    --setting up subtitle extensions
-    for i = 1, #subtitle_extension_list do
-        sub_extensions[subtitle_extension_list[i]] = true end
-    for str in string.gmatch(o.sub_extension_whitelist:lower(), "([^"..API.pattern_escape(o.root_seperators).."]+)") do
-        sub_extensions[str] = true end
-    for str in string.gmatch(o.sub_extension_blacklist:lower(), "([^"..API.pattern_escape(o.root_seperators).."]+)") do
-        sub_extensions[str] = nil end
-
-    --adding subtitle extensions to the main extension list
-    for ext in pairs(sub_extensions) do
-        extensions[ext] = true end
-
     --setting up audio extensions
-    for i = 1, #audio_extension_list do
-        audio_extensions[audio_extension_list[i]] = true end
-    for str in string.gmatch(o.audio_extension_whitelist:lower(), "([^"..API.pattern_escape(o.root_seperators).."]+)") do
-        audio_extensions[str] = true end
-    for str in string.gmatch(o.audio_extension_blacklist:lower(), "([^"..API.pattern_escape(o.root_seperators).."]+)") do
-        audio_extensions[str] = nil end
+    for ext in API.iterate_opt(o.audio_extensions:lower()) do
+        audio_extensions[ext] = true
+        extensions[ext] = true
+    end
 
-    --adding audio extensions to the main extension list
-    for ext in pairs(audio_extensions) do
-        extensions[ext] = true end
+    --adding file extensions to the set
+    for _, ext in ipairs(compatible_file_extensions) do
+        extensions[ext] = true
+    end
 
     --adding extra extensions on the whitelist
-    for str in string.gmatch(o.extension_whitelist:lower(), "([^"..API.pattern_escape(o.root_seperators).."]+)") do
+    for str in API.iterate_opt(o.extension_whitelist:lower()) do
         extensions[str] = true
     end
 
     --removing extensions that are in the blacklist
-    for str in string.gmatch(o.extension_blacklist:lower(), "([^"..API.pattern_escape(o.root_seperators).."]+)") do
+    for str in API.iterate_opt(o.extension_blacklist:lower()) do
         extensions[str] = nil
     end
 end
@@ -1740,7 +1744,7 @@ end
 --splits the string into a table on the semicolons
 local function setup_root()
     root = {}
-    for str in string.gmatch(o.root, "([^"..API.pattern_escape(o.root_seperators).."]+)") do
+    for str in API.iterate_opt(o.root) do
         local path = mp.command_native({'expand-path', str})
         path = API.fix_path(path, true)
 
