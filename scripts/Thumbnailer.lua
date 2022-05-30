@@ -200,8 +200,11 @@ local function remove_lock(path)
 end
 
 local function is_locked(path)
-    if utils.readdir(path, 'files') == nil then return
-    else return #utils.readdir(path, 'files') ~= 0 end
+    if utils.readdir(path, 'files') == nil then
+        return
+    else
+        return #utils.readdir(path, 'files') ~= 0
+    end
 end
 
 

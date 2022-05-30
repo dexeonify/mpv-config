@@ -2282,7 +2282,6 @@ end
 function osc_visible(visible)
     if state.osc_visible ~= visible then
         state.osc_visible = visible
-
         if user_opts.movesub then
             observe_subpos(visible)
             update_subpos(visible)
