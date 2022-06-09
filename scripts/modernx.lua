@@ -567,21 +567,22 @@ local osc_icons = {
     volume_low = "\xEE\xA4\x85",
     volume_med = "\xEE\xA4\x86",
     volume_high = "\xEE\xA4\x87",
+    volume_loud = "\xEE\xA4\x88",
 
-    audio = "\xEE\xA4\x88",
-    subtitle = "\xEE\xA4\x89",
-    info = "\xEE\xA4\x90",
-    fullscreen_exit = "\xEE\xA4\x91",
-    fullscreen = "\xEE\xA4\x92",
+    audio = "\xEE\xA4\x89",
+    subtitle = "\xEE\xA4\x90",
+    info = "\xEE\xA4\x91",
+    fullscreen_exit = "\xEE\xA4\x92",
+    fullscreen = "\xEE\xA4\x93",
 
-    playlist_prev = "\xEE\xA4\x93",
-    playlist_next = "\xEE\xA4\x94",
-    chapter_prev = "\xEE\xA4\x95",
-    chapter_next = "\xEE\xA4\x96",
-    play = "\xEE\xA4\x97",
-    pause = "\xEE\xA4\x98",
-    skipback = "\xEE\xA4\x99",
-    skipforward = "\xEE\xA4\xA0",
+    playlist_prev = "\xEE\xA4\x94",
+    playlist_next = "\xEE\xA4\x95",
+    chapter_prev = "\xEE\xA4\x96",
+    chapter_next = "\xEE\xA4\x97",
+    play = "\xEE\xA4\x98",
+    pause = "\xEE\xA4\x99",
+    skipback = "\xEE\xA4\xA0",
+    skipforward = "\xEE\xA4\xA1",
 }
 
 -- internal states, do not touch
@@ -2199,13 +2200,12 @@ function osc_init()
     ne.content = function()
         local volume = mp.get_property_number("volume", 0)
         local mute = mp.get_property_native("mute")
-        local volicon = {
-            osc_icons.volume_low, osc_icons.volume_med, osc_icons.volume_high
-        }
+        local volicon = {osc_icons.volume_low, osc_icons.volume_med,
+                         osc_icons.volume_high, osc_icons.volume_loud}
         if volume == 0 or mute then
             return osc_icons.volume_mute
         else
-            return volicon[math.min(3,math.ceil(volume / (100/3)))]
+            return volicon[math.min(4,math.ceil(volume / (100/3)))]
         end
     end
     ne.eventresponder["mbtn_left_up"] =
