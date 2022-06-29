@@ -2128,7 +2128,6 @@ function osc_init()
                     mp.commandv("seek", seekto, flags)
                     element.state.lastseek = seekto
             end
-
         end
     ne.eventresponder["mbtn_left_down"] = --exact seeks on single clicks
         function (element)
@@ -2154,7 +2153,11 @@ function osc_init()
                         ch = i - 1 --chapter index starts from 0
                     end
                 end
+
                 mp.commandv("set", "chapter", ch)
+                if user_opts.chapters_osd then
+                    show_message(get_chapterlist(), 3)
+                end
             end
         end
     ne.eventresponder["reset"] =
