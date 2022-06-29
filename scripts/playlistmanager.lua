@@ -64,8 +64,10 @@ local settings = {
     ]
   ]],
 
-  --loadfiles at startup if there is 0 or 1 items in playlist, if 0 uses worḱing dir for files
+  --loadfiles at startup if 1 or more items in playlist
   loadfiles_on_start = false,
+  -- loadfiles from working directory on idle startup
+  loadfiles_on_idle_start = false,
 
   --sort playlist on mpv start
   sortplaylist_on_start = false,
@@ -164,7 +166,13 @@ local settings = {
 
   -- what to show when playlist is truncated
   playlist_sliced_prefix = "...",
-  playlist_sliced_suffix = "..."
+  playlist_sliced_suffix = "...",
+
+  --output visual feedback to OSD for tasks
+  display_osd_feedback = false,
+
+  -- reset cursor navigation when playlist is not visible
+  reset_cursor_on_close = true
 
 }
 local opts = require("mp.options")
@@ -500,6 +508,10 @@ function unselectfile()
   showplaylist()
 end
 
+function resetcursor()
+  cursor = mp.get_property_number('playlist-pos', 1)
+end
+
 function removefile()
   refresh_globals()
   if plen == 0 then return end
@@ -794,7 +806,9 @@ function save_playlist()
       file:write(fullpath, "\n")
       i=i+1
     end
-    msg.info("Playlist written to: "..savepath)
+    local saved_msg = "Playlist written to: "..savepath
+    if settings.display_osd_feedback then mp.osd_message(saved_msg) end
+    msg.info(saved_msg)
     file:close()
   end
 end
@@ -853,7 +867,11 @@ function reverseplaylist()
   for outer=1, length-1, 1 do
     mp.commandv('playlist-move', outer, 0)
   end
-  if playlist_visible then showplaylist() end
+  if playlist_visible then
+    showplaylist()
+  elseif settings.display_osd_feedback then
+    mp.osd_message("Playlist reversed")
+  end
 end
 
 function shuffleplaylist()
@@ -864,7 +882,11 @@ function shuffleplaylist()
   mp.commandv("playlist-move", pos, math.random(0, plen-1))
   mp.set_property('playlist-pos', 0)
   refresh_globals()
-  if playlist_visible then showplaylist() end
+  if playlist_visible then
+    showplaylist()
+  elseif settings.display_osd_feedback then
+    mp.osd_message("Playlist shuffled")
+  end
 end
 
 function bind_keys(keys, name, func, opts)
@@ -913,6 +935,9 @@ function remove_keybinds()
   keybindstimer:kill()
   mp.set_osd_ass(0, 0, "")
   playlist_visible = false
+  if settings.reset_cursor_on_close then
+    resetcursor()
+  end
   if settings.dynamic_binds then
     unbind_keys(settings.key_moveup, 'moveup')
     unbind_keys(settings.key_movedown, 'movedown')
@@ -935,7 +960,7 @@ if not settings.dynamic_binds then
   add_keybinds()
 end
 
-if settings.loadfiles_on_start and mp.get_property_number('playlist-count', 0) == 0 then
+if settings.loadfiles_on_idle_start and mp.get_property_number('playlist-count', 0) == 0 then
   playlist()
 end
 
