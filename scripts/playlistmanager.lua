@@ -169,11 +169,10 @@ local settings = {
   playlist_sliced_suffix = "...",
 
   --output visual feedback to OSD for tasks
-  display_osd_feedback = false,
+  display_osd_feedback = true,
 
   -- reset cursor navigation when playlist is not visible
-  reset_cursor_on_close = true
-
+  reset_cursor_on_close = true,
 }
 local opts = require("mp.options")
 opts.read_options(settings, "playlistmanager", function(list) update_opts(list) end)
@@ -759,8 +758,18 @@ function parse_home(path)
   return result
 end
 
+local interactive_save = false
+function activate_playlist_save()
+  if interactive_save then
+    remove_keybinds()
+    mp.command("script-message playlistmanager-save-interactive \"start interactive filenaming process\"")
+  else
+    save_playlist()
+  end
+end
+
 --saves the current playlist into a m3u file
-function save_playlist()
+function save_playlist(filename)
   local length = mp.get_property_number('playlist-count', 0)
   if length == 0 then return end
 
@@ -788,7 +797,9 @@ function save_playlist()
   local date = os.date("*t")
   local datestring = ("%02d-%02d-%02d_%02d-%02d-%02d"):format(date.year, date.month, date.day, date.hour, date.min, date.sec)
 
-  local savepath = utils.join_path(savepath, datestring.."_playlist-size_"..length..".m3u")
+  local name = filename or datestring.."_playlist-size_"..length..".m3u"
+
+  local savepath = utils.join_path(savepath, name)
   local file, err = io.open(savepath, "w")
   if not file then
     msg.error("Error in creating playlist file, check permissions. Error: "..(err or "unknown"))
@@ -830,19 +841,34 @@ function dosort(a,b)
   end
 end
 
+-- fast sort algo from https://github.com/zsugabubus/dotfiles/blob/master/.config/mpv/scripts/playlist-filtersort.lua
 function sortplaylist(startover)
-  local length = mp.get_property_number('playlist-count', 0)
-  if length < 2 then return end
-  --use insertion sort on playlist to make it easy to order files with playlist-move
-  for outer=1, length-1, 1 do
-    local outerfile = get_name_from_index(outer, true)
-    local inner = outer - 1
-    while inner >= 0 and dosort(outerfile, get_name_from_index(inner, true)) do
-      inner = inner - 1
-    end
-    inner = inner + 1
-    if outer ~= inner then
-      mp.commandv('playlist-move', outer, inner)
+  local playlist = mp.get_property_native('playlist')
+  if #playlist < 2 then return end
+
+  local order = {}
+  for i=1, #playlist do
+    order[i] = i
+    playlist[i].string = get_name_from_index(i - 1, true)
+  end
+
+  table.sort(order, function(a, b)
+    return dosort(playlist[a].string, playlist[b].string)
+  end)
+
+  for i=1, #playlist do
+    playlist[order[i]].new_pos = i
+  end
+
+  for i=1, #playlist do
+    while true do
+      local j = playlist[i].new_pos
+      if i == j then
+        break
+      end
+      mp.commandv('playlist-move', (i)     - 1, (j + 1) - 1)
+      mp.commandv('playlist-move', (j - 1) - 1, (i)     - 1)
+      playlist[j], playlist[i] = playlist[i], playlist[j]
     end
   end
   cursor = mp.get_property_number('playlist-pos', 0)
@@ -1060,9 +1086,10 @@ function handlemessage(msg, value, value2)
   if msg == "shuffle" then shuffleplaylist() ; return end
   if msg == "reverse" then reverseplaylist() ; return end
   if msg == "loadfiles" then playlist(value) ; return end
-  if msg == "save" then save_playlist() ; return end
+  if msg == "save" then save_playlist(value) ; return end
   if msg == "playlist-next" then playlist_next(true) ; return end
   if msg == "playlist-prev" then playlist_prev(true) ; return end
+  if msg == "enable-interactive-save" then interactive_save = true end
 end
 
 mp.register_script_message("playlistmanager", handlemessage)
@@ -1071,7 +1098,7 @@ mp.add_key_binding("CTRL+p", "sortplaylist", sortplaylist)
 mp.add_key_binding("CTRL+P", "shuffleplaylist", shuffleplaylist)
 mp.add_key_binding("CTRL+R", "reverseplaylist", reverseplaylist)
 mp.add_key_binding("P", "loadfiles", playlist)
-mp.add_key_binding("p", "saveplaylist", save_playlist)
+mp.add_key_binding("p", "saveplaylist", activate_playlist_save)
 mp.add_key_binding("SHIFT+ENTER", "showplaylist", toggle_playlist)
 
 mp.register_event("file-loaded", on_loaded)
