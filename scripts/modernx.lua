@@ -1993,7 +1993,7 @@ function osc_init()
     ne.tooltipF = function ()
         local msg = "OFF"
         if not (get_track("audio") == 0) then
-            msg = "Audio ["..get_track("audio").."∕"..#tracks_osc.audio.."] "
+            msg = "Audio ["..get_track("audio").."/"..#tracks_osc.audio.."] "
             local lang = mp.get_property("current-tracks/audio/lang") or "N/A"
             local title = mp.get_property("current-tracks/audio/title") or ""
             msg = msg .. "(" .. lang .. ")" .. " " .. title
@@ -2018,7 +2018,7 @@ function osc_init()
     ne.tooltipF = function ()
         local msg = "OFF"
         if not (get_track("sub") == 0) then
-            msg = "Subtitle ["..get_track("sub").."∕"..#tracks_osc.sub.."] "
+            msg = "Subtitle ["..get_track("sub").."/"..#tracks_osc.sub.."] "
             local lang = mp.get_property("current-tracks/sub/lang") or "N/A"
             local title = mp.get_property("current-tracks/sub/title") or ""
             msg = msg .. "(" .. lang .. ")" .. " " .. title
