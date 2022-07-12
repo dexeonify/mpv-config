@@ -37,7 +37,8 @@ for the OSC icons.
   ThomasEricB's fork [Mpv.Net-HQ-Config](https://github.com/ThomasEricB/Mpv.Net-HQ-Config).
 
 - **[playlistmanager.lua](https://github.com/jonniek/mpv-playlistmanager):**
-  Create and manage playlists intuitively.
+  Create and manage playlists intuitively. Uses [playlistmanager-save-interactive.lua](https://github.com/jonniek/mpv-playlistmanager/blob/master/playlistmanager-save-interactive.lua)
+  to manually name playlists on save.
 
 - **[reload.lua](https://github.com/4e6/mpv-reload):**
   Provides automatic reloading of videos that didn't have buffering progress
