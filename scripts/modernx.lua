@@ -67,6 +67,7 @@ local user_opts = {
                                 -- playlist starts playing
     showonseek = false,         -- show OSC when seeking
     movesub = true,             -- move subtitles when the OSC is visible
+    volumebar = true,           -- show volume slider for ease of access
     titlefont = "",             -- font used for the title above OSC and
                                 -- in the window controls bar
     blur_intensity = 150,       -- adjust the strength of the OSC blur
@@ -540,6 +541,8 @@ local osc_styles = {
     transBg = "{\\blur100\\bord" .. user_opts.blur_intensity .. "\\1c&H000000&\\3c&H" .. user_opts.osc_color .. "&}",
     seekbarBg = "{\\blur0\\bord0\\1c&H" .. user_opts.seekbarbg_color .. "&}",
     seekbarFg = "{\\blur1\\bord1\\1c&H" .. user_opts.seekbarfg_color .. "&}",
+    volumebarBg = "{\\blur0\\bord0\\1c&H999999&}",
+    volumebarFg = "{\\blur1\\bord1\\1c&HFFFFFF&}",
 
     bigButtons = "{\\blur0\\bord0\\1c&HFFFFFF&\\3c&HFFFFFF&\\fs28\\fnmodernx-osc-icon}",
     mediumButtons = "{\\blur0\\bord0\\1c&HFFFFFF&\\3c&HFFFFFF&\\fs24\\fnmodernx-osc-icon}",
@@ -1741,16 +1744,33 @@ function layout()
 
     if min then lo.geometry.x = osc_geo.w - 87 - pad end
 
+    -- Volumebar
+    lo = new_element("volumebarBg", "box")
+    lo.visible = user_opts.volumebar
+
+    lo = add_layout("volumebarBg")
+    lo.geometry = {x = 67, y = refY - 40, an = 4, w = 80, h = 2}
+    lo.style = osc_styles.volumebarBg
+    lo.alpha[1] = 128
+    lo.layer = 13
+
+    lo = add_layout("volumebar")
+    lo.geometry = {x = 67, y = refY - 40, an = 4, w = 80, h = 8}
+    lo.style = osc_styles.volumebarFg
+    lo.slider.gap = 3
+    lo.slider.tooltip_style = osc_styles.tooltip
+    lo.slider.tooltip_an = 2
+
     -- Audio tracks
     lo = add_layout("cy_audio")
-    lo.geometry = {x = 87, y = refY - 40, an = 5, w = 24, h = 24}
+    lo.geometry = {x = 177, y = refY - 40, an = 5, w = 24, h = 24}
     lo.style = osc_styles.smallButtons
 
     if min then lo.geometry.x = 37 end
 
     -- Subtitle tracks
     lo = add_layout("cy_sub")
-    lo.geometry = {x = 137, y = refY - 40, an = 5, w = 24, h = 24}
+    lo.geometry = {x = 217, y = refY - 40, an = 5, w = 24, h = 24}
     lo.style = osc_styles.smallButtons
 
     if min then lo.geometry.x = 87 + pad end
@@ -2242,12 +2262,36 @@ function osc_init()
     end
     ne.eventresponder["mbtn_left_up"] =
         function () mp.commandv("cycle", "mute") end
-
     ne.eventresponder["wheel_up_press"] =
         function () mp.commandv("osd-auto", "add", "volume", 5) end
     ne.eventresponder["wheel_down_press"] =
         function () mp.commandv("osd-auto", "add", "volume", -5) end
 
+    -- volumebar
+    ne = new_element("volumebar", "slider")
+
+    ne.visible = user_opts.volumebar
+    ne.slider.markerF = function () return {} end
+    ne.slider.seekRangesF = function () return nil end
+    ne.slider.posF =
+        function () return mp.get_property_number("volume", nil) end
+    ne.eventresponder["mouse_move"] =
+        function (element)
+            -- see seekbar code for reference
+            local setvol = get_slider_value(element)
+            if (element.state.lastseek == nil) or
+                (not (element.state.lastseek == setvol)) then
+                    mp.commandv("set", "volume", setvol)
+                    element.state.lastseek = setvol
+            end
+        end
+    ne.eventresponder["mbtn_left_down"] =
+        function (element)
+            local setvol = get_slider_value(element)
+            mp.commandv("set", "volume", setvol)
+        end
+    ne.eventresponder["reset"] =
+        function (element) element.state.lastseek = nil end
 
     -- load layout
     layout()
