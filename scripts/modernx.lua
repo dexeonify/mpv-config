@@ -1755,7 +1755,7 @@ function layout()
 
     lo = add_layout("volumebar")
     lo.geometry = {x = 67, y = refY - 40, an = 4, w = 80, h = 8}
-    lo.style = (get_track("audio") ~= 0) and osc_styles.seekbarFg
+    lo.style = (#tracks_osc.audio > 0) and osc_styles.seekbarFg
                or osc_styles.seekbarBg
     lo.slider.gap = 3
     lo.slider.tooltip_style = osc_styles.tooltip
