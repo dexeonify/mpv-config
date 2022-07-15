@@ -74,6 +74,7 @@ local user_opts = {
     osc_color = "000000",       -- accent of the OSC and the title bar
     seekbarfg_color = "E39C42", -- color of the seekbar progress and handle
     seekbarbg_color = "FFFFFF", -- color of the remaining seekbar
+                                -- both options apply to the volumebar too
 }
 
 -- read options from config and command-line
@@ -541,8 +542,6 @@ local osc_styles = {
     transBg = "{\\blur100\\bord" .. user_opts.blur_intensity .. "\\1c&H000000&\\3c&H" .. user_opts.osc_color .. "&}",
     seekbarBg = "{\\blur0\\bord0\\1c&H" .. user_opts.seekbarbg_color .. "&}",
     seekbarFg = "{\\blur1\\bord1\\1c&H" .. user_opts.seekbarfg_color .. "&}",
-    volumebarBg = "{\\blur0\\bord0\\1c&H999999&}",
-    volumebarFg = "{\\blur1\\bord1\\1c&HFFFFFF&}",
 
     bigButtons = "{\\blur0\\bord0\\1c&HFFFFFF&\\3c&HFFFFFF&\\fs28\\fnmodernx-osc-icon}",
     mediumButtons = "{\\blur0\\bord0\\1c&HFFFFFF&\\3c&HFFFFFF&\\fs24\\fnmodernx-osc-icon}",
@@ -1750,13 +1749,13 @@ function layout()
 
     lo = add_layout("volumebarBg")
     lo.geometry = {x = 67, y = refY - 40, an = 4, w = 80, h = 2}
-    lo.style = osc_styles.volumebarBg
+    lo.style = osc_styles.seekbarBg
     lo.alpha[1] = 128
     lo.layer = 13
 
     lo = add_layout("volumebar")
     lo.geometry = {x = 67, y = refY - 40, an = 4, w = 80, h = 8}
-    lo.style = osc_styles.volumebarFg
+    lo.style = osc_styles.seekbarFg
     lo.slider.gap = 3
     lo.slider.tooltip_style = osc_styles.tooltip
     lo.slider.tooltip_an = 2
