@@ -1245,8 +1245,10 @@ function render_elements(master_ass)
                     ass_append_alpha(elem_ass, slider_lo.alpha, 0)
                     elem_ass:append(tooltiplabel)
 
-                    display_tn_osc(ty, sliderpos, elem_ass)
-                else
+                    if (element.thumbnailable) then
+                        display_tn_osc(ty, sliderpos, elem_ass)
+                    end
+                elseif (element.thumbnailable) then
                     hide_thumbnail()
                 end
             end
@@ -1460,6 +1462,7 @@ function new_element(name, type)
 
     if (type == "slider") then
         elements[name].slider = {min = {value = 0}, max = {value = 100}}
+        elements[name].thumbnailable = false
     end
 
     return elements[name]
@@ -2078,6 +2081,7 @@ function osc_init()
     ne = new_element("seekbar", "slider")
 
     ne.enabled = not (mp.get_property("percent-pos") == nil)
+    ne.thumbnailable = true
     state.slider_element = ne.enabled and ne or nil  -- used for forced_title
     ne.slider.markerF = function ()
         local duration = mp.get_property_number("duration", nil)
