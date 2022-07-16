@@ -1204,7 +1204,7 @@ function render_elements(master_ass)
             elem_ass:draw_stop()
 
             -- add tooltip
-            if not (element.slider.tooltipF == nil) then
+            if not (element.slider.tooltipF == nil) and element.enabled then
 
                 if mouse_hit(element) then
                     local sliderpos = get_slider_value(element)
@@ -2276,6 +2276,8 @@ function osc_init()
     ne.slider.seekRangesF = function () return nil end
     ne.slider.posF =
         function () return mp.get_property_number("volume", nil) end
+    ne.slider.tooltipF =
+        function (pos) return math.floor(pos) end
     ne.eventresponder["mouse_move"] =
         function (element)
             -- see seekbar code for reference
