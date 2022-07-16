@@ -1653,6 +1653,10 @@ function layout()
     local min = round(osc_param.display_aspect) <= 0.6
     local pad = min and -10 or 0
 
+    -- condition to determine whether volume bar is visible
+    -- if volume bar is hidden, reposition cy_audio and cy_sub
+    volbar_cond = user_opts.volumebar and round(osc_param.display_aspect) > 1.3
+
     osc_param.areas = {} -- delete areas
 
     -- area for active mouse input
@@ -1748,7 +1752,7 @@ function layout()
 
     -- Volumebar
     lo = new_element("volumebarBg", "box")
-    lo.visible = user_opts.volumebar
+    lo.visible = volbar_cond
 
     lo = add_layout("volumebarBg")
     lo.geometry = {x = 67, y = refY - 40, an = 4, w = 80, h = 2}
@@ -1769,6 +1773,7 @@ function layout()
     lo.geometry = {x = 177, y = refY - 40, an = 5, w = 24, h = 24}
     lo.style = osc_styles.smallButtons
 
+    if not volbar_cond then lo.geometry.x = 87 end
     if min then lo.geometry.x = 37 end
 
     -- Subtitle tracks
@@ -1776,6 +1781,7 @@ function layout()
     lo.geometry = {x = 217, y = refY - 40, an = 5, w = 24, h = 24}
     lo.style = osc_styles.smallButtons
 
+    if not volbar_cond then lo.geometry.x = 137 end
     if min then lo.geometry.x = 87 + pad end
 
     -- Cache
@@ -2274,7 +2280,7 @@ function osc_init()
     -- volumebar
     ne = new_element("volumebar", "slider")
 
-    ne.visible = user_opts.volumebar
+    ne.visible = user_opts.volumebar and round(osc_param.display_aspect) > 1.3
     ne.enabled = (get_track("audio") > 0)
     ne.slider.markerF = function () return {} end
     ne.slider.seekRangesF = function () return nil end
