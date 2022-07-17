@@ -1069,7 +1069,7 @@ function prepare_elements()
         end
 
         -- gray out the element if it is toggled off
-        if (element.off) then
+        if (element.inactive) then
             element.layout.alpha[1] = 136
         end
     end
@@ -2006,7 +2006,7 @@ function osc_init()
     ne = new_element("cy_audio", "button")
 
     ne.enabled = (#tracks_osc.audio > 0)
-    ne.off = (get_track("audio") == 0)
+    ne.inactive = (get_track("audio") == 0)
     ne.content = osc_icons.audio
     ne.tooltip_style = osc_styles.tooltip
     ne.tooltipF = function ()
@@ -2031,7 +2031,7 @@ function osc_init()
     ne = new_element("cy_sub", "button")
 
     ne.enabled = (#tracks_osc.sub > 0)
-    ne.off = (get_track("sub") == 0)
+    ne.inactive = (get_track("sub") == 0)
     ne.content = osc_icons.subtitle
     ne.tooltip_style = osc_styles.tooltip
     ne.tooltipF = function ()
