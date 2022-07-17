@@ -1755,7 +1755,8 @@ function layout()
 
     lo = add_layout("volumebar")
     lo.geometry = {x = 67, y = refY - 40, an = 4, w = 80, h = 8}
-    lo.style = osc_styles.seekbarFg
+    lo.style = (get_track("audio") ~= 0) and osc_styles.seekbarFg
+               or osc_styles.seekbarBg
     lo.slider.gap = 3
     lo.slider.tooltip_style = osc_styles.tooltip
     lo.slider.tooltip_an = 2
@@ -2270,6 +2271,7 @@ function osc_init()
     ne = new_element("volumebar", "slider")
 
     ne.visible = user_opts.volumebar
+    ne.enabled = (get_track("audio") > 0)
     ne.slider.markerF = function () return {} end
     ne.slider.seekRangesF = function () return nil end
     ne.slider.posF =
