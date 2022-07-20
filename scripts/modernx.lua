@@ -52,6 +52,7 @@ local user_opts = {
     tooltipborder = 1,          -- border of tooltip in bottom/topbar
     timetotal = false,          -- display total time instead of remaining time?
     timems = false,             -- display timecodes with milliseconds?
+    tcspace = 100,              -- timecode spacing (compensate font size estimation)
     visibility = "auto",        -- only used at init to set visibility_mode(...)
     windowcontrols = "auto",    -- whether to show window controls
     windowcontrols_alignment = "right", -- which side to show window controls on
@@ -1650,6 +1651,13 @@ function layout()
     local refX = osc_geo.w / 2
     local refY = posY
 
+    -- adjust timecode width based on whether milliseconds are visible
+    local tcW = (state.tc_ms) and 100 or 64
+    if user_opts.tcspace >= 50 and user_opts.tcspace <= 200 then
+        -- adjust our hardcoded font size estimation
+        tcW = tcW * user_opts.tcspace / 100
+    end
+
     -- padding to decrease when player window is tall or small
     local min = round(osc_param.display_aspect) <= 0.6
     local pad = min and -10 or 0
@@ -1737,11 +1745,11 @@ function layout()
 
     -- Timecode
     lo = add_layout("tc_left")
-    lo.geometry = {x = 25, y = refY - 90, an = 7, w = 120, h = 20}
+    lo.geometry = {x = 25, y = refY - 90, an = 7, w = tcW, h = 20}
     lo.style = osc_styles.timecodes
 
     lo = add_layout("tc_right")
-    lo.geometry = {x = osc_geo.w - 25, y = refY - 90, an = 9, w = 120, h = 20}
+    lo.geometry = {x = osc_geo.w - 25, y = refY - 90, an = 9, w = tcW, h = 20}
     lo.style = osc_styles.timecodes
 
     -- Volume
