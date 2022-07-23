@@ -553,12 +553,12 @@ local osc_styles = {
     tooltip = "{\\blur1\\bord" .. user_opts.tooltipborder .. "\\1c&HFFFFFF&\\3c&H000000&\\fs20}",
     vidTitle = "{\\blur1\\bord0.5\\1c&HFFFFFF&\\3c&H0\\fs32\\q2\\fn" .. user_opts.titlefont .. "}",
 
-    wcButtons = "{\\1c&HFFFFFF&\\fs20\\fnmodernx-osc-icon}",
+    wcButtons = "{\\bord0\\1c&HFFFFFF&\\fs20\\fnmodernx-osc-icon}",
     wcTitle = "{\\1c&HFFFFFF&\\fs24\\q2\\fn" .. user_opts.titlefont .. "}",
     wcBar = "{\\1c&H" .. user_opts.osc_color .. "}",
 
     elementDown = "{\\1c&H999999&}",
-    elementHover = "{\\blur5\\1c&HFFFFFF&}"
+    elementHover = "{\\blur5\\2c&HFFFFFF&}"
 }
 
 local osc_icons = {
@@ -1312,7 +1312,11 @@ function render_elements(master_ass)
             -- add hover effect
             -- source: https://github.com/Zren/mpvz/issues/13
             local button_lo = element.layout.button
-            if mouse_hit(element) and element.hoverable and element.enabled then
+            local is_clickable = element.eventresponder and (
+                element.eventresponder["mbtn_left_down"] ~= nil or
+                element.eventresponder["mbtn_left_up"] ~= nil
+            )
+            if mouse_hit(element) and is_clickable and element.enabled then
                 local shadow_ass = assdraw.ass_new()
                 shadow_ass:merge(style_ass)
                 shadow_ass:append(button_lo.hoverstyle .. buttontext)
@@ -1459,7 +1463,6 @@ function new_element(name, type)
     elements[name].enabled = true
     elements[name].softrepeat = false
     elements[name].styledown = (type == "button")
-    elements[name].hoverable = (type == "button")
     elements[name].state = {}
 
     if (type == "slider") then
@@ -1613,7 +1616,6 @@ function window_controls()
         title = title:gsub("\\n", " "):gsub("\\$", ""):gsub("{","\\{")
         return not (title == "") and title or "mpv"
     end
-    ne.hoverable = false
     local left_pad = 5
     local right_pad = 10
     lo = add_layout("wctitle")
@@ -1707,11 +1709,11 @@ function layout()
     lo.slider.tooltip_an = 2
 
     -- Title
-    geo = {x = 25, y = refY - 132, an = 1, w = osc_geo.w - 50, h = 48}
+    geo = {x = 25, y = refY - 132, an = 1, w = osc_geo.w - 50, h = 35}
     lo = add_layout("title")
     lo.geometry = geo
-    lo.style = string.format("%s{\\clip(%f,%f,%f,%f)}", osc_styles.vidTitle,
-                             geo.x, geo.y - geo.h, geo.x + geo.w, geo.y)
+    lo.style = string.format("%s{\\clip(0,%f,%f,%f)}", osc_styles.vidTitle,
+                             geo.y - geo.h, geo.x + geo.w, geo.y + geo.h)
     lo.alpha[3] = 0
 
     -- Playback control buttons
@@ -1883,7 +1885,6 @@ function osc_init()
     ne = new_element("title", "button")
 
     ne.visible = user_opts.showtitle
-    ne.hoverable = false
     ne.content = function ()
         local title = state.forced_title or
                       mp.command_native({"expand-text", user_opts.title})
@@ -2246,7 +2247,6 @@ function osc_init()
     ne = new_element("cache", "button")
 
     ne.visible = (round(osc_param.display_aspect) > 1.3)
-    ne.hoverable = false
     ne.content = function ()
         local cache_state = state.cache_state
         if not (cache_state and cache_state["seekable-ranges"] and
