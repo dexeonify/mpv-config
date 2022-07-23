@@ -2271,6 +2271,7 @@ function osc_init()
     -- volume
     ne = new_element("volume", "button")
 
+    ne.enabled = (#tracks_osc.audio > 0)
     ne.content = function()
         local volume = mp.get_property_number("volume", 0)
         local mute = mp.get_property_native("mute")
