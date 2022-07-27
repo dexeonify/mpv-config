@@ -501,44 +501,34 @@ function API.sort_keys(t, include_item)
     return keys
 end
 
-local invalid_types = {
-    userdata = true,
-    thread = true,
-    ["function"] = true
-}
-
-local invalid_key_types = {
-    boolean = true,
-    table = true,
-    ["nil"] = true
-}
-setmetatable(invalid_key_types, { __index = invalid_types })
+--Uses a loop to get the length of an array. The `#` operator is undefined if there
+--are gaps in the array, this ensures there are none as expected by the mpv node function.
+local function get_length(t)
+    local i = 1
+    while t[i] do i = i+1 end
+    return i - 1
+end
 
 --recursively removes elements of the table which would cause
 --utils.format_json to throw an error
 local function json_safe_recursive(t)
     if type(t) ~= "table" then return t end
 
-    local invalid_ktypes = setmetatable({}, { __index = invalid_key_types })
-    local arr_length = #t
-    if arr_length > 0 then
-        invalid_ktypes.string = true
-        setmetatable(t, { type = "ARRAY" })
-    else
-        invalid_ktypes.number = true
-        setmetatable(t, { type = "MAP" })
-    end
+    local array_length = get_length(t)
+    local isarray = array_length > 0
 
     for key, value in pairs(t) do
         local ktype = type(key)
         local vtype = type(value)
 
-        if invalid_ktypes[ktype] or invalid_types[vtype] then
-            t[key] = nil
-        elseif ktype == "number" and key > arr_length then
-            t[key] = nil
-        else
+        if  vtype ~= "userdata" and vtype ~= "function" and vtype ~= "thread"
+            and ((  isarray and ktype == "number" and key <= array_length)
+                    or (not isarray and ktype == "string"))
+        then
             t[key] = json_safe_recursive(t[key])
+        elseif key then
+            t[key] = nil
+            if isarray then array_length = get_length(t) end
         end
     end
     return t
@@ -928,12 +918,11 @@ end
 local function run_parse(directory, parse_state)
     msg.verbose("scanning files in", directory)
     parse_state.directory = directory
+
     local co = coroutine.running()
+    parse_states[co] = setmetatable(parse_state, { __index = parse_state_API })
 
-    setmetatable(parse_state, { __index = parse_state_API })
     if directory == "" then return root_parser:parse() end
-
-    parse_states[co] = parse_state
     local list, opts = choose_and_parse(directory, 1)
 
     if list == nil then return msg.debug("no successful parsers found") end
@@ -1474,25 +1463,34 @@ local function create_item_string(cmd, items, funct)
 end
 
 --characters used for custom keybind codes
-local CUSTOM_KEYBIND_CODES = "%fFnNpPdDrR"
+local CUSTOM_KEYBIND_CODES = "%%["..API.pattern_escape("%fFnNpPdDrR").."]"
 local code_fns
 code_fns = {
-    ["%%"] = "%",
     ["%f"] = function(cmd, items, s)
-        return create_item_string(cmd, items, function(item) return item and API.get_full_path(item, s.directory) or "" end)
+        return create_item_string(cmd, items, function(item)
+            return item and API.get_full_path(item, s.directory) or ""
+        end)
+    end,
+    ["%F"] = function(cmd, items, s)
+        return create_item_string(cmd, items, function(item)
+            return ("%q"):format(item and API.get_full_path(item, s.directory) or "")
+        end)
     end,
     ["%n"] = function(cmd, items)
-        return create_item_string(cmd, items, function(item) return item and (item.label or item.name) or "" end)
+        return create_item_string(cmd, items, function(item)
+            return item and (item.label or item.name) or ""
+        end)
     end,
-    ["%p"] = function(_, _, s)
-        return s.directory or ""
+    ["%N"] = function(cmd, items)
+        return create_item_string(cmd, items, function(item)
+            return ("%q"):format(item and (item.label or item.name) or "")
+        end)
     end,
-    ["%d"] = function(_, _, s)
-        return (s.directory_label or s.directory):match("([^/]+)/?$") or ""
-    end,
-    ["%r"] = function(_, _, s)
-        return s.parser.keybind_name or s.parser.name or ""
-    end,
+
+    ["%%"] = "%",
+    ["%p"] = function(_, _, s) return s.directory or "" end,
+    ["%d"] = function(_, _, s) return (s.directory_label or s.directory):match("([^/]+)/?$") or "" end,
+    ["%r"] = function(_, _, s) return s.parser.keybind_name or s.parser.name or "" end,
 }
 
 --iterates through the command table and substitutes special
@@ -1503,7 +1501,7 @@ local function format_command_table(cmd, items, state)
         copy[i] = {}
 
         for j = 1, #cmd.command[i] do
-            copy[i][j] = cmd.command[i][j]:gsub("%%["..CUSTOM_KEYBIND_CODES.."]", function(code)
+            copy[i][j] = cmd.command[i][j]:gsub(CUSTOM_KEYBIND_CODES, function(code)
                 if type(code_fns[code]) == "string" then return code_fns[code] end
 
                 --encapsulates the string if using an uppercase code
@@ -1627,7 +1625,7 @@ local function scan_for_codes(command_table, codes)
         if type == "table" then
             scan_for_codes(value, codes)
         elseif type == "string" then
-            value:gsub("%%["..CUSTOM_KEYBIND_CODES.."]", function(code) codes[code] = true end)
+            value:gsub(CUSTOM_KEYBIND_CODES, function(code) codes[code] = true end)
         end
     end
     return codes
