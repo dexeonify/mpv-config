@@ -7,9 +7,9 @@ integrated GPU. This is mainly just for backup and keeping track of changes.
 
 ## Fonts
 
-- [Cascadia Code](https://github.com/microsoft/cascadia-code) (OSC)
-- [Open Sans](https://fonts.google.com/specimen/Open+Sans) (Title)
+- [Open Sans](https://fonts.google.com/specimen/Open+Sans) (OSC)
 - [Manrope](https://github.com/sharanda/manrope) (Subtitles)
+- [Cascadia Code](https://github.com/microsoft/cascadia-code) (Console)
 
 ⚠️ **Important:**
 Install my custom-made icon font [modernx-osc-icon.ttf](https://github.com/dexeonify/mpv-config/raw/main/modernx-osc-icon.ttf)
@@ -66,6 +66,6 @@ the exact changes by looking at the commit history for each individual script.
 
 - [mpv Wiki](https://github.com/mpv-player/mpv/wiki)
 - [mpv Manual](https://mpv.io/manual/master)
-- [Kokomins's mpv Configuration Guide for Watching Videos](https://kokomins.wordpress.com/2019/10/14/mpv-config-guide)
+- [Kokomins' mpv Configuration Guide for Watching Videos](https://kokomins.wordpress.com/2019/10/14/mpv-config-guide)
 - [I Am Scum's Guide](https://iamscum.wordpress.com/guides/videoplayback-guide/mpv-conf)
 - [Mathematically Evaluating mpv's Upscaling Algorithms](https://artoriuz.github.io/blog/mpv_upscaling.html)
