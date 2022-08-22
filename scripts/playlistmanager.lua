@@ -6,7 +6,10 @@ local settings = {
   --if "no" then you can display the playlist by any of the navigation keys
   dynamic_binds = true,
 
-  -- to bind multiple keys separate them by a space
+  -- main key
+  key_showplaylist = "SHIFT+ENTER",
+
+  -- dynamic keys - to bind multiple keys separate them by a space
   key_moveup = "UP",
   key_movedown = "DOWN",
   key_movepageup = "PGUP",
@@ -18,6 +21,13 @@ local settings = {
   key_playfile = "ENTER",
   key_removefile = "BS",
   key_closeplaylist = "ESC",
+
+  -- extra functionality keys
+  key_sortplaylist = "",
+  key_shuffleplaylist = "",
+  key_reverseplaylist = "",
+  key_loadfiles = "",
+  key_saveplaylist = "",
 
   --replaces matches on filenames based on extension, put as empty string to not replace anything
   --replace rules are executed in provided order
@@ -118,6 +128,9 @@ local settings = {
 
   --call youtube-dl to resolve the titles of urls in the playlist
   resolve_titles = false,
+
+  -- timeout in seconds for title resolving
+  resolve_title_timeout = 15,
 
   --osd timeout on inactivity, with high value on this open_toggles is good to be true
   playlist_display_timeout = 5,
@@ -817,8 +830,10 @@ function save_playlist(filename)
       if not filename:match("^%a%a+:%/%/") then
         fullpath = utils.join_path(pwd, filename)
       end
-      local title = mp.get_property('playlist/'..i..'/title')
-      if title then file:write("#EXTINF:,"..title.."\n") end
+      local title = mp.get_property('playlist/'..i..'/title') or url_table[filename]
+      if title then
+        file:write("#EXTINF:,"..title.."\n")
+      end
       file:write(fullpath, "\n")
       i=i+1
     end
@@ -1061,7 +1076,7 @@ function resolve_titles()
             end
           end)
 
-      mp.add_timeout(5, function()
+      mp.add_timeout(settings.resolve_title_timeout, function()
         mp.abort_async_command(req)
       end)
 
@@ -1099,12 +1114,12 @@ end
 
 mp.register_script_message("playlistmanager", handlemessage)
 
-mp.add_key_binding("CTRL+p", "sortplaylist", sortplaylist)
-mp.add_key_binding("CTRL+P", "shuffleplaylist", shuffleplaylist)
-mp.add_key_binding("CTRL+R", "reverseplaylist", reverseplaylist)
-mp.add_key_binding("P", "loadfiles", playlist)
-mp.add_key_binding("p", "saveplaylist", activate_playlist_save)
-mp.add_key_binding("SHIFT+ENTER", "showplaylist", toggle_playlist)
-
 mp.register_event("file-loaded", on_loaded)
 mp.register_event("end-file", on_closed)
+
+mp.add_key_binding(settings.key_loadfiles,        "loadfiles",        playlist)
+mp.add_key_binding(settings.key_sortplaylist,     "sortplaylist",     sortplaylist)
+mp.add_key_binding(settings.key_saveplaylist,     "saveplaylist",     activate_playlist_save)
+mp.add_key_binding(settings.key_showplaylist,     "showplaylist",     toggle_playlist)
+mp.add_key_binding(settings.key_shuffleplaylist,  "shuffleplaylist",  shuffleplaylist)
+mp.add_key_binding(settings.key_reverseplaylist,  "reverseplaylist",  reverseplaylist)
