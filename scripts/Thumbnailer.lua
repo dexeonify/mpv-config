@@ -254,6 +254,8 @@ local user_opts = {
     prefer_ffmpeg         = false,              -- Use FFMPEG when available
     ffmpeg_threads        = 8,                  -- Limit FFMPEG/MPV LAVC threads per worker. Also limits filter and output threads for FFMPEG.
     ffmpeg_scaler         = 'bicubic',          -- Applies to both MPV and FFMPEG. See: https://ffmpeg.org/ffmpeg-scaler.html
+    ffmpeg_hwaccel        = 'none',             -- Hardware acceleration API used for thumbnail generation. See: https://trac.ffmpeg.org/wiki/HWAccelIntro
+    ffmpeg_hwaccel_device = 0,                  -- Specify the GPU to be used for hwaccel
 }
 
 local thumbnails, thumbnails_new,thumbnails_new_count
@@ -285,13 +287,15 @@ end
 
 local function worker_set_options()
     return {
-        encoder        = (not state.is_remote and user_opts.use_ffmpeg and exec_exist('ffmpeg', user_opts.exec_path)) and 'ffmpeg' or 'mpv',
-        exec_path      = user_opts.exec_path,
-        worker_timeout = state.worker_timeout,
-        accurate_seek  = user_opts.accurate_seek,
-        use_ffmpeg     = user_opts.use_ffmpeg,
-        ffmpeg_threads = user_opts.ffmpeg_threads,
-        ffmpeg_scaler  = user_opts.ffmpeg_scaler,
+        encoder               = (not state.is_remote and user_opts.use_ffmpeg and exec_exist('ffmpeg', user_opts.exec_path)) and 'ffmpeg' or 'mpv',
+        exec_path             = user_opts.exec_path,
+        worker_timeout        = state.worker_timeout,
+        accurate_seek         = user_opts.accurate_seek,
+        use_ffmpeg            = user_opts.use_ffmpeg,
+        ffmpeg_threads        = user_opts.ffmpeg_threads,
+        ffmpeg_scaler         = user_opts.ffmpeg_scaler,
+        ffmpeg_hwaccel        = user_opts.ffmpeg_hwaccel,
+		ffmpeg_hwaccel_device = user_opts.ffmpeg_hwaccel_device
     }
 end
 

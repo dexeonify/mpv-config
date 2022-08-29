@@ -369,6 +369,8 @@ local function create_ffmpeg_command(time, output, force_accurate_seek)
         add_args(args, '-nostats')
         add_args(args, '-loglevel', 'error')
         -- Input
+        add_args(args, '-hwaccel', worker_options.ffmpeg_hwaccel)
+        add_args(args, '-hwaccel_device', worker_options.ffmpeg_hwaccel_device)
         add_args(args, '-threads', worker_options.ffmpeg_threads)
         add_args(args, '-fflags', 'fastseek')
         add_args(args, '-flags2', 'fast')
