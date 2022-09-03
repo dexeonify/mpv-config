@@ -44,10 +44,6 @@ for the OSC icons.
   Provides automatic reloading of videos that didn't have buffering progress
   for some time, keeping the current time position.
 
-- **[rename.lua](https://github.com/Kayizoku/mpv-rename):**
-  Rename files on the go directly from within mpv without leaving it.
-  Requires [mpv-user-input](https://github.com/CogentRedTester/mpv-user-input).
-
 - **[seek-to.lua](https://github.com/occivink/mpv-scripts#seek-tolua):**
   Seek to an absolute timestamp specified via keyboard input or
   pasted from clipboard.
