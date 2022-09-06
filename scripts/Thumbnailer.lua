@@ -295,7 +295,7 @@ local function worker_set_options()
         ffmpeg_threads        = user_opts.ffmpeg_threads,
         ffmpeg_scaler         = user_opts.ffmpeg_scaler,
         ffmpeg_hwaccel        = user_opts.ffmpeg_hwaccel,
-		ffmpeg_hwaccel_device = user_opts.ffmpeg_hwaccel_device
+        ffmpeg_hwaccel_device = user_opts.ffmpeg_hwaccel_device
     }
 end
 
