@@ -585,8 +585,9 @@ local osc_icons = {
     chapter_next = "\xEE\xA4\x97",
     play = "\xEE\xA4\x98",
     pause = "\xEE\xA4\x99",
-    skipback = "\xEE\xA4\xA0",
-    skipforward = "\xEE\xA4\xA1",
+    replay = "\xEE\xA4\xA0",
+    skipback = "\xEE\xA4\xA1",
+    skipforward = "\xEE\xA4\xA2",
 }
 
 -- internal states, do not touch
@@ -1953,14 +1954,23 @@ function osc_init()
     ne = new_element("playpause", "button")
 
     ne.content = function ()
-        if mp.get_property("pause") == "yes" then
+        if mp.get_property("eof-reached") == "yes" then
+            return (osc_icons.replay)
+        elseif mp.get_property("pause") == "yes" then
             return (osc_icons.play)
         else
             return (osc_icons.pause)
         end
     end
     ne.eventresponder["mbtn_left_up"] =
-        function () mp.commandv("cycle", "pause") end
+        function ()
+            if mp.get_property("eof-reached") == "yes" then
+                mp.commandv("seek", 0, "absolute-percent")
+                mp.commandv("set", "pause", "no")
+            else
+                mp.commandv("cycle", "pause")
+            end
+        end
 
     -- skipback
     ne = new_element("skipback", "button")
