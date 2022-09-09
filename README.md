@@ -12,7 +12,7 @@ integrated GPU. This is mainly just for backup and keeping track of changes.
 - [Cascadia Code](https://github.com/microsoft/cascadia-code) (Console)
 
 ⚠️ **Important:**
-Install my custom-made icon font [modernx-osc-icon.ttf](https://github.com/dexeonify/mpv-config/raw/main/modernx-osc-icon.ttf)
+Install my custom-made icon font [modernx-osc-icon.ttf](https://github.com/dexeonify/mpv-config/raw/main/fonts/modernx-osc-icon.ttf)
 for the OSC icons.
 
 ## User scripts
