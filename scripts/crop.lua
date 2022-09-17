@@ -345,8 +345,11 @@ function update_crop_zone_state()
         return
     end
     cursor = clamp_point(cursor, dim)
-    if crop_first_corner == nil then
-        crop_first_corner = screen_to_video_norm(cursor, dim)
+    local corner_video = screen_to_video_norm(cursor, dim)
+    if crop_first_corner == nil or
+       (crop_first_corner.x == corner_video.x and
+        crop_first_corner.y == corner_video.y) then
+        crop_first_corner = corner_video
         redraw()
     else
         local c1, c2 = rect_from_two_points(
@@ -362,11 +365,15 @@ function update_crop_zone_state()
 end
 
 local bindings = {}
+local bindings_complex = {}
 local bindings_repeat = {}
 
 function cancel_crop()
     crop_first_corner = nil
     for key, _ in pairs(bindings) do
+        mp.remove_key_binding("crop-"..key)
+    end
+    for key, _ in pairs(bindings_complex) do
         mp.remove_key_binding("crop-"..key)
     end
     for key, _ in pairs(bindings_repeat) do
@@ -376,9 +383,6 @@ function cancel_crop()
     mp.unregister_idle(draw_crop_zone)
     mp.set_osd_ass(1280, 720, '')
     active = false
-    if opts.disable_window_dragging and not mp.get_property_bool("window-dragging") then
-        mp.set_property_bool("window-dragging", true)
-    end
 end
 
 -- adjust coordinates based on previous values
@@ -539,6 +543,9 @@ function start_crop(mode)
     for key, func in pairs(bindings) do
         mp.add_forced_key_binding(key, "crop-"..key, func)
     end
+    for key, func in pairs(bindings_complex) do
+        mp.add_forced_key_binding(key, "crop-"..key, func, { complex = true })
+    end
     for key, func in pairs(bindings_repeat) do
         mp.add_forced_key_binding(key, "crop-"..key, func, { repeatable = true })
     end
@@ -577,7 +584,18 @@ if opts.mouse_support then
     bindings["MOUSE_MOVE"] = function() cursor.x, cursor.y = mp.get_mouse_pos(); redraw() end
 end
 for _, key in ipairs(opts.accept) do
-    bindings[key] = update_crop_zone_state
+    if string.find(key:lower(), "btn") then
+        bindings_complex[key] = function(mouse)
+            if opts.disable_window_dragging then
+                mp.set_property_bool("window-dragging", mouse["event"] ~= "down")
+            end
+            if crop_first_corner == nil or mouse["event"] ~= "down" then
+                update_crop_zone_state()
+            end
+        end
+    else
+        bindings[key] = update_crop_zone_state
+    end
 end
 for _, key in ipairs(opts.cancel) do
     bindings[key] = cancel_crop
