@@ -70,6 +70,7 @@ local user_opts = {
     showonseek = false,         -- show OSC when seeking
     movesub = true,             -- move subtitles when the OSC is visible
     volumebar = true,           -- show volume slider for ease of access
+    volumecontrol = "linear",   -- use linear or logarithmic volume scale
     titlefont = "",             -- font used for the title above OSC and
                                 -- in the window controls bar
     blur_intensity = 150,       -- adjust the strength of the OSC blur
@@ -932,6 +933,16 @@ function get_track(type)
         end
     end
     return 0
+end
+
+
+-- convert slider_pos to logarithmic depending on volumecontrol user_opts
+function set_volume(slider_pos)
+    local volume = slider_pos
+    if user_opts.volumecontrol == "log" then
+        volume = slider_pos^2 / 100
+    end
+    return math.floor(volume)
 end
 
 -- WindowControl helpers
@@ -1828,6 +1839,13 @@ function validate_user_opts()
                 user_opts.windowcontrols_alignment .. "\". Ignoring.")
         user_opts.windowcontrols_alignment = "right"
     end
+
+    if user_opts.volumecontrol ~= "linear" and
+       user_opts.volumecontrol ~= "log" then
+        msg.warn("volumecontrol cannot be \"" ..
+                user_opts.volumecontrol .. "\". Ignoring.")
+        user_opts.volumecontrol = "linear"
+    end
 end
 
 function update_options(list)
@@ -2308,13 +2326,20 @@ function osc_init()
     ne.slider.markerF = function () return {} end
     ne.slider.seekRangesF = function () return nil end
     ne.slider.posF =
-        function () return mp.get_property_number("volume", nil) end
-    ne.slider.tooltipF =
-        function (pos) return math.floor(pos) end
+        function ()
+            local volume = mp.get_property_number("volume", nil)
+            if user_opts.volumecontrol == "log" then
+                return math.sqrt(volume * 100)
+            else
+                return volume
+            end
+        end
+    ne.slider.tooltipF = function (pos) return set_volume(pos) end
     ne.eventresponder["mouse_move"] =
         function (element)
             -- see seekbar code for reference
-            local setvol = get_slider_value(element)
+            local pos = get_slider_value(element)
+            local setvol = set_volume(pos)
             if (element.state.lastseek == nil) or
                 (not (element.state.lastseek == setvol)) then
                     mp.commandv("set", "volume", setvol)
@@ -2323,8 +2348,8 @@ function osc_init()
         end
     ne.eventresponder["mbtn_left_down"] =
         function (element)
-            local setvol = get_slider_value(element)
-            mp.commandv("set", "volume", setvol)
+            local pos = get_slider_value(element)
+            mp.commandv("set", "volume", set_volume(pos))
         end
     ne.eventresponder["reset"] =
         function (element) element.state.lastseek = nil end
