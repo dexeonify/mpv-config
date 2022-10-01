@@ -1,4 +1,4 @@
--- deus0ww - 2022-03-24
+-- deus0ww - 2022-10-01
 
 local ipairs,loadfile,pairs,pcall,tonumber,tostring = ipairs,loadfile,pairs,pcall,tonumber,tostring
 local debug,io,math,os,string,table,utf8 = debug,io,math,os,string,table,utf8
@@ -406,7 +406,7 @@ end
 -- From https://github.com/TheAMM/mpv_thumbnail_script
 local function hack_input()
     msg.debug('Hacking Input...')
-    local file_path = mp.get_property_native('stream-path'):gsub(',ytdl_description.+', '')
+    local file_path = mp.get_property_native('stream-path'):gsub(',ytdl_description.*', '')
     local playlist_filename = join_paths(state.cache_dir, 'playlist.txt')
     worker_extra.ytdl = false
     if #file_path > 8000 then -- Path is too long for a playlist - just pass the original URL to workers and allow ytdl
