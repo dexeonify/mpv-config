@@ -524,7 +524,15 @@ mp.register_script_message(message.debug, function()
 end)
 
 
+-------------------
+-- thumbfast.lua --
+-------------------
 
+local thumbfast = {
+    width = 0,
+    height = 0,
+    disabled = false
+}
 
 -----------------
 -- modernx.lua --
@@ -1261,9 +1269,34 @@ function render_elements(master_ass)
 
                     if (element.thumbnailable) then
                         display_tn_osc(ty, sliderpos, elem_ass)
+
+                        if not thumbfast.disabled and thumbfast.width ~= 0
+                           and thumbfast.height ~= 0 then
+
+                            local osd_w = mp.get_property_number("osd-dimensions/w")
+                            local hover_sec = mp.get_property_number("duration") * sliderpos / 100
+                            local r_w, r_h = get_virt_scale_factor()
+
+                            mp.commandv("script-message-to", "thumbfast", "thumb",
+                                -- hovered time in seconds
+                                hover_sec,
+                                -- x
+                                math.min(
+                                    osd_w - thumbfast.width - 10,
+                                    math.max(10, tx / r_w - thumbfast.width / 2)
+                                ),
+                                -- y
+                                (ty - (user_opts.layout == "bottombar" and 39 or 18) - user_opts.barmargin) / r_h -
+                                (user_opts.layout == "topbar" and (-(57 + user_opts.barmargin) / r_h) or thumbfast.height)
+                            )
+                        end
                     end
                 elseif (element.thumbnailable) then
                     hide_thumbnail()
+
+                    if thumbfast.width ~= 0 and thumbfast.height ~= 0 then
+                        mp.commandv("script-message-to", "thumbfast", "clear")
+                    end
                 end
             end
 
@@ -2928,6 +2961,14 @@ mp.register_script_message("osc-tracklist", function(dur)
         table.insert(msg, get_tracklist(k))
     end
     show_message(table.concat(msg, '\n\n'), dur)
+end)
+mp.register_script_message("thumbfast-info", function(json)
+    local data = utils.parse_json(json)
+    if type(data) ~= "table" or not data.width or not data.height then
+        msg.error("thumbfast-info: received json didn't produce a table with thumbnail information")
+    else
+        thumbfast = data
+    end
 end)
 
 mp.observe_property("fullscreen", "bool",
