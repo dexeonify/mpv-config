@@ -39,7 +39,6 @@ local user_opts = {
     iamaprogrammer = false,     -- use native mpv values and disable OSC
                                 -- internal track list management (and some
                                 -- functions that depend on it)
-    layout = "modernx",         -- set thumbnail layout
     seekbarhandlesize = 0.6,    -- size ratio of the knob handle
     seekrangealpha = 64,        -- transparency of seekranges
     seekbarkeyframes = true,    -- use keyframes when dragging the seekbar
@@ -822,32 +821,27 @@ function render_elements(master_ass)
                     ass_append_alpha(elem_ass, slider_lo.alpha, 0)
                     elem_ass:append(tooltiplabel)
 
-                    if (element.thumbnailable) then
-                        if not thumbfast.disabled and thumbfast.width ~= 0
-                           and thumbfast.height ~= 0 then
+                    if element.thumbnailable and not thumbfast.disabled and
+                       thumbfast.width ~= 0 and thumbfast.height ~= 0 then
+                        local osd_w = mp.get_property_number("osd-dimensions/w")
+                        local hover_sec = mp.get_property_number("duration") * sliderpos / 100
+                        local r_w, r_h = get_virt_scale_factor()
 
-                            local osd_w = mp.get_property_number("osd-dimensions/w")
-                            local hover_sec = mp.get_property_number("duration") * sliderpos / 100
-                            local r_w, r_h = get_virt_scale_factor()
-
-                            mp.commandv("script-message-to", "thumbfast", "thumb",
-                                -- hovered time in seconds
-                                hover_sec,
-                                -- x
-                                math.min(
-                                    osd_w - thumbfast.width - 10,
-                                    math.max(10, tx / r_w - thumbfast.width / 2)
-                                ),
-                                -- y
-                                (ty - (user_opts.layout == "bottombar" and 39 or 18) - user_opts.barmargin) / r_h -
-                                (user_opts.layout == "topbar" and (-(57 + user_opts.barmargin) / r_h) or thumbfast.height)
-                            )
-                        end
+                        mp.commandv("script-message-to", "thumbfast", "thumb",
+                            -- hovered time in seconds
+                            hover_sec,
+                            -- x
+                            math.min(
+                                osd_w - thumbfast.width - 30,
+                                math.max(30, tx / r_w - thumbfast.width / 2)
+                            ),
+                            -- y
+                            (ty - 20) / r_h - thumbfast.height
+                        )
                     end
-                elseif (element.thumbnailable) then
-                    if thumbfast.width ~= 0 and thumbfast.height ~= 0 then
-                        mp.commandv("script-message-to", "thumbfast", "clear")
-                    end
+                elseif element.thumbnailable and thumbfast.width ~= 0 and
+                       thumbfast.height ~= 0 then
+                    mp.commandv("script-message-to", "thumbfast", "clear")
                 end
             end
 
