@@ -482,7 +482,7 @@ function load_file_index_in_current_directory(index)
 		if index < 0 then index = #files + index + 1 end
 
 		if files[index] then
-			mp.commandv('loadfile', utils.join_path(serialized.dirname, files[index]))
+			mp.commandv('loadfile', join_path(serialized.dirname, files[index]))
 		end
 	end
 end
@@ -900,7 +900,7 @@ mp.add_key_binding(nil, 'open-file', function()
 	-- Update active file in directory navigation menu
 	local function handle_file_loaded()
 		if Menu:is_open('open-file') then
-			Elements.menu:activate_value(normalize_path(mp.get_property_native('path')))
+			Elements.menu:activate_one_value(normalize_path(mp.get_property_native('path')))
 		end
 	end
 
