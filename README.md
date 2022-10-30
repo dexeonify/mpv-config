@@ -51,9 +51,8 @@ for the OSC icons.
 - **[SmartCopyPaste.lua](https://github.com/Eisa01/mpv-scripts#smartcopypaste):**
   Add the capability to copy and paste while being smart and customizable.
 
-- **[Thumbnailer.lua](https://github.com/deus0ww/mpv-conf):**
-  A more streamlined thumbnailer than [mpv_thumbnail_script](https://github.com/marzzzello/mpv_thumbnail_script),
-  also comes with additional features.
+- **[thumbfast.lua](https://github.com/po5/thumbfast):**
+  High-performance on-the-fly thumbnailer for mpv.
 
 **Note:** Some of the scripts have been modified to suit my needs. You can see
 the exact changes by looking at the commit history for each individual script.
