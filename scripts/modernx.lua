@@ -824,20 +824,24 @@ function render_elements(master_ass)
                     if element.thumbnailable and not thumbfast.disabled and
                        thumbfast.width ~= 0 and thumbfast.height ~= 0 then
                         local osd_w = mp.get_property_number("osd-dimensions/w")
-                        local hover_sec = mp.get_property_number("duration") * sliderpos / 100
                         local r_w, r_h = get_virt_scale_factor()
 
+                        local hover_sec = mp.get_property_number("duration") * sliderpos / 100
+                        local thumbPad = 2
+                        local thumbMarginX = 30 / r_w
+                        local thumbMarginY = 70
+                        local thumbX = math.min(osd_w - thumbfast.width - thumbMarginX, math.max(thumbMarginX, tx / r_w - thumbfast.width / 2))
+                        local thumbY = (ty - thumbMarginY) / r_h - thumbfast.height
+
+                        elem_ass:new_event()
+                        elem_ass:pos(thumbX * r_w, ty - thumbMarginY - thumbfast.height * r_h)
+                        elem_ass:append(osc_styles.tooltip)
+                        elem_ass:draw_start()
+                        elem_ass:rect_cw(-thumbPad * r_h, -thumbPad * r_h, (thumbfast.width + thumbPad) * r_w, (thumbfast.height + thumbPad) * r_h)
+                        elem_ass:draw_stop()
+
                         mp.commandv("script-message-to", "thumbfast", "thumb",
-                            -- hovered time in seconds
-                            hover_sec,
-                            -- x
-                            math.min(
-                                osd_w - thumbfast.width - 30,
-                                math.max(30, tx / r_w - thumbfast.width / 2)
-                            ),
-                            -- y
-                            (ty - 20) / r_h - thumbfast.height
-                        )
+                            hover_sec, thumbX, thumbY)
                     end
                 elseif element.thumbnailable and thumbfast.width ~= 0 and
                        thumbfast.height ~= 0 then
