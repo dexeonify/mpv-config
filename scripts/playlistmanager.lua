@@ -40,7 +40,7 @@ local settings = {
 
   filename_replace = "",
 
---[=====[ START OF SAMPLE REPLACE, to use remove start and end line
+--[=====[ START OF SAMPLE REPLACE - Remove this line to use it
   --Sample replace: replaces underscore to space on all files
   --for mp4 and webm; remove extension, remove brackets and surrounding whitespace, change dot between alphanumeric to space
   filename_replace = [[
@@ -270,6 +270,11 @@ update_opts({filename_replace = true, loadfiles_filetypes = true})
 function on_loaded()
   filename = mp.get_property("filename")
   path = mp.get_property('path')
+  local ext = filename:match("%.(.+)$")
+  if not ext or not filetype_lookup[ext:lower()] then
+    -- a directory or playlist has been loaded, let's not do anything as mpv will expand it into files
+    return
+  end
   --if not a url then join path with working directory
   if not path:match("^%a%a+:%/%/") then
     path = utils.join_path(mp.get_property('working-directory'), path)
