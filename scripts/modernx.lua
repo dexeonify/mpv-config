@@ -85,7 +85,8 @@ opt.read_options(user_opts, "osc", function(list) update_options(list) end)
 local thumbfast = {
     width = 0,
     height = 0,
-    disabled = false
+    disabled = false,
+    available = false
 }
 
 -----------------
@@ -696,13 +697,19 @@ function render_elements(master_ass)
     -- render iterations because the title may be rendered before the slider.
     state.forced_title = nil
     local se, ae = state.slider_element, elements[state.active_element]
-    if user_opts.chapter_fmt ~= "no" and se and (ae == se or (not ae and mouse_hit(se))) then
-        local dur = mp.get_property_number("duration", 0)
-        if dur > 0 then
-            local possec = get_slider_value(se) * dur / 100 -- of mouse pos
-            local ch = get_chapter(possec)
-            if ch and ch.title and ch.title ~= "" then
-                state.forced_title = string.format(user_opts.chapter_fmt, ch.title)
+
+    -- disable displaying chapter name in title when thumbfast is available
+    -- because thumbfast will render it above the thumbnail instead
+    if thumbfast.disabled then
+        local se, ae = state.slider_element, elements[state.active_element]
+        if user_opts.chapter_fmt ~= "no" and se and (ae == se or (not ae and mouse_hit(se))) then
+            local dur = mp.get_property_number("duration", 0)
+            if dur > 0 then
+                local possec = get_slider_value(se) * dur / 100 -- of mouse pos
+                local ch = get_chapter(possec)
+                if ch and ch.title and ch.title ~= "" then
+                    state.forced_title = string.format(user_opts.chapter_fmt, ch.title)
+                end
             end
         end
     end
@@ -821,30 +828,51 @@ function render_elements(master_ass)
                     ass_append_alpha(elem_ass, slider_lo.alpha, 0)
                     elem_ass:append(tooltiplabel)
 
-                    if element.thumbnailable and not thumbfast.disabled and
-                       thumbfast.width ~= 0 and thumbfast.height ~= 0 then
-                        local osd_w = mp.get_property_number("osd-dimensions/w")
+                    -- thumbfast
+                    if element.thumbnailable and not thumbfast.disabled then
+                        local osd_w = mp.get_property_number("osd-width")
                         local r_w, r_h = get_virt_scale_factor()
 
                         local hover_sec = mp.get_property_number("duration") * sliderpos / 100
+                        local tooltip_font_size = 20
                         local thumbPad = 2
-                        local thumbMarginX = 30 / r_w
-                        local thumbMarginY = 70
+                        local thumbMarginX = 25 / r_w
+                        local thumbMarginY = tooltip_font_size + thumbPad + 30 / r_h
                         local thumbX = math.min(osd_w - thumbfast.width - thumbMarginX, math.max(thumbMarginX, tx / r_w - thumbfast.width / 2))
                         local thumbY = (ty - thumbMarginY) / r_h - thumbfast.height
+
+                        thumbX = math.floor(thumbX + 0.5)
+                        thumbY = math.floor(thumbY + 0.5)
 
                         elem_ass:new_event()
                         elem_ass:pos(thumbX * r_w, ty - thumbMarginY - thumbfast.height * r_h)
                         elem_ass:append(osc_styles.tooltip)
                         elem_ass:draw_start()
-                        elem_ass:rect_cw(-thumbPad * r_h, -thumbPad * r_h, (thumbfast.width + thumbPad) * r_w, (thumbfast.height + thumbPad) * r_h)
+                        elem_ass:rect_cw(-thumbPad * r_w, -thumbPad * r_h, (thumbfast.width + thumbPad) * r_w, (thumbfast.height + thumbPad) * r_h)
                         elem_ass:draw_stop()
 
                         mp.commandv("script-message-to", "thumbfast", "thumb",
                             hover_sec, thumbX, thumbY)
+
+                        -- chapter title
+                        local se, ae = state.slider_element, elements[state.active_element]
+                        if user_opts.chapter_fmt ~= "no" and se and (ae == se or (not ae and mouse_hit(se))) then
+                            local dur = mp.get_property_number("duration", 0)
+                            if dur > 0 then
+                                local possec = get_slider_value(se) * dur / 100 -- of mouse pos
+                                local ch = get_chapter(possec)
+                                if ch and ch.title and ch.title ~= "" then
+                                    elem_ass:new_event()
+                                    elem_ass:pos((thumbX + thumbfast.width / 2) * r_w, thumbY * r_h - tooltip_font_size)
+                                    elem_ass:an(an)
+                                    elem_ass:append(slider_lo.tooltip_style)
+                                    ass_append_alpha(elem_ass, slider_lo.alpha, 0)
+                                    elem_ass:append(string.format(user_opts.chapter_fmt, ch.title))
+                                end
+                            end
+                        end
                     end
-                elseif element.thumbnailable and thumbfast.width ~= 0 and
-                       thumbfast.height ~= 0 then
+                elseif element.thumbnailable and thumbfast.available then
                     mp.commandv("script-message-to", "thumbfast", "clear")
                 end
             end
