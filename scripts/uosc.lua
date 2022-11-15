@@ -1,5 +1,5 @@
---[[ uosc 4.4.0 - 2022-Oct-28 | https://github.com/tomasklaen/uosc ]]
-local uosc_version = '4.4.0'
+--[[ uosc 4.5.0 - 2022-Dec-07 | https://github.com/tomasklaen/uosc ]]
+local uosc_version = '4.5.0'
 
 assdraw = require('mp.assdraw')
 opt = require('mp.options')
@@ -96,9 +96,10 @@ defaults = {
 	pause_indicator = 'flash',
 	curtain_opacity = 0.5,
 	stream_quality_options = '4320,2160,1440,1080,720,480,360,240,144',
-	media_types = '3g2,3gp,aac,aiff,ape,apng,asf,au,avi,avif,bmp,dsf,f4v,flac,flv,gif,h264,h265,j2k,jp2,jfif,jpeg,jpg,jxl,m2ts,m4a,m4v,mid,midi,mj2,mka,mkv,mov,mp3,mp4,mp4a,mp4v,mpeg,mpg,oga,ogg,ogm,ogv,opus,png,rm,rmvb,spx,svg,tak,tga,tta,tif,tiff,ts,vob,wav,weba,webm,webp,wma,wmv,wv,y4m',
+	media_types = '3g2,3gp,aac,aiff,ape,apng,asf,au,avi,avif,bmp,dsf,dts,f4v,flac,flv,gif,h264,h265,j2k,jp2,jfif,jpeg,jpg,jxl,m2ts,m4a,m4v,mid,midi,mj2,mka,mkv,mov,mp3,mp4,mp4a,mp4v,mpeg,mpg,oga,ogg,ogm,ogv,opus,png,rm,rmvb,spx,svg,tak,tga,tta,tif,tiff,ts,vob,wav,weba,webm,webp,wma,wmv,wv,y4m',
 	subtitle_types = 'aqt,ass,gsub,idx,jss,lrc,mks,pgs,pjs,psb,rt,slt,smi,sub,sup,srt,ssa,ssf,ttxt,txt,usf,vt,vtt',
 	default_directory = '~/',
+	use_trash = false,
 	chapter_ranges = 'openings:30abf964,endings:30abf964,ads:c54e4e80',
 	chapter_range_patterns = 'openings:オープニング;endings:エンディング',
 }
@@ -268,7 +269,7 @@ end
 
 --[[ STATE ]]
 
-display = {width = 1280, height = 720, scale_x = 1, scale_y = 1}
+display = {width = 1280, height = 720, scale_x = 1, scale_y = 1, initialized = false}
 cursor = {hidden = true, x = 0, y = 0}
 state = {
 	os = (function()
@@ -343,9 +344,11 @@ require('uosc_shared/lib/menus')
 function update_display_dimensions()
 	local scale = (state.hidpi_scale or 1) * options.ui_scale
 	local real_width, real_height = mp.get_osd_size()
+	if real_width <= 0 then return end
 	local scaled_width, scaled_height = round(real_width / scale), round(real_height / scale)
 	display.width, display.height = scaled_width, scaled_height
 	display.scale_x, display.scale_y = real_width / scaled_width, real_height / scaled_height
+	display.initialized = true
 
 	-- Tell elements about this
 	Elements:trigger('display')
@@ -643,7 +646,7 @@ mp.observe_property('osd-dimensions', 'native', function(name, val)
 	request_render()
 end)
 mp.observe_property('display-hidpi-scale', 'native', create_state_setter('hidpi_scale', update_display_dimensions))
-mp.observe_property('cache', 'native', create_state_setter('cache'))
+mp.observe_property('cache', 'string', create_state_setter('cache'))
 mp.observe_property('cache-buffering-state', 'number', create_state_setter('cache_buffering'))
 mp.observe_property('demuxer-via-network', 'native', create_state_setter('is_stream', function()
 	Elements:trigger('dispositions')
