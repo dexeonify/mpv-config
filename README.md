@@ -11,9 +11,9 @@ integrated GPU. This is mainly just for backup and keeping track of changes.
 - [Manrope](https://github.com/sharanda/manrope) (Subtitles)
 - [Cascadia Code](https://github.com/microsoft/cascadia-code) (Console)
 
-⚠️ **Important:**
-Install my custom-made icon font [modernx-osc-icon.ttf](https://github.com/dexeonify/mpv-config/raw/main/fonts/modernx-osc-icon.ttf)
-for the OSC icons.
+> **Warning** \
+> Install my custom-made icon font [modernx-osc-icon.ttf](https://github.com/dexeonify/mpv-config/raw/main/fonts/modernx-osc-icon.ttf)
+> for the OSC icons.
 
 ## User scripts
 
@@ -30,11 +30,9 @@ for the OSC icons.
 
 - **[modernx.lua](https://github.com/dexeonify/mpv-config/blob/main/scripts/modernx.lua):**
   My own spin on [MordenX](https://github.com/cyl0/ModernX), with added support
-  of deus0ww's Thumbnailer.lua (see below) and upstream fixes ported from from
-  mpv's [osc.lua](https://github.com/mpv-player/mpv/blob/master/player/lua/osc.lua).
-
-  **Note:** For a version that supports mpv_thumbnail_script, you can check out
-  ThomasEricB's fork [Mpv.Net-HQ-Config](https://github.com/ThomasEricB/Mpv.Net-HQ-Config).
+  of po5's thumbfast.lua (see below) and upstream fixes ported from from mpv's
+  [osc.lua](https://github.com/mpv-player/mpv/blob/master/player/lua/osc.lua).
+  You can view the differences between the upstream/forks [here](#difference-between-upstream-modernx).
 
 - **[playlistmanager.lua](https://github.com/jonniek/mpv-playlistmanager):**
   Create and manage playlists intuitively. Uses [playlistmanager-save-interactive.lua](https://github.com/jonniek/mpv-playlistmanager/blob/master/playlistmanager-save-interactive.lua)
@@ -54,8 +52,61 @@ for the OSC icons.
 - **[thumbfast.lua](https://github.com/po5/thumbfast):**
   High-performance on-the-fly thumbnailer for mpv.
 
-**Note:** Some of the scripts have been modified to suit my needs. You can see
-the exact changes by looking at the commit history for each individual script.
+> **Note** \
+> Some of the scripts have been modified to suit my needs. You can see the
+> exact changes by looking at the commit history for each individual script.
+
+## Difference between upstream ModernX
+
+<details>
+<summary>Expand</summary>
+
+### New
+
+- Add `movesub` feature
+- Move console when OSC is visible
+- Add script-opts to show OSC on `file-loaded` and `seek`
+- Add logarithmic volume control (`processvolume` in [modern])
+- Add replay button at the end of playback ([modern#21])
+- Add hover effect to icons
+- Add `blur_intensity`, `osc_color`, `seekbarfg_color`, `seekbarbg_color` and
+  `titlefont` script-opts to customize OSC
+
+### Changes
+
+- Use Feather icons (outlined, rounded corners) instead of Material Icons
+  (solid, sharp corners)
+- Use osc.lua's windows control bar
+- Revert logo to mpv's default and add a christmas theme logo
+- Change default font size for title, tooltip & timecode
+- No translations
+- No support for directional keyboard ([ModernX#4])
+
+### Improvements
+
+- More frequent syncing from upstream osc.lua
+- Smarter OSC elements show/hide logic
+- Right-click seeks chapter closer to the clicked position
+- Window controls respect Fitts's law ([mpv#9791])
+- Volume bar follow `seekbar*_color`
+
+### Bug fix
+
+- Working deadzone implementation
+- Fix timecode hitbox when milleseconds are shown (fixed in [583faf0])
+- Fix title being clipped ([ModernX#26], fixed in [aa29531])
+- Fix middle click to show audio track and subtitle track list ([ModernX#15])
+
+</details>
+
+[modern]: https://github.com/maoiscat/mpv-osc-modern
+[modern#21]: https://github.com/maoiscat/mpv-osc-modern/issues/21
+[ModernX#4]: https://github.com/cyl0/ModernX/pull/4
+[ModernX#15]: https://github.com/cyl0/ModernX/issues/15
+[ModernX#26]: https://github.com/cyl0/ModernX/issues/26
+[mpv#9791]: https://github.com/mpv-player/mpv/issues/9791
+[583faf0]: https://github.com/dexeonify/mpv-config/commit/583faf0
+[aa29531]: https://github.com/dexeonify/mpv-config/commit/aa29531
 
 ## References
 

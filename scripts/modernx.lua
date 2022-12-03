@@ -838,7 +838,7 @@ function render_elements(master_ass)
                         local tooltip_font_size = 20
                         local thumbPad = 2
                         local thumbMarginX = 25 / r_w
-                        local thumbMarginY = tooltip_font_size + thumbPad + 30 / r_h
+                        local thumbMarginY = tooltip_font_size + thumbPad + 4 / r_h
                         local thumbX = math.min(osd_w - thumbfast.width - thumbMarginX, math.max(thumbMarginX, tx / r_w - thumbfast.width / 2))
                         local thumbY = (ty - thumbMarginY) / r_h - thumbfast.height
 
