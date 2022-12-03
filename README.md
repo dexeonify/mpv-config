@@ -29,7 +29,7 @@ for the OSC icons.
   files & folders.
 
 - **[modernx.lua](https://github.com/dexeonify/mpv-config/blob/main/scripts/modernx.lua):**
-  My own spin on [MordenX](https://github.com/cyl0/MordenX), with added support
+  My own spin on [MordenX](https://github.com/cyl0/ModernX), with added support
   of deus0ww's Thumbnailer.lua (see below) and upstream fixes ported from from
   mpv's [osc.lua](https://github.com/mpv-player/mpv/blob/master/player/lua/osc.lua).
 

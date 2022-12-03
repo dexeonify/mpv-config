@@ -1,9 +1,9 @@
--- mpv-osc-morden by maoiscat
+-- mpv-osc-modern by maoiscat
 -- email:valarmor@163.com
 -- https://github.com/maoiscat/mpv-osc-modern
 
 -- fork by cyl0
--- https://github.com/cyl0/MordenX
+-- https://github.com/cyl0/ModernX
 
 -- forked again by dexeonify
 -- https://github.com/dexeonify/mpv-config/blob/main/scripts/modernx.lua
