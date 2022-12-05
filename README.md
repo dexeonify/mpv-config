@@ -77,7 +77,6 @@ integrated GPU. This is mainly just for backup and keeping track of changes.
 - Use Feather icons (outlined, rounded corners) instead of Material Icons
   (solid, sharp corners)
 - Use osc.lua's windows control bar
-- Revert logo to mpv's default and add a christmas theme logo
 - Change default font size for title, tooltip & timecode
 - No translations
 - No support for directional keyboard ([ModernX#4])
@@ -95,14 +94,12 @@ integrated GPU. This is mainly just for backup and keeping track of changes.
 - Working deadzone implementation
 - Fix timecode hitbox when milleseconds are shown (fixed in [583faf0])
 - Fix title being clipped ([ModernX#26], fixed in [aa29531])
-- Fix middle click to show audio track and subtitle track list ([ModernX#15])
 
 </details>
 
 [modern]: https://github.com/maoiscat/mpv-osc-modern
 [modern#21]: https://github.com/maoiscat/mpv-osc-modern/issues/21
 [ModernX#4]: https://github.com/cyl0/ModernX/pull/4
-[ModernX#15]: https://github.com/cyl0/ModernX/issues/15
 [ModernX#26]: https://github.com/cyl0/ModernX/issues/26
 [mpv#9791]: https://github.com/mpv-player/mpv/issues/9791
 [583faf0]: https://github.com/dexeonify/mpv-config/commit/583faf0
