@@ -73,6 +73,7 @@ local user_opts = {
     seekbarfg_color = "E39C42", -- color of the seekbar progress and handle
     seekbarbg_color = "FFFFFF", -- color of the remaining seekbar
                                 -- both options apply to the volumebar too
+    thumbpad = 4,               -- thumbnail border width
 }
 
 -- read options from config and command-line
@@ -836,7 +837,7 @@ function render_elements(master_ass)
 
                         local hover_sec = mp.get_property_number("duration") * sliderpos / 100
                         local tooltip_font_size = 20
-                        local thumbPad = 2
+                        local thumbPad = user_opts.thumbpad
                         local thumbMarginX = 25 / r_w
                         local thumbMarginY = tooltip_font_size + thumbPad + 4 / r_h
                         local thumbX = math.min(osd_w - thumbfast.width - thumbMarginX, math.max(thumbMarginX, tx / r_w - thumbfast.width / 2))
