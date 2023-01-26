@@ -13,7 +13,7 @@ integrated GPU. This is mainly just for backup and keeping track of changes.
 
 ## Fonts
 
-- [Open Sans](https://fonts.google.com/specimen/Open+Sans) (OSC)
+- [Source Sans Pro](https://fonts.google.com/specimen/Source+Sans+Pro) (OSC)
 - [Manrope](https://github.com/sharanda/manrope) (Subtitles)
 - [Cascadia Code](https://github.com/microsoft/cascadia-code) (Console)
 
