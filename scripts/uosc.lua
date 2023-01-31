@@ -1,5 +1,5 @@
---[[ uosc 4.5.0 - 2022-Dec-07 | https://github.com/tomasklaen/uosc ]]
-local uosc_version = '4.5.0'
+--[[ uosc 4.6.0 - 2023-Feb-15 | https://github.com/tomasklaen/uosc ]]
+local uosc_version = '4.6.0'
 
 assdraw = require('mp.assdraw')
 opt = require('mp.options')
@@ -1116,7 +1116,7 @@ mp.register_script_message('open-menu', function(json, submenu_id)
 		msg.error('open-menu: received json didn\'t produce a table with menu configuration')
 	else
 		if data.type and Menu:is_open(data.type) then Menu:close()
-		else open_command_menu(data, {submenu_id = submenu_id}) end
+		else open_command_menu(data, {submenu = submenu_id, on_close = data.on_close}) end
 	end
 end)
 mp.register_script_message('update-menu', function(json)
