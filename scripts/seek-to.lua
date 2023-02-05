@@ -2,6 +2,7 @@
 
 local assdraw = require 'mp.assdraw'
 local utils = require 'mp.utils'
+local msg = require 'mp.msg'
 local active = false
 local cursor_position = 1
 local time_scale = {60*60*10, 60*60, 60*10, 60, 10, 1, 0.1, 0.01, 0.001}
@@ -180,6 +181,8 @@ function paste_timestamp()
     if match ~= nil then
         mp.osd_message("Timestamp pasted: " .. match)
         mp.commandv("osd-bar", "seek", match, "absolute")
+    else
+        msg.warn("No pastable timestamp found!")
     end
 end
 
