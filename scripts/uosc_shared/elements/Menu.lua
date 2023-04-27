@@ -156,7 +156,7 @@ function Menu:update(data)
 
 		-- Update items
 		local first_active_index = nil
-		menu.items = {}
+		menu.items = {{title = t('Empty'), value = 'ignore', italic = 'true', muted = 'true'}}
 
 		for i, item_data in ipairs(menu_data.items or {}) do
 			if item_data.active and not first_active_index then first_active_index = i end
@@ -506,7 +506,7 @@ function Menu:move_selected_item_to(index)
 	if callback and from and from ~= index and index >= 1 and index <= #self.current.items then
 		callback(from, index, self.current.submenu_path)
 		self.current.selected_index = index
-		request_render()
+		self:set_scroll_by((index - from) * self.scroll_step)
 	end
 end
 
