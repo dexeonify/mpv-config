@@ -1,4 +1,4 @@
-local Element = require('uosc_shared/elements/Element')
+local Element = require('elements/Element')
 
 -- Menu data structure accepted by `Menu:open(menu)`.
 ---@alias MenuData {type?: string; title?: string; hint?: string; keep_open?: boolean; separator?: boolean; items?: MenuDataItem[]; selected_index?: integer;}
@@ -185,6 +185,10 @@ function Menu:update(data)
 		-- Retain old state
 		local old_menu = self.by_id[menu.is_root and '__root__' or menu.id]
 		if old_menu then table_assign(menu, old_menu, {'selected_index', 'scroll_y', 'fling'}) end
+
+		if menu.selected_index then
+			menu.selected_index = #menu.items > 0 and clamp(1, menu.selected_index, #menu.items) or nil
+		end
 
 		new_all[#new_all + 1] = menu
 		new_by_id[menu.is_root and '__root__' or menu.id] = menu
