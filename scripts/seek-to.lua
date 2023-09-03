@@ -3,6 +3,8 @@
 local assdraw = require 'mp.assdraw'
 local utils = require 'mp.utils'
 local msg = require 'mp.msg'
+
+local platform = mp.get_property_native("platform")
 local active = false
 local cursor_position = 1
 local time_scale = {60*60*10, 60*60, 60*10, 60, 10, 1, 0.1, 0.01, 0.001}
@@ -172,7 +174,6 @@ function subprocess(args)
 end
 
 function get_clipboard()
-    local platform = mp.get_property_native("platform")
     local res
     if platform == "windows" then
         res = subprocess({ "powershell", "-Command", "Get-Clipboard", "-Raw" })
