@@ -179,7 +179,11 @@ function get_clipboard()
     elseif platform == "darwin" then
         res = subprocess({ "pbpaste" })
     elseif platform == "linux" then
-        res = subprocess({ "xclip", "-selection", "clipboard", "-out" })
+        if os.getenv("WAYLAND_DISPLAY") then
+            res = subprocess({ "wl-paste", "-n" })
+        else
+            res = subprocess({ "xclip", "-selection", "clipboard", "-out" })
+        end
     end
     return res
 end
