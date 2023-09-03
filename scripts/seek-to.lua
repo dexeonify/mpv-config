@@ -193,7 +193,7 @@ function paste_timestamp()
     local clipboard = get_clipboard()
     if clipboard == nil then return end
 
-    timestamp = clipboard:match("%d?%d?:?%d%d:%d%d%.?%d*")
+    timestamp = clipboard:match("%d*:?%d+:[0-5][0-9]%.?%d*")
     if timestamp ~= nil then
         mp.osd_message("Timestamp pasted: " .. timestamp)
         mp.commandv("osd-bar", "seek", timestamp, "absolute")
