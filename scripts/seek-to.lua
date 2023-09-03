@@ -160,16 +160,13 @@ function subprocess(args)
         name = "subprocess",
         args = args,
         playback_only = false,
-        capture_stdout = true,
-        capture_stderr = true
+        capture_stdout = true
     }
     local res = mp.command_native(cmd)
     if not res.error then
         return res.stdout
     else
-        msg.error("Error getting data from clipboard:")
-        msg.error("  stderr: " .. res.stderr)
-        msg.error("  stdout: " .. res.stdout)
+        msg.error("Error getting data from clipboard")
         return
     end
 end
