@@ -67,6 +67,7 @@ defaults = {
 	top_bar_alt_title = '',
 	top_bar_alt_title_place = 'below',
 	top_bar_title_opacity = 0.8,
+	top_bar_flash_on = 'video,audio',
 
 	window_border_size = 1,
 	window_border_opacity = 0.8,
@@ -103,6 +104,7 @@ defaults = {
 	image_types= 'apng,avif,bmp,gif,j2k,jp2,jfif,jpeg,jpg,jxl,mj2,png,svg,tga,tif,tiff,webp',
 	subtitle_types = 'aqt,ass,gsub,idx,jss,lrc,mks,pgs,pjs,psb,rt,slt,smi,sub,sup,srt,ssa,ssf,ttxt,txt,usf,vt,vtt',
 	default_directory = '~/',
+	show_hidden_files = false,
 	use_trash = false,
 	adjust_osd_margins = true,
 	chapter_ranges = 'openings:30abf964,endings:30abf964,ads:c54e4e80',
@@ -200,6 +202,7 @@ config = {
 		end)(),
 	},
 	stream_quality_options = split(options.stream_quality_options, ' *, *'),
+	top_bar_flash_on = split(options.top_bar_flash_on, ' *, *'),
 	menu_items = (function()
 		local input_conf_property = mp.get_property_native('input-conf')
 		local input_conf_path = mp.command_native({
@@ -635,7 +638,10 @@ function load_file_index_in_current_directory(index)
 
 	local serialized = serialize_path(state.path)
 	if serialized and serialized.dirname then
-		local files = read_directory(serialized.dirname, config.types.autoload)
+		local files = read_directory(serialized.dirname, {
+			types = config.types.autoload,
+			hidden = options.show_hidden_files
+		})
 
 		if not files then return end
 		sort_filenames(files)
@@ -707,7 +713,14 @@ mp.register_event('file-loaded', function()
 	itable_delete_value(state.history, path)
 	state.history[#state.history + 1] = path
 	set_state('path', path)
-	Elements:flash({'top_bar'})
+
+	-- Flash top bar on requested file types
+	for _, type in ipairs(config.top_bar_flash_on) do
+		if state['is_'..type] then
+			Elements:flash({'top_bar'})
+			break
+		end
+	end
 end)
 mp.register_event('end-file', function(event)
 	set_state('path', nil)
@@ -1189,7 +1202,10 @@ bind_command('delete-file-next', function()
 		mp.commandv('playlist-remove', 'current')
 	else
 		if is_local_file then
-			local paths, current_index = get_adjacent_files(state.path, config.types.autoload)
+			local paths, current_index = get_adjacent_files(state.path, {
+				types = config.types.autoload,
+				hidden = options.show_hidden_files
+			})
 			if paths and current_index then
 				local index, path = decide_navigation_in_list(paths, current_index, 1)
 				if path then next_file = path end
