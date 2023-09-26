@@ -2,37 +2,38 @@
 
 My personal [mpv](https://github.com/mpv-player/mpv) config and user scripts :)
 
-Nothing special, not even any fancy shaders or anything, since I only have an
-integrated GPU. This is mainly just for backup and keeping track of changes.
+This config is tailored to my workflow, rather than serving as another
+reference in a sea of *high-quality* configs. Also, this repo is mostly for
+backup and keeping track of changes.
 
-> **Note** \
-> This branch is the one I'm locally using (and developing moving forward),
-> taking advantage of the superb uosc! However, I will still continue to
-> maintain modernx (in the [main](https://github.com/dexeonify/mpv-config/tree/main)
-> branch) - in terms of upstream fixes.
+> [!NOTE]
+> This is the branch that I'm currently using (and developing) locally,
+> utilizing the superb uosc! As a result, the development on my fork of ModernX
+> will grind to a halt. I *may* try to sync some minor changes and bug fixes
+> from upstream every now and then.
 
 ## Fonts
 
-- [Manrope](https://github.com/sharanda/manrope) (Subtitles)
+- [Manrope](https://github.com/sharanda/manrope) (OSC, Subtitle, Stats)
   - A modified version of Manrope (with Tabular Number enabled) is used for the
-    OSC and Stats window
+    OSC and Stats window, which can be downloaded [here](https://github.com/dexeonify/mpv-config/tree/uosc/fonts).
 - [Cascadia Code](https://github.com/microsoft/cascadia-code) (Console)
 
 ## User scripts
 
 - **[uosc.lua](https://github.com/tomasklaen/uosc):**
-  A feature-rich minimalist proximity-based UI for mpv. Completed with fully
-  customizable controls bar and menu, UI for file browser and playlist,
-  as well as integration with various scripts.
+  A feature-rich minimalist proximity-based UI for mpv. Complete with fully
+  customisable controls bar and menu, UI for file browser and playlist,
+  as well as scripts integration that acts as extensions to the UI.
 
 - **[thumbfast.lua](https://github.com/po5/thumbfast):**
-  High-performance on-the-fly thumbnailer for mpv. The latest and greatest
-  thumbnail engine rivalling both [mpv_thumbnail_script](https://github.com/marzzzello/mpv_thumbnail_script)
+  A high-performance and state-of-the-art thumbnailer engine for mpv, rivalling
+  both [mpv_thumbnail_script](https://github.com/marzzzello/mpv_thumbnail_script)
   and [Thumbnailer](https://github.com/deus0ww/mpv-conf/blob/master/scripts/Thumbnailer.lua).
 
 - **[file-browser.lua](https://github.com/CogentRedTester/mpv-file-browser):**
-  Navigate through the file system entirely from within mpv and open/append
-  files & folders.
+  Navigate through the file system entirely from within mpv, as well as
+  opening and appending files & folders.
 
 - **[playlistmanager.lua](https://github.com/jonniek/mpv-playlistmanager):**
   Create and manage playlists intuitively. Use [playlistmanager-save-interactive.lua](https://github.com/jonniek/mpv-playlistmanager/blob/master/playlistmanager-save-interactive.lua)
@@ -51,9 +52,9 @@ integrated GPU. This is mainly just for backup and keeping track of changes.
   Seek to an absolute timestamp specified via keyboard input or
   pasted from clipboard.
 
-> **Note** \
+> [!IMPORTANT]
 > Some of the scripts have been modified to suit my needs. You can see the
-> exact changes by looking at the commit history for each individual script.
+> exact changes by viewing the commit history of each individual script.
 
 ## References
 
