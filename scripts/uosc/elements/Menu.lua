@@ -11,7 +11,7 @@ local Element = require('elements/Element')
 ---@alias MenuStackItem MenuStackValue|MenuStack
 ---@alias MenuStackValue {title?: string; hint?: string; icon?: string; value: any; active?: boolean; bold?: boolean; italic?: boolean; muted?: boolean; keep_open?: boolean; separator?: boolean; selectable?: boolean; align?: 'left'|'center'|'right'; title_width: number; hint_width: number}
 ---@alias Fling {y: number, distance: number, time: number, easing: fun(x: number), duration: number, update_cursor?: boolean}
----@alias Search {query: string; timeout: unknown; width: number; top: number; source: {scroll_y: number; selected_index?: integer; items?: MenuDataItem[]}}
+---@alias Search {query: string; timeout: unknown; min_top: number; max_width: number; source: {width: number; top: number; scroll_y: number; selected_index?: integer; items?: MenuDataItem[]}}
 
 ---@alias Modifiers {shift?: boolean, ctrl?: boolean, alt?: boolean}
 ---@alias MenuCallbackMeta {modifiers: Modifiers}
@@ -290,21 +290,33 @@ function Menu:update_content_dimensions()
 end
 
 function Menu:update_dimensions()
-	-- Coordinates and sizes are of the scrollable area to make
-	-- consuming values in rendering and collisions easier. Title is rendered
+	-- Coordinates and sizes are of the scrollable area. Title is rendered
 	-- above it, so we need to account for that in max_height and ay position.
-	local min_width = state.fullormaxed and options.menu_min_width_fullscreen or options.menu_min_width
-	local height_available = display.height - Elements.timeline.size_min
+	-- This is a debt from an era where we had different cursor event handling,
+	-- and dumb titles with no search inputs. It could use a refactor.
+	local margin = round(self.item_height / 2)
+	local width_available, height_available = display.width - margin * 2, display.height - margin * 2
+	local min_width = math.min(
+		state.fullormaxed and options.menu_min_width_fullscreen or options.menu_min_width,
+		width_available
+	)
 
 	for _, menu in ipairs(self.all) do
-		local width = math.max(menu.search and menu.search.width or 0, menu.max_width)
-		menu.width = round(clamp(min_width, width, display.width * 0.9))
+		local width = math.max(menu.search and menu.search.max_width or 0, menu.max_width)
+		menu.width = round(clamp(min_width, width, width_available))
 		local title_height = (menu.is_root and menu.title or menu.search) and self.scroll_step or 0
-		local max_height = round(height_available * 0.9 - title_height)
+		local max_height = height_available - title_height
 		local content_height = self.scroll_step * #menu.items
 		menu.height = math.min(content_height - self.item_spacing, max_height)
-		local search_top = menu.search and menu.search.top or height_available
-		menu.top = math.min(search_top, round((height_available - menu.height + title_height) / 2))
+		menu.top = clamp(
+			title_height + margin,
+			menu.search and math.min(menu.search.min_top, menu.search.source.top) or height_available,
+			round((height_available - menu.height + title_height) / 2)
+		)
+		if menu.search then
+			menu.search.min_top = math.min(menu.search.min_top, menu.top)
+			menu.search.max_width = math.max(menu.search.max_width, menu.width)
+		end
 		menu.scroll_height = math.max(content_height - menu.height - self.item_spacing, 0)
 		menu.scroll_y = menu.scroll_y or 0
 		self:scroll_to(menu.scroll_y, menu) -- clamps scroll_y to scroll limits
@@ -757,11 +769,12 @@ end
 
 ---@param event? string
 function Menu:search_backspace(event)
-	local pos, old_query, is_palette = #self.current.search.query - 1, self.current.search.query, self.current.palette
+	local pos, old_query, is_palette = #self.current.search.query, self.current.search.query, self.current.palette
 	-- The while loop is for skipping utf8 continuation bytes
 	while pos > 1 and old_query:byte(pos) >= 0x80 and old_query:byte(pos) <= 0xbf do
 		pos = pos - 1
 	end
+	pos = pos - 1
 	local new_query = old_query:sub(1, pos)
 	if new_query ~= old_query and (is_palette or not self.type_to_search or pos > 0) then
 		self:search_query_update(new_query)
@@ -809,8 +822,9 @@ function Menu:search_init(menu)
 		timeout:kill()
 	end
 	menu.search = {
-		query = '', timeout = timeout, width = menu.width, top = menu.top,
+		query = '', timeout = timeout, min_top = menu.top, max_width = menu.width,
 		source = {
+			width = menu.width, top = menu.top,
 			scroll_y = menu.scroll_y, selected_index = menu.selected_index,
 			items = not menu.on_search and menu.items or nil
 		},
@@ -1002,7 +1016,7 @@ function Menu:render()
 		local end_index = math.ceil((menu.scroll_y + menu.height) / self.scroll_step)
 		-- Remove menu_opacity to start off with full, but still decay for parent menus
 		local text_opacity = menu_opacity / options.menu_opacity
-		local menu_rect = {ax = ax, ay = ay - (draw_title and self.item_height or 0) - 2, bx = bx, by = by + 2}
+		local menu_rect = {ax = ax, ay = ay - (draw_title and self.scroll_step or 0) - 2, bx = bx, by = by + 2}
 		local blur_selected_index = is_current and self.mouse_nav
 
 		-- Background
@@ -1136,7 +1150,7 @@ function Menu:render()
 		-- Menu title
 		if draw_title then
 			local requires_submit = menu.search_debounce == 'submit'
-			local rect = {ax = ax, ay = ay - self.item_height, bx = bx, by = ay - 2}
+			local rect = {ax = ax + spacing, ay = ay - self.scroll_step, bx = bx - spacing, by = math.min(by, ay - 2)}
 			local prevent_title_click = true
 			rect.cx, rect.cy = rect.ax + (rect.bx - rect.ax) / 2, rect.ay + (rect.by - rect.ay) / 2 -- centers
 
@@ -1145,13 +1159,13 @@ function Menu:render()
 			end
 
 			-- Bottom border
-			ass:rect(rect.ax, rect.by - 1, rect.bx, rect.by, {color = fg, opacity = menu_opacity * 0.2})
+			ass:rect(ax, rect.by - 1, bx, rect.by, {color = fg, opacity = menu_opacity * 0.2})
 
 			-- Title
 			if menu.search then
 				-- Icon
 				local icon_size, icon_opacity = self.font_size * 1.3, requires_submit and text_opacity * 0.5 or 1
-				local icon_rect = {ax = rect.ax, ay = rect.ay, bx = ax + icon_size + spacing * 1.5, by = ay}
+				local icon_rect = {ax = rect.ax, ay = rect.ay, bx = ax + icon_size + spacing * 1.5, by = rect.by}
 
 				if is_current and requires_submit and get_point_to_rectangle_proximity(cursor, icon_rect) == 0 then
 					cursor.on_primary_down = function() self:search_submit() end
@@ -1159,38 +1173,40 @@ function Menu:render()
 					prevent_title_click = false
 				end
 
-				ass:icon(rect.ax + spacing + icon_size / 2, rect.cy, icon_size, 'search', {
+				ass:icon(rect.ax + icon_size / 2, rect.cy, icon_size, 'search', {
 					color = fg, opacity = icon_opacity, shadow = 1, shadow_color = bg,
+					clip = '\\clip(' .. icon_rect.ax .. ',' .. icon_rect.ay .. ',' .. icon_rect.bx .. ',' .. icon_rect.by .. ')'
 				})
 
 				-- Query/Placeholder
 				if menu.search.query ~= '' then
 					-- Add a ZWNBSP suffix to prevent libass from trimming trailing spaces
 					local query = ass_escape(menu.search.query) .. '\239\187\191'
-					ass:txt(rect.bx - spacing, rect.cy, 6, query, {
+					ass:txt(rect.bx, rect.cy, 6, query, {
 						size = self.font_size, color = bgt, wrap = 2, opacity = menu_opacity,
-						clip = '\\clip(' .. icon_rect.bx .. ',' .. rect.ay .. ',' .. bx - spacing .. ',' .. ay .. ')',
+						clip = '\\clip(' .. icon_rect.bx .. ',' .. rect.ay .. ',' .. rect.bx .. ',' .. rect.by .. ')',
 					})
 				else
 					local placeholder = (menu.palette and menu.ass_safe_title)
 						and menu.ass_safe_title
 						or (requires_submit and t('type & ctrl+enter to search') or t('type to search'))
-					ass:txt(rect.bx - spacing, rect.cy, 6, placeholder, {
+					ass:txt(rect.bx, rect.cy, 6, placeholder, {
 						size = self.font_size, italic = true, color = bgt, wrap = 2, opacity = menu_opacity * 0.4,
-						clip = '\\clip(' .. ax + spacing .. ',' .. rect.ay .. ',' .. bx - spacing .. ',' .. ay .. ')',
+						clip = '\\clip(' .. rect.ax .. ',' .. rect.ay .. ',' .. rect.bx .. ',' .. rect.by .. ')',
 					})
 				end
 
 				-- Cursor
-				local font_size_half = round(self.font_size / 2)
-				local cursor_ax, cursor_thickness = rect.bx - spacing + 1, round(self.font_size / 14)
-				ass:rect(cursor_ax, rect.cy - font_size_half, cursor_ax + cursor_thickness, rect.cy + font_size_half, {
-					color = fg, opacity = menu_opacity * 0.5
+				local font_size_half, cursor_thickness = round(self.font_size / 2), round(self.font_size / 14)
+				local cursor_ax, cursor_bx = rect.bx + 1, rect.bx + 1 + cursor_thickness
+				ass:rect(cursor_ax, rect.cy - font_size_half, cursor_bx, rect.cy + font_size_half, {
+					color = fg, opacity = menu_opacity * 0.5,
+					clip = '\\clip(' .. cursor_ax .. ',' .. rect.ay .. ',' .. cursor_bx .. ',' .. rect.by .. ')',
 				})
 			else
 				ass:txt(rect.cx, rect.cy, 5, menu.ass_safe_title, {
 					size = self.font_size, bold = true, color = bgt, wrap = 2, opacity = menu_opacity,
-					clip = '\\clip(' .. rect.ax + 2 .. ',' .. rect.ay .. ',' .. rect.bx - 2 .. ',' .. rect.by .. ')',
+					clip = '\\clip(' .. rect.ax .. ',' .. rect.ay .. ',' .. rect.bx .. ',' .. rect.by .. ')',
 				})
 			end
 
