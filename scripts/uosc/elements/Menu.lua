@@ -116,7 +116,10 @@ function Menu:init(data, callback, opts)
 	self.drag_last_y = nil
 	self.is_dragging = false
 
-	mp.set_property_native('user-data/uosc/menu/type', self.type)
+	if utils.shared_script_property_set then
+		utils.shared_script_property_set('uosc-menu-type', self.type or 'undefined')
+	end
+	mp.set_property_native('user-data/uosc/menu/type', self.type or 'undefined')
 	self:update(data)
 
 	if self.mouse_nav then
@@ -136,7 +139,10 @@ function Menu:destroy()
 	self:disable_key_bindings()
 	self.is_closed = true
 	if not self.is_being_replaced then Elements.curtain:unregister('menu') end
-	mp.del_property('user-data/uosc/menu/type')
+	if utils.shared_script_property_set then
+		utils.shared_script_property_set('uosc-menu-type', nil)
+	end
+	mp.set_property_native('user-data/uosc/menu/type', nil)
 	if self.opts.on_close then self.opts.on_close() end
 end
 
@@ -241,13 +247,14 @@ function Menu:update(data)
 	end
 	-- Apply search suggestions
 	for _, menu in ipairs(new_menus) do
-		if menu.search_suggestion then
+		if menu.search_suggestion then menu.search.query = menu.search_suggestion end
+	end
+	for _, menu in ipairs(self.all) do
+		if menu.search then
+			-- the menu items are new objects and the search needs to contain those
+			menu.search.source.items = not menu.on_search and menu.items or nil
 			-- Only internal searches are immediately submitted
-			if menu.on_search then
-				menu.search.query = menu.search_suggestion
-			else
-				self:search_query_update(menu.search_suggestion, menu)
-			end
+			if not menu.on_search then self:search_submit(menu) end
 		end
 	end
 
@@ -689,10 +696,15 @@ function Menu:search_internal(menu)
 		-- Reset menu state to what it was before search
 		for key, value in pairs(menu.search.source) do menu[key] = value end
 	else
-		menu.items = search_items(menu.search.source.items, query, menu.search_submenus)
+		-- Inherit `search_submenus` from parent menus
+		local search_submenus, parent_menu = menu.search_submenus, menu.parent_menu
+		while not search_submenus and parent_menu do
+			search_submenus, parent_menu = parent_menu.search_submenus, parent_menu.parent_menu
+		end
+		menu.items = search_items(menu.search.source.items, query, search_submenus)
 		-- Select 1st item in search results
 		menu.scroll_y = 0
-		self:select_index(1, menu)
+		if not self.mouse_nav then self:select_index(1, menu) end
 	end
 	self:update_content_dimensions()
 end
@@ -717,6 +729,7 @@ function search_items(items, query, recursive, prefix)
 					hint and table.concat(initials(hint)):find(query, 1, true) then
 					item = table_shallow_copy(item)
 					item.title = prefixed_title
+					item.ass_safe_title = nil
 					result[#result + 1] = item
 				end
 			end
@@ -1082,7 +1095,6 @@ function Menu:render()
 			local next_is_active = next_item and next_item.active
 			local next_is_highlighted = menu.selected_index == index + 1 or next_is_active
 			local font_color = item.active and fgt or bgt
-			local shadow_color = item.active and fg or bg
 
 			-- Separator
 			local separator_ay = item.separator and item_by - 1 or item_by
@@ -1112,7 +1124,6 @@ function Menu:render()
 				else
 					ass:icon(x, y, icon_size * 1.5, item.icon, {
 						color = font_color, opacity = text_opacity, clip = item_clip,
-						shadow = 1, shadow_color = shadow_color,
 					})
 				end
 				content_bx = content_bx - icon_size - spacing
@@ -1133,7 +1144,6 @@ function Menu:render()
 					math.max(item_ay, ay) .. ',' .. bx .. ',' .. math.min(item_by, by) .. ')'
 				ass:txt(content_bx, item_center_y, 6, item.ass_safe_hint, {
 					size = self.font_size_hint, color = font_color, wrap = 2, opacity = 0.5 * menu_opacity, clip = clip,
-					shadow = 1, shadow_color = shadow_color,
 				})
 			end
 
@@ -1151,7 +1161,6 @@ function Menu:render()
 				ass:txt(title_x, item_center_y, align, item.ass_safe_title, {
 					size = self.font_size, color = font_color, italic = item.italic, bold = item.bold, wrap = 2,
 					opacity = text_opacity * (item.muted and 0.5 or 1), clip = clip,
-					shadow = 1, shadow_color = shadow_color,
 				})
 			end
 		end
@@ -1183,7 +1192,7 @@ function Menu:render()
 				end
 
 				ass:icon(rect.ax + icon_size / 2, rect.cy, icon_size, 'search', {
-					color = fg, opacity = icon_opacity, shadow = 1, shadow_color = bg,
+					color = fg, opacity = icon_opacity,
 					clip = '\\clip(' .. icon_rect.ax .. ',' .. icon_rect.ay .. ',' .. icon_rect.bx .. ',' .. icon_rect.by .. ')'
 				})
 
