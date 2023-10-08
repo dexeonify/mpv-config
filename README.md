@@ -31,6 +31,10 @@ backup and keeping track of changes.
   both [mpv_thumbnail_script](https://github.com/marzzzello/mpv_thumbnail_script)
   and [Thumbnailer](https://github.com/deus0ww/mpv-conf/blob/master/scripts/Thumbnailer.lua).
 
+- **[skipsilence.lua](https://github.com/ferreum/mpv-skipsilence):**
+  Increase playback speed during quiet parts of a file.
+  Similar to the "Fast-forward during silence" feature of the NewPipe app.
+
 - **[file-browser.lua](https://github.com/CogentRedTester/mpv-file-browser):**
   Navigate through the file system entirely from within mpv, as well as
   opening and appending files & folders.
@@ -44,6 +48,10 @@ backup and keeping track of changes.
 
 - **[quality-menu.lua](https://github.com/christoph-heinrich/mpv-quality-menu):**
   Add a menu for changing the streamed video and audio quality on the fly.
+
+- **[memo.lua](https://github.com/po5/memo):**
+  A recent files menu for mpv. Saves your watch history and displays it
+  in a nice menu.
 
 - **[crop.lua](https://github.com/occivink/mpv-scripts#croplua):**
   Crop the video by defining the target rectangle with the cursor.
