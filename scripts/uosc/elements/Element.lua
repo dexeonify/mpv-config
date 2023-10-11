@@ -15,7 +15,7 @@ function Element:init(id, props)
 	-- Relative proximity from `0` - mouse outside `proximity_max` range, to `1` - mouse within `proximity_min` range.
 	self.proximity = 0
 	-- Raw proximity in pixels.
-	self.proximity_raw = INFINITY
+	self.proximity_raw = math.huge
 	---@type number `0-1` factor to force min visibility. Used for toggling element's permanent visibility.
 	self.min_visibility = 0
 	---@type number `0-1` factor to force a visibility value. Used for flashing, fading out, and other animations
@@ -44,7 +44,7 @@ function Element:destroy()
 	Elements:remove(self)
 end
 
-function Element:reset_proximity() self.proximity, self.proximity_raw = 0, INFINITY end
+function Element:reset_proximity() self.proximity, self.proximity_raw = 0, math.huge end
 
 ---@param ax number
 ---@param ay number
@@ -108,12 +108,12 @@ end
 ---@param from number
 ---@param to number|fun():number
 ---@param setter fun(value: number)
----@param factor_or_callback? number|fun()
+---@param duration_or_callback? number|fun() Duration in milliseconds or a callback function.
 ---@param callback? fun() Called either on animation end, or when animation is killed.
-function Element:tween(from, to, setter, factor_or_callback, callback)
+function Element:tween(from, to, setter, duration_or_callback, callback)
 	self:tween_stop()
 	self._kill_tween = self.enabled and tween(
-		from, to, setter, factor_or_callback,
+		from, to, setter, duration_or_callback,
 		function()
 			self._kill_tween = nil
 			if callback then callback() end
@@ -128,10 +128,10 @@ function Element:tween_stop() self:maybe('_kill_tween') end
 ---@param prop string
 ---@param from number
 ---@param to number|fun():number
----@param factor_or_callback? number|fun()
+---@param duration_or_callback? number|fun() Duration in milliseconds or a callback function.
 ---@param callback? fun() Called either on animation end, or when animation is killed.
-function Element:tween_property(prop, from, to, factor_or_callback, callback)
-	self:tween(from, to, function(value) self[prop] = value end, factor_or_callback, callback)
+function Element:tween_property(prop, from, to, duration_or_callback, callback)
+	self:tween(from, to, function(value) self[prop] = value end, duration_or_callback, callback)
 end
 
 ---@param name string
