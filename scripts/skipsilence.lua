@@ -63,10 +63,10 @@
 -- info [<style>]
 --      Show state as osd message. If style is specified, use it instead of
 --      the infostyle option. Defaults to "verbose" if "off".
--- adjust-speed add|multiply <n>
---      During silence, adjust the base speed by adding it to or multiplying
---      it with n. This allows changing speed more reliably than the
---      apply_speed_change option.
+-- adjust-speed add|multiply|set <n>
+--      During silence, adjust the base speed by adding it to n, multiplying
+--      it with n, or setting it to n. This allows changing speed more
+--      reliably than the apply_speed_change option.
 --
 --      Usage:
 --      - Ensure that apply_speed_change is 'off' (default)
@@ -74,15 +74,21 @@
 --
 --          } multiply speed 2; script-message-to skipsilence adjust-speed multiply 2
 --          ] add speed 0.1; script-message-to skipsilence adjust-speed add 0.1
+--          X set speed 1; script-message-to skipsilence adjust-speed set 1
 --
 --      This is designed such that these bindings still work without
 --      skipsilence being loaded.
 --
 -- User-data (mpv 0.36 and above):
 --
--- user-data/skipsilence/enabled - true/false according to enabled state
--- user-data/skipsilence/info - the current info according to the infostyle option
--- user-data/skipsilence/saved_total - the total time saved in seconds
+-- user-data/skipsilence/enabled
+--      true/false according to enabled state
+-- user-data/skipsilence/base_speed
+--      the original playback speed. Only updated while the script is enabled.
+-- user-data/skipsilence/info
+--      the current info according to the infostyle option
+-- user-data/skipsilence/saved_total
+--      the total time saved in seconds
 --
 -- These allow showing the state in osd like this:
 --
@@ -179,6 +185,12 @@ local opts = {
     -- resyncing every time the script is disabled. Recommended value: 100.
     resync_threshold_droppedframes = -1,
 
+    -- Keep the filter added while the script is disabled. This prevents
+    -- most audio interruptions/clicks when toggling the script.
+    -- If arnndn_output is enabled, noise reduction also stays active while
+    -- the script is disabled.
+    filter_persistent = false,
+
     -- Info style used for the 'user-data/skipsilence/info' property and
     -- the default of the 'info' script-message/binding.
     -- May be one of
@@ -210,8 +222,10 @@ local opts = {
 local msg = require "mp.msg"
 
 local is_enabled = false
-local orig_speed = 1
+local base_speed = 1
 local is_silent = false
+local is_filter_added = false
+local latest_is_silent = false
 local expected_speed = 1
 local last_speed_change_time = -1
 local filter_reapply_time = -1
@@ -292,7 +306,7 @@ local function get_saved_time(now)
         return s.saved_current, s.period_current
     end
     local period = (s.pause_start_time or now) - s.time
-    local period_orig = period * s.speed / orig_speed
+    local period_orig = period * s.speed / base_speed
     local saved = period_orig - period
     -- avoid negative value caused by float precision
     if saved > -0.001 and saved <= 0 then saved = 0 end
@@ -392,6 +406,11 @@ local function update_info_now()
     end
 end
 
+local function set_base_speed(speed)
+    base_speed = speed
+    mp.set_property_number("user-data/skipsilence/base_speed", speed)
+end
+
 local function reapply_filter()
     if not reapply_filter_timer or not reapply_filter_timer:is_enabled() then
         -- throttle with timer to avoid stalling playback with repeated calls
@@ -405,7 +424,7 @@ end
 local function clear_silence_state()
     if is_silent then
         stats_end_current(mp.get_time())
-        mp.set_property_number("speed", orig_speed)
+        mp.set_property_number("speed", base_speed)
     end
     clear_events()
     is_silent = false
@@ -469,17 +488,20 @@ local function check_time()
             stats_start_current(now, speed)
             dprint("silence start")
 
-            orig_speed = speed
-            if opts.alt_normal_speed >= 0 and math.abs(orig_speed - 1) < 0.001 then
-                orig_speed = opts.alt_normal_speed
-                new_speed = orig_speed
+            local new_base_speed = speed
+            if opts.alt_normal_speed >= 0 and math.abs(speed - 1) < 0.001 then
+                new_base_speed = opts.alt_normal_speed
+                new_speed = new_base_speed
+            end
+            if new_base_speed ~= base_speed then
+                set_base_speed(new_base_speed)
             end
             last_speed_change_time = -1
         else
             stats_end_current(now)
 
             dprint("silence end, saved:", get_saved_time(now, speed))
-            new_speed = orig_speed
+            new_speed = base_speed
         end
     end
     if is_silent then
@@ -489,7 +511,7 @@ local function check_time()
             next_delay = take_lower(next_delay, remaining)
         else
             local length = stats_silence_length(now)
-            new_speed = orig_speed * (opts.ramp_constant + (length * opts.ramp_factor) ^ opts.ramp_exponent)
+            new_speed = base_speed * (opts.ramp_constant + (length * opts.ramp_factor) ^ opts.ramp_exponent)
             next_delay = take_lower(next_delay, opts.speed_updateinterval)
             last_speed_change_time = now
         end
@@ -546,10 +568,10 @@ local function handle_speed(name, speed)
         dprint("handle_speed: external speed change: got", speed, "instead of", expected_speed)
         if is_silent then
             if opts.apply_speed_change == "add" then
-                orig_speed = orig_speed + speed - expected_speed
+                set_base_speed(base_speed + speed - expected_speed)
                 do_check = true
             elseif opts.apply_speed_change == "multiply" then
-                orig_speed = orig_speed * speed / expected_speed
+                set_base_speed(base_speed * speed / expected_speed)
                 do_check = true
             end
         end
@@ -562,17 +584,20 @@ local function handle_speed(name, speed)
 end
 
 local function add_event(is_silent)
-    local prev = events[events_ilast]
-    if not prev or is_silent ~= prev.is_silent then
-        local i = events_ilast + 1
-        events[i] = {
-            recv_time = mp.get_time(),
-            is_silent = is_silent,
-            filter_cleanup_time = filter_reapply_time,
-        }
-        events_ilast = i
-        if not is_paused then
-            check_time()
+    latest_is_silent = is_silent
+    if is_enabled then
+        local prev = events[events_ilast]
+        if not prev or is_silent ~= prev.is_silent then
+            local i = events_ilast + 1
+            events[i] = {
+                recv_time = mp.get_time(),
+                is_silent = is_silent,
+                filter_cleanup_time = filter_reapply_time,
+            }
+            events_ilast = i
+            if not is_paused then
+                check_time()
+            end
         end
     end
 end
@@ -589,6 +614,16 @@ local function handle_silence_msg(msg)
     end
 end
 
+local function remove_detect_filter()
+    if reapply_filter_timer then
+        reapply_filter_timer:kill()
+    end
+    mp.unregister_event(handle_silence_msg)
+    mp.commandv("af", "remove", "@"..detect_filter_label)
+    is_filter_added = false
+    latest_is_silent = false
+end
+
 local function set_option(opt_name, value)
     mp.commandv("change-list", "script-opts", "append",
         mp.get_script_name().."-"..opt_name.."="..value)
@@ -600,18 +635,20 @@ local function adjust_thresholdDB(change)
     mp.osd_message("silence threshold: "..value.."dB")
 end
 
-local function adjust_speed(method, change)
-    local change = tonumber(change)
-    if method ~= 'add' and method ~= 'multiply' or not change then
-        msg.error("invalid arguments; usage: adjust-speed add|multiply <number>")
+local function adjust_speed(method, number)
+    local number = tonumber(number)
+    if method ~= 'add' and method ~= 'multiply' and method ~= 'set' or not number then
+        msg.error("invalid arguments; usage: adjust-speed add|multiply|set <number>")
         return
     end
 
     if is_silent then
         if method == 'add' then
-            orig_speed = orig_speed + change
+            set_base_speed(base_speed + number)
         elseif method == 'multiply' then
-            orig_speed = orig_speed * change
+            set_base_speed(base_speed * number)
+        elseif method == 'set' then
+            set_base_speed(number)
         end
         last_speed_change_time = -1
         check_time()
@@ -663,33 +700,41 @@ end
 local function enable(flag)
     local no_osd = flag == "no-osd"
 
-    if is_enabled then return end
-    mp.commandv("af", "pre", get_silence_filter())
-    if not mp.get_property("af"):find("@"..detect_filter_label..":", 1, true) then
-        if opts.enabled then set_option("enabled", "no") end
-        mp.osd_message("skipsilence enable failed: see console output")
-        return
+    if not is_enabled then
+        mp.commandv("af", "pre", get_silence_filter())
+        if not mp.get_property("af"):find("@"..detect_filter_label..":", 1, true) then
+            if opts.enabled then set_option("enabled", "no") end
+            mp.osd_message("skipsilence enable failed: see console output")
+            return
+        end
+        is_enabled = true
+        if not no_osd then
+            mp.osd_message("skipsilence enabled")
+        end
+        mp.register_event("log-message", handle_silence_msg)
+        mp.register_event("seek", handle_seek)
+        mp.observe_property("core-idle", "bool", handle_pause)
+        mp.observe_property("speed", "number", handle_speed)
+        set_base_speed(mp.get_property_number("speed"))
+
+        if is_filter_added and latest_is_silent then
+            add_event(true)
+        end
+        is_filter_added = true
     end
-    is_enabled = true
-    mp.set_property_bool("user-data/skipsilence/enabled", true)
-    if not no_osd then
-        mp.osd_message("skipsilence enabled")
-    end
-    mp.register_event("log-message", handle_silence_msg)
-    mp.register_event("seek", handle_seek)
-    mp.observe_property("core-idle", "bool", handle_pause)
-    mp.observe_property("speed", "number", handle_speed)
+
     set_option("enabled", "yes")
+    mp.set_property_bool("user-data/skipsilence/enabled", true)
 end
 
 local function disable(arg1, arg2)
     local no_osd = false
-    local opt_orig_speed = nil
+    local opt_base_speed = nil
     if arg1 == "no-osd" then
         no_osd = true
     else
-        opt_orig_speed = tonumber(arg1)
-        if not opt_orig_speed and arg1 then
+        opt_base_speed = tonumber(arg1)
+        if not opt_base_speed and arg1 then
             msg.warn("invalid number:", arg1)
         end
         if arg2 == "no-osd" then
@@ -697,45 +742,49 @@ local function disable(arg1, arg2)
         end
     end
 
-    mp.unregister_event(handle_silence_msg)
     mp.unregister_event(handle_seek)
     mp.unobserve_property(handle_pause)
     mp.unobserve_property(handle_speed)
     if check_time_timer then
         check_time_timer:kill()
     end
-    if reapply_filter_timer then
-        reapply_filter_timer:kill()
-    end
-    mp.set_property_bool("user-data/skipsilence/enabled", false)
-    if not is_enabled then return end
-    mp.commandv("af", "remove", "@"..detect_filter_label)
-    if opt_orig_speed then
-        mp.set_property_number("speed", opt_orig_speed)
-    else
-        local speed = is_silent and orig_speed or mp.get_property_number("speed")
-        if opts.alt_normal_speed and math.abs(speed - opts.alt_normal_speed) < 0.001 then
-            mp.set_property_number("speed", 1)
-        elseif is_silent then
-            mp.set_property_number("speed", speed)
+
+    if is_enabled then
+        if not opts.filter_persistent then
+            remove_detect_filter()
+        end
+
+        if opt_base_speed then
+            mp.set_property_number("speed", opt_base_speed)
+        else
+            local speed = is_silent and base_speed or mp.get_property_number("speed")
+            if opts.alt_normal_speed and math.abs(speed - opts.alt_normal_speed) < 0.001 then
+                mp.set_property_number("speed", 1)
+            elseif is_silent then
+                mp.set_property_number("speed", speed)
+            end
+        end
+
+        if is_silent then
+            stats_end_current(mp.get_time())
+        end
+        clear_events()
+        is_silent = false
+        is_enabled = false
+        if not no_osd then
+            mp.osd_message("skipsilence disabled")
+        end
+
+        if opts.resync_threshold_droppedframes >= 0 then
+            local drops = mp.get_property_number("frame-drop-count")
+            if drops and drops >= opts.resync_threshold_droppedframes then
+                mp.commandv("seek", "0", "exact")
+            end
         end
     end
-    if is_silent then
-        stats_end_current(mp.get_time())
-    end
-    clear_events()
-    is_silent = false
-    is_enabled = false
+
     if opts.enabled then set_option("enabled", "no") end
-    if not no_osd then
-        mp.osd_message("skipsilence disabled")
-    end
-    if opts.resync_threshold_droppedframes >= 0 then
-        local drops = mp.get_property_number("frame-drop-count")
-        if drops and drops >= opts.resync_threshold_droppedframes then
-            mp.commandv("seek", "0", "exact")
-        end
-    end
+    mp.set_property_bool("user-data/skipsilence/enabled", false)
 end
 
 local function toggle(flag)
@@ -768,7 +817,7 @@ end
     if list['threshold_db'] or list['threshold_duration']
         or list["arnndn_enable"] or list["arnndn_modelpath"]
         or list["arnndn_output"] then
-        if is_enabled then
+        if is_filter_added then
             reapply_filter()
         end
     end
@@ -781,6 +830,11 @@ end
             check_time()
         end
         update_info_now()
+    end
+    if list["filter_persistent"] then
+        if not opts.filter_persistent and not is_enabled and is_filter_added then
+            remove_detect_filter()
+        end
     end
     if list["enabled"] and opts.enabled and not is_enabled then
         enable("no-osd")
@@ -801,6 +855,8 @@ mp.add_key_binding(nil, "reset-total", reset_total_saved_time)
 mp.add_key_binding(nil, "toggle-arnndn", function() toggle_option("arnndn_enable") end)
 mp.add_key_binding(nil, "toggle-arnndn-output", function() toggle_option("arnndn_output") end)
 mp.register_event("start-file", handle_start_file)
+
+set_base_speed(1)
 
 update_info_now()
 if opts.enabled then
