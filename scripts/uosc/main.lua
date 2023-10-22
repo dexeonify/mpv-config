@@ -1,5 +1,5 @@
---[[ uosc 4.7.0 - 2023-Apr-15 | https://github.com/tomasklaen/uosc ]]
-local uosc_version = '4.7.0'
+--[[ uosc | https://github.com/tomasklaen/uosc ]]
+local uosc_version = '5.0.0'
 
 mp.commandv('script-message', 'uosc-version', uosc_version)
 
@@ -21,7 +21,7 @@ defaults = {
 	progress = 'windowed',
 	progress_size = 2,
 	progress_line_width = 20,
-	timeline_persistency = 'paused',
+	timeline_persistency = '',
 	timeline_border = 1,
 	timeline_step = 5,
 	timeline_cache = true,
