@@ -48,7 +48,7 @@ local options = {
     --   them with "pattern:", otherwise they will be treated as plain text.
     --   Pattern syntax can be found here https://www.lua.org/manual/5.1/manual.html#5.4.1
     -- Example
-    --   path_prefixes="My-Movies|pattern:TV Shows/.-/|Anime" will show directories
+    --   "path_prefixes=My-Movies|pattern:TV Shows/.-/|Anime" will show directories
     --   that are direct subdirectories of directories named "My-Movies" as well as
     --   "Anime", while for TV Shows the shown directories are one level below that.
     --   Opening the file "/data/TV Shows/Comedy/Curb Your Enthusiasm/S4/E06.mkv" will
@@ -58,16 +58,15 @@ local options = {
 }
 
 function parse_path_prefixes(path_prefixes)
-    local plain = {}
-    local pattern = {}
-    for prefix in path_prefixes:gmatch('([^|]+)') do
+    local patterns = {}
+    for prefix in path_prefixes:gmatch("([^|]+)") do
         if prefix:find("pattern:", 1, true) == 1 then
-            pattern[#pattern + 1] = prefix:sub(9)
+            patterns[#patterns + 1] = {pattern = prefix:sub(9)}
         else
-            plain[#plain + 1] = prefix
+            patterns[#patterns + 1] = {pattern = prefix, plain = true}
         end
     end
-    return {plain = plain, pattern = pattern}
+    return patterns
 end
 
 local script_name = mp.get_script_name()
@@ -159,17 +158,6 @@ local platform = (function()
         end
     end
     return "linux"
-end)()
-
-local path_separator = (function()
-	local os_separator = platform == "windows" and "\\" or "/"
-
-	-- Get appropriate path separator for the given path.
-	---@param path string
-	---@return string
-	return function(path)
-		return path:sub(1, 2) == "\\\\" and "\\" or os_separator
-	end
 end)()
 
 local event_loop_exhausted = false
@@ -297,7 +285,7 @@ function has_protocol(path)
 end
 
 function menu_json(menu_items, page)
-    local title = (search_query or "History") .. " (memo)"
+    local title = (search_query or (dir_menu and "Directories" or "History")) .. " (memo)"
     if options.pagination or page ~= 1 then
         title = title .. " - Page " .. page
     end
@@ -306,15 +294,15 @@ function menu_json(menu_items, page)
         type = "memo-history",
         title = title,
         items = menu_items,
-        on_search = { "script-message-to", script_name, "memo-search-uosc:" },
-        on_close = { "script-message-to", script_name, "memo-clear" }
+        on_search = {"script-message-to", script_name, "memo-search-uosc:"},
+        on_close = {"script-message-to", script_name, "memo-clear"}
     }
 
     return menu
 end
 
-function uosc_update(menu_override)
-    local json = mp.utils.format_json(menu_override or menu_data) or "{}"
+function uosc_update()
+    local json = mp.utils.format_json(menu_data) or "{}"
     mp.commandv("script-message-to", "uosc", menu_shown and "update-menu" or "open-menu", json)
 end
 
@@ -346,7 +334,7 @@ if mp.utils.shared_script_property_set then
     end
 else
     function update_margins()
-        local val = mp.get_property_native('user-data/osc/margins')
+        local val = mp.get_property_native("user-data/osc/margins")
         if val then
             margin_top = val.t
             margin_bottom = val.b
@@ -476,13 +464,13 @@ function draw_menu(delay)
     local curtain_opacity = 0.7
 
     local alpha = 255 - math.ceil(255 * curtain_opacity)
-    ass.text = string.format("{\\pos(0,0)\\r\\an7\\1c&H000000&\\alpha&H%X&}", alpha)
+    ass.text = string.format("{\\pos(0,0)\\rDefault\\an7\\1c&H000000&\\alpha&H%X&}", alpha)
     ass:draw_start()
     ass:rect_cw(0, 0, width, height)
     ass:draw_stop()
     ass:new_event()
 
-    ass:append("{\\pos("..(0.3 * font_size).."," .. (margin_top * height + 0.1 * font_size) .. ")\\an7\\fs" .. font_size .. "\\bord2\\q2\\b1}" .. ass_clean(menu_data.title) .. "{\\b0}")
+    ass:append("{\\rDefault\\pos("..(0.3 * font_size).."," .. (margin_top * height + 0.1 * font_size) .. ")\\an7\\fs" .. font_size .. "\\bord2\\q2\\b1}" .. ass_clean(menu_data.title) .. "{\\b0}")
     ass:new_event()
 
     local scrolled_lines = get_scrolled_lines() - 1
@@ -509,18 +497,18 @@ function draw_menu(delay)
                 end
                 ass:new_event()
                 ass:pos(0.3 * font_size, pos_y + menu_index * font_size)
-                ass:append("{\\fnmonospace\\an1\\fs" .. font_size .. "\\bord2\\q2\\clip(" .. clipping_coordinates .. ")}"..separator.."{\\r\\an7\\fs" .. font_size .. "\\bord2\\q2}" .. ass_clean(item.title))
+                ass:append("{\\rDefault\\fnmonospace\\an1\\fs" .. font_size .. "\\bord2\\q2\\clip(" .. clipping_coordinates .. ")}"..separator.."{\\rDefault\\an7\\fs" .. font_size .. "\\bord2\\q2}" .. ass_clean(item.title))
                 if icon then
                     ass:new_event()
                     ass:pos(0.6 * font_size, pos_y + menu_index * font_size)
-                    ass:append("{\\fnmonospace\\an2\\fs" .. font_size .. "\\bord2\\q2\\clip(" .. clipping_coordinates .. ")}" .. icon)
+                    ass:append("{\\rDefault\\fnmonospace\\an2\\fs" .. font_size .. "\\bord2\\q2\\clip(" .. clipping_coordinates .. ")}" .. icon)
                 end
                 menu_index = menu_index + 1
             end
         end
     else
         ass:pos(0.3 * font_size, pos_y)
-        ass:append("{\\an1\\fs" .. font_size .. "\\bord2\\q2\\clip(" .. clipping_coordinates .. ")}")
+        ass:append("{\\rDefault\\an1\\fs" .. font_size .. "\\bord2\\q2\\clip(" .. clipping_coordinates .. ")}")
         ass:append("No entries")
     end
 
@@ -713,14 +701,8 @@ function show_history(entries, next_page, prev_page, update, return_items)
     end
 
     local function find_path_prefix(path, path_prefixes)
-        for _, plain in ipairs(path_prefixes.plain) do
-            local start, stop = path:find(plain, 1, true)
-            if start then
-                return start, stop
-            end
-        end
-        for _, pattern in ipairs(path_prefixes.pattern) do
-            local start, stop = path:find(pattern)
+        for _, prefix in ipairs(path_prefixes) do
+            local start, stop = path:find(prefix.pattern, 1, prefix.plain)
             if start then
                 return start, stop
             end
@@ -808,14 +790,17 @@ function show_history(entries, next_page, prev_page, update, return_items)
         elseif options.hide_same_dir or dir_menu then
             dirname, basename = mp.utils.split_path(display_path)
             if dir_menu then
-                local path_sep = path_separator(dirname)
-                local parent, _ = mp.utils.split_path(dirname:sub(1, -path_sep:len() - 1))
+                if dirname == "." then return end
+                local unix_dirname = dirname:gsub("\\", "/")
+                local parent, _ = mp.utils.split_path(unix_dirname:sub(1, -2))
                 local start, stop = find_path_prefix(parent, dir_menu_prefixes)
                 if not start then
                     return
                 end
-                basename = dirname:match(path_sep .. "(.-)" .. path_sep, stop)
-                dirname = dirname:sub(1, stop + basename:len() + 1)
+                basename = unix_dirname:match("/(.-)/", stop)
+                if basename == nil then return end
+                start, stop = dirname:find(basename, stop, true)
+                dirname = dirname:sub(1, stop + 1)
             end
             if state.known_dirs[dirname] then
                 return
@@ -833,20 +818,18 @@ function show_history(entries, next_page, prev_page, update, return_items)
                 local stat = mp.utils.file_info(effective_path)
                 if stat then
                     state.existing_files[cache_key] = true
-                else
-                    if dir_menu then
-                        local dir = mp.utils.split_path(effective_path)
-                        stat = mp.utils.file_info(dir)
-                        if stat then
-                            full_path = dir
-                        else
-                            state.known_files[cache_key] = true
-                            return
-                        end
+                elseif dir_menu then
+                    local dir = mp.utils.split_path(effective_path)
+                    stat = mp.utils.file_info(dir)
+                    if stat and stat.size ~= 0 then
+                        full_path = dir
                     else
                         state.known_files[cache_key] = true
                         return
                     end
+                else
+                    state.known_files[cache_key] = true
+                    return
                 end
             end
         end
@@ -928,7 +911,8 @@ function show_history(entries, next_page, prev_page, update, return_items)
                 draw_menu()
             end
         end
-        if not return_items and attempts % options.entries == 0 and #menu_items ~= item_count then
+
+        if not return_items and (attempts > 0 or not (prev_page or next_page)) and attempts % options.entries == 0 and #menu_items ~= item_count then
             item_count = #menu_items
             local temp_items = {unpack(menu_items)}
             for i = 1, options.entries - item_count do
@@ -1015,7 +999,7 @@ mp.register_script_message("uosc-version", function(version)
         return false
     end
 
-    local min_version = "4.6.0"
+    local min_version = "5.0.0"
     uosc_available = not semver_comp(version, min_version)
 end)
 
@@ -1050,23 +1034,58 @@ function memo_search(...)
 
     local words = {...}
     if #words > 0 then
-        search_query = table.concat(words, " ")
+        query = table.concat(words, " ")
 
-        -- escape keywords
-        for i, word in ipairs(words) do
-            words[i] = word:lower()
+        if query ~= "" then
+            for i, word in ipairs(words) do
+                words[i] = word:lower()
+            end
+            search_query = query
+            search_words = words
+        else
+            search_query = nil
+            search_words = nil
         end
-        search_words = words
     end
 
     show_history(options.entries, false)
 end
 
 function memo_search_uosc(query)
-    search_query = query
-    search_words = {}
-    for m in query:lower():gmatch('%S+') do
-        search_words[#search_words + 1] = m
+    if query ~= "" then
+        search_query = query
+        search_words = {}
+        local quote_open = false
+        local quoted_words = ""
+        for word in query:lower():gmatch("%S+") do
+            if #word > 1 and word:sub(1, 1) == '"' then
+                word = word:sub(2)
+                quote_open = not quote_open
+            end
+            if quote_open then
+                quoted_words = quoted_words .. (quoted_words ~= "" and " " or "") .. word
+            elseif quoted_words ~= "" then
+                search_words[#search_words + 1] = quoted_words .. " "
+                quoted_words = ""
+            end
+            if quote_open then
+                if word:sub(-1) == '"' then
+                    word = word:sub(1, -2)
+                    quote_open = not quote_open
+                end
+            end
+            if not quote_open then
+                if quoted_words ~= "" then
+                    search_words[#search_words + 1] = quoted_words:sub(1, -2)
+                    quoted_words = ""
+                else
+                    search_words[#search_words + 1] = word
+                end
+            end
+        end
+    else
+        search_query = nil
+        search_words = nil
     end
     event_loop_exhausted = false
     show_history(options.entries, false, false, menu_shown and last_state)
@@ -1075,8 +1094,6 @@ end
 mp.register_script_message("memo-clear", memo_clear)
 mp.register_script_message("memo-search:", memo_search)
 mp.register_script_message("memo-search-uosc:", memo_search_uosc)
-
-mp.command_native_async({"script-message-to", "uosc", "get-version", script_name}, function() end)
 
 mp.add_key_binding(nil, "memo-next", memo_next)
 mp.add_key_binding(nil, "memo-prev", memo_prev)
