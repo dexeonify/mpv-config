@@ -97,7 +97,6 @@ end
 function fakeio:read(format)
     local out = ""
     if self.cursor < self.offset then
-        local memory_side = self.offset - self.cursor
         self.file:seek("set", self.cursor)
         out = self.file:read(format)
         format = format - #out
@@ -144,27 +143,12 @@ if history == nil then
 end
 history:setvbuf("full")
 
-local platform = (function()
-    local platform = mp.get_property_native("platform")
-    if platform then
-        if platform == "windows" or platform == "darwin" then
-            return platform
-        end
-    else
-        if os.getenv("windir") ~= nil then return "windows" end
-        local homedir = os.getenv("HOME")
-        if homedir ~= nil and string.sub(homedir, 1, 6) == "/Users" then
-            return "darwin"
-        end
-    end
-    return "linux"
-end)()
-
 local event_loop_exhausted = false
 local uosc_available = false
 local menu_shown = false
 local last_state = nil
 local menu_data = nil
+local palette = false
 local search_words = nil
 local search_query = nil
 local dir_menu = false
@@ -295,7 +279,8 @@ function menu_json(menu_items, page)
         title = title,
         items = menu_items,
         on_search = {"script-message-to", script_name, "memo-search-uosc:"},
-        on_close = {"script-message-to", script_name, "memo-clear"}
+        on_close = {"script-message-to", script_name, "memo-clear"},
+        palette = palette
     }
 
     return menu
@@ -386,6 +371,7 @@ function close_menu()
     search_query = nil
     dir_menu = false
     menu_shown = false
+    palette = false
     osd:update()
     osd.hidden = true
     osd:update()
@@ -444,7 +430,7 @@ function open_menu()
     draw_menu()
 end
 
-function draw_menu(delay)
+function draw_menu()
     if not menu_data then return end
     if not menu_shown then
         open_menu()
@@ -819,12 +805,15 @@ function show_history(entries, next_page, prev_page, update, return_items)
                 if stat then
                     state.existing_files[cache_key] = true
                 elseif dir_menu then
+                    state.known_files[cache_key] = true
                     local dir = mp.utils.split_path(effective_path)
-                    stat = mp.utils.file_info(dir)
-                    if stat and stat.size ~= 0 then
+                    if dir == "." then
+                        return
+                    end
+                    stat = mp.utils.readdir(dir, "files")
+                    if stat and next(stat) ~= nil then
                         full_path = dir
                     else
-                        state.known_files[cache_key] = true
                         return
                     end
                 else
@@ -1005,6 +994,7 @@ end)
 
 function memo_close()
     menu_shown = false
+    palette = false
     if uosc_available then
         mp.commandv("script-message-to", "uosc", "close-menu", "memo-history")
     else
@@ -1017,6 +1007,7 @@ function memo_clear()
     search_words = nil
     search_query = nil
     menu_shown = false
+    palette = false
     dir_menu = false
 end
 
@@ -1051,38 +1042,31 @@ function memo_search(...)
     show_history(options.entries, false)
 end
 
+function parse_query_parts(query)
+    local pos, len, parts = query:find("%S"), query:len(), {}
+    while pos and pos <= len do
+        local first_char, part, pos_end = query:sub(pos, pos)
+        if first_char == '"' or first_char == "'" then
+            pos_end = query:find(first_char, pos + 1, true)
+            if not pos_end or pos_end ~= len and not query:find("^%s", pos_end + 1) then
+                parts[#parts + 1] = query:sub(pos + 1)
+                return parts
+            end
+            part = query:sub(pos + 1, pos_end - 1)
+        else
+            pos_end = query:find("%S%s", pos) or len
+            part = query:sub(pos, pos_end)
+        end
+        parts[#parts + 1] = part
+        pos = query:find("%S", pos_end + 2)
+    end
+    return parts
+end
+
 function memo_search_uosc(query)
     if query ~= "" then
         search_query = query
-        search_words = {}
-        local quote_open = false
-        local quoted_words = ""
-        for word in query:lower():gmatch("%S+") do
-            if #word > 1 and word:sub(1, 1) == '"' then
-                word = word:sub(2)
-                quote_open = not quote_open
-            end
-            if quote_open then
-                quoted_words = quoted_words .. (quoted_words ~= "" and " " or "") .. word
-            elseif quoted_words ~= "" then
-                search_words[#search_words + 1] = quoted_words .. " "
-                quoted_words = ""
-            end
-            if quote_open then
-                if word:sub(-1) == '"' then
-                    word = word:sub(1, -2)
-                    quote_open = not quote_open
-                end
-            end
-            if not quote_open then
-                if quoted_words ~= "" then
-                    search_words[#search_words + 1] = quoted_words:sub(1, -2)
-                    quoted_words = ""
-                else
-                    search_words[#search_words + 1] = word
-                end
-            end
-        end
+        search_words = parse_query_parts(query:lower())
     else
         search_query = nil
         search_words = nil
@@ -1144,6 +1128,11 @@ mp.add_key_binding(nil, "memo-last", function()
     mp.osd_message("[memo] no recent files to open")
 end)
 mp.add_key_binding(nil, "memo-search", function()
+    if uosc_available then
+        palette = true
+        show_history(options.entries, false, false, true)
+        return
+    end
     if menu_shown then
         memo_close()
     end
