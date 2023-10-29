@@ -386,29 +386,13 @@ function open_menu()
     local margin_prop = mp.utils.shared_script_property_set and "shared-script-properties" or "user-data/osc/margins"
     mp.observe_property(margin_prop, "native", update_margins)
 
-    bind_keys(options.up_binding, "move_up", function()
-        last_state.selected_index = math.max(last_state.selected_index - 1, 1)
-        draw_menu()
-    end, { repeatable = true })
-    bind_keys(options.down_binding, "move_down", function()
-        last_state.selected_index = math.min(last_state.selected_index + 1, #menu_data.items)
-        draw_menu()
-    end, { repeatable = true })
-    bind_keys(options.select_binding, "select", function()
+    local function select_item(append)
         local item = menu_data.items[last_state.selected_index]
         if not item then return end
         if not item.keep_open then
             close_menu()
         end
-        mp.commandv(unpack(item.value))
-    end)
-    bind_keys(options.append_binding, "append", function()
-        local item = menu_data.items[last_state.selected_index]
-        if not item then return end
-        if not item.keep_open then
-            close_menu()
-        end
-        if item.value[1] == "loadfile" then
+        if append and item.value[1] == "loadfile" then
             -- bail if file is already in playlist
             local directory = mp.get_property("working-directory", "")
             local playlist = mp.get_property_native("playlist", {})
@@ -424,6 +408,19 @@ function open_menu()
             item.value[3] = "append-play"
         end
         mp.commandv(unpack(item.value))
+    end
+
+    bind_keys(options.up_binding, "move_up", function()
+        last_state.selected_index = math.max(last_state.selected_index - 1, 1)
+        draw_menu()
+    end, { repeatable = true })
+    bind_keys(options.down_binding, "move_down", function()
+        last_state.selected_index = math.min(last_state.selected_index + 1, #menu_data.items)
+        draw_menu()
+    end, { repeatable = true })
+    bind_keys(options.select_binding, "select", select_item)
+    bind_keys(options.append_binding, "append", function()
+        select_item(true)
     end)
     bind_keys(options.close_binding, "close", close_menu)
     osd.hidden = false
@@ -669,6 +666,7 @@ function show_history(entries, next_page, prev_page, update, return_items)
             state.current_page = state.current_page - 1
         elseif next_page then
             if state.cursor == 0 and not state.pages[state.current_page + 1] then return end
+            if options.entries < 1 then return end
             state.current_page = state.current_page + 1
         end
     end
@@ -933,8 +931,8 @@ function show_history(entries, next_page, prev_page, update, return_items)
         return menu_items
     end
 
-    if options.pagination and #menu_items > 0 then
-        if state.cursor - max_digits_length > 0 then
+    if options.pagination then
+        if #menu_items > 0 and state.cursor - max_digits_length > 0 then
             table.insert(menu_items, {title = "Older entries", value = {"script-binding", "memo-next"}, italic = "true", muted = "true", icon = "navigate_next", keep_open = true})
         end
         if state.current_page ~= 1 then
