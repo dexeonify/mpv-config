@@ -157,7 +157,8 @@ local opts = {
     arnndn_enable = true,
     -- Path to the rnnn file containing the model parameters. If empty,
     -- noise reduction is disabled.
-    -- The mpv config path can be referenced with the prefix '~~/'.
+    -- The value is expanded with the expand-path command. See "Paths" in the
+    -- mpv manual.
     -- Avoid special characters in this option, they must be escaped to
     -- work with "af add lavfi=[arnndn='...']".
     arnndn_modelpath = "",
@@ -172,16 +173,17 @@ local opts = {
     -- played back without interruptions.
     alt_normal_speed = -1,
 
-    -- When disabling skipsilence, fix audio sync if this many frames have
-    -- been dropped since the last playback restart (seek, etc.).
-    -- Disabled if value is less than 0.
+    -- Workaround for audio-video de-synchronization with scaletempo2 in
+    -- mpv 0.36 and below. When disabling skipsilence, fix audio sync if this
+    -- many frames have been dropped since the last playback restart
+    -- (seek, etc.). Disabled if value is less than 0.
     --
     -- When disabling skipsilence while frame-drop-count is greater or equal
     -- to configured value, audio-video sync is fixed by running
     -- 'seek 0 exact'. May produce a short pause and/or audio repeat.
     --
     -- Note that frame-drop-count does not exactly correspond to the
-    -- audio-video desynchronization. It is used as a proxy to avoid
+    -- audio-video desynchronization. It is used as a heuristic to avoid
     -- resyncing every time the script is disabled. Recommended value: 100.
     resync_threshold_droppedframes = -1,
 
@@ -574,6 +576,8 @@ local function handle_speed(name, speed)
                 set_base_speed(base_speed * speed / expected_speed)
                 do_check = true
             end
+        else
+            set_base_speed(speed)
         end
         expected_speed = speed
         if do_check then
@@ -701,6 +705,13 @@ local function enable(flag)
     local no_osd = flag == "no-osd"
 
     if not is_enabled then
+        if not is_filter_added then
+            -- if filter was added externally, silence start messages are
+            -- missed; ensure it's removed first
+            if mp.get_property("af"):find("@"..detect_filter_label..":", 1, true) then
+                mp.commandv("af", "remove", "@"..detect_filter_label)
+            end
+        end
         mp.commandv("af", "pre", get_silence_filter())
         if not mp.get_property("af"):find("@"..detect_filter_label..":", 1, true) then
             if opts.enabled then set_option("enabled", "no") end
