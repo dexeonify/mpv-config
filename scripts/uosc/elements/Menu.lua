@@ -125,11 +125,8 @@ function Menu:init(data, callback, opts)
 	mp.set_property_native('user-data/uosc/menu/type', self.type or 'undefined')
 	self:update(data)
 
-	if self.mouse_nav then
-		if self.current then self.current.selected_index = nil end
-	else
-		for _, menu in ipairs(self.all) do self:scroll_to_index(menu.selected_index, menu) end
-	end
+	for _, menu in ipairs(self.all) do self:scroll_to_index(menu.selected_index, menu) end
+	if self.mouse_nav then self.current.selected_index = nil end
 
 	self:tween_property('opacity', 0, 1)
 	self:enable_key_bindings()
@@ -338,8 +335,7 @@ function Menu:update_dimensions()
 			menu.search.max_width = math.max(menu.search.max_width, menu.width)
 		end
 		menu.scroll_height = math.max(content_height - menu.height - self.item_spacing, 0)
-		menu.scroll_y = menu.scroll_y or 0
-		self:scroll_to(menu.scroll_y, menu) -- clamps scroll_y to scroll limits
+		self:set_scroll_to(menu.scroll_y, menu) -- clamps scroll_y to scroll limits
 	end
 
 	self:update_coordinates()
@@ -516,6 +512,13 @@ function Menu:activate_submenu(id)
 	local submenu = self.by_id[id]
 	if submenu then
 		self:activate_menu(submenu)
+		local menu = self.current
+		local parent = menu.parent_menu
+		while parent do
+			parent.selected_index = itable_index_of(parent.items, menu)
+			self:scroll_to_index(parent.selected_index, parent)
+			menu, parent = parent, parent.parent_menu
+		end
 	else
 		msg.error(string.format('Requested submenu id "%s" doesn\'t exist', id))
 	end
