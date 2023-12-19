@@ -120,7 +120,9 @@ local key_mappings = {
     DOWN  = function() history_move(false) show_seeker() end,
     BS    = function() backspace() show_seeker() end,
     ESC   = function() set_inactive() end,
-    ENTER = function() seek_to() set_inactive() end
+    ENTER = function() seek_to() set_inactive() end,
+    KP_ENTER = function() seek_to() set_inactive() end,
+    ["Ctrl+v"] = function() paste_timestamp() end
 }
 for i = 0, 9 do
     local func = function() change_number(i) show_seeker() end
@@ -141,7 +143,7 @@ function set_active()
         end
     end
     for key, func in pairs(key_mappings) do
-        mp.add_forced_key_binding(key, "seek-to-"..key, func)
+        mp.add_forced_key_binding(key, "seek-to-"..key, func, {repeatable=true})
     end
     show_seeker()
     timer = mp.add_periodic_timer(timer_duration, show_seeker)
@@ -203,4 +205,3 @@ function paste_timestamp()
 end
 
 mp.add_key_binding(nil, "toggle-seeker", function() if active then set_inactive() else set_active() end end)
-mp.add_key_binding("ctrl+alt+v", "paste-timestamp", paste_timestamp)
