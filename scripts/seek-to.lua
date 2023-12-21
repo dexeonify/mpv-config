@@ -32,8 +32,14 @@ local underline_on = "{\\u1}"   -- Enable underline
 local underline_off = "{\\u0}"  -- Disable underline
 local underline_forced = true   -- Always start with underline on
 
+local ss = "{\\fscx0}"          -- Scale 0 to limit additional width of the hairspace
+local se = "{\\fscx100}"        -- Reset scale
+-- Insert 'hair space' after first digit to avoid shifting
+-- when two 1's are beside each other (11:11:11.111)
+local hs = ss .. string.char(0xE2, 0x80, 0x8A) .. se
+
 function show_seeker()
-    local prepend_char = {'','',':','',':','','.','',''}
+    local prepend_char = {'',''..hs,':',''..hs,':',''..hs,'.',''..hs,''..hs}
     local str = ''
     for i = 1, 9 do
         str = str .. prepend_char[i]
