@@ -179,12 +179,6 @@ function set_inactive()
     for key, _ in pairs(key_mappings) do
         mp.remove_key_binding("seek-to-"..key)
     end
-    -- Reset timestamp to 0 when closed after entering it manually
-    for i = 1, 9 do
-        history[#history][i] = 0
-    end
-    -- Reset timestamp to 0 when closed while history entry was selected
-    history_position = #history
     underline_forced = true
     active = false
     blink_timer:kill()
@@ -271,11 +265,17 @@ function paste_timestamp()
         for i = 1, 9 do
             history[#history][i] = tonumber(timestamp_digits[i])
         end
-        -- Add a new entry if the current timestamp is different from the last one in the history
-        if #history == 1 or not time_equal(history[history_position], history[#history - 1]) then
+        -- If the timestamp is duplicated, no new entry is created and
+        -- it will be overwritten to 0
+        -- If the timestamp is different from the last one in history,
+        -- add a new entry to preserve it in history
+        if #history == 1 or not time_equal(history[#history], history[#history - 1]) then
             history[#history + 1] = {}
-            history_position = #history
         end
+        for i = 1, 9 do
+            history[#history][i] = 0
+        end
+        history_position = #history
 
         set_inactive()
         mp.osd_message("Seeking to: " .. timestamp)
