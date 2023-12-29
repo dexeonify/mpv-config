@@ -1,4 +1,10 @@
 -- Original script from https://github.com/occivink/mpv-scripts/blob/master/scripts/seek-to.lua
+local o = {
+    mouse_controls = true,
+    selection_color = "FFCF46",
+    selection_border_color = "",
+}
+(require 'mp.options').read_options(o)
 
 local assdraw = require 'mp.assdraw'
 local utils = require 'mp.utils'
@@ -25,8 +31,9 @@ local timer_duration = 3
 local blink_timer = nil
 local blink_rate = 2    -- (1 / blink_rate)
 
-local selection_color = "{\\c&46CFFF&}"
-local selection_border_color = ""   -- "{\\3c&H0000FF&}"
+-- Convert RRGGBB to BBGGRR for user convenience
+local selection_color = string.format("{\\c&%s}", o.selection_color:gsub("(%x%x)(%x%x)(%x%x)","%3%2%1"))
+local selection_border_color = string.format("{\\3c&%s}", o.selection_border_color:gsub("(%x%x)(%x%x)(%x%x)","%3%2%1"))
 
 local underline_on = "{\\u1}"   -- Enable underline
 local underline_off = "{\\u0}"  -- Disable underline
@@ -148,6 +155,13 @@ local key_mappings = {
     KP_ENTER = function() seek_to() set_inactive() end,
     ["Ctrl+v"] = function() paste_timestamp() end
 }
+if o.mouse_controls then
+    key_mappings.WHEEL_UP = function() shift_cursor(true) show_seeker() end
+    key_mappings.WHEEL_DOWN	= function() shift_cursor(false) show_seeker() end
+    key_mappings.MBTN_RIGHT = function() backspace() show_seeker() end
+    key_mappings.MBTN_RIGHT_DBL = function() return end  -- silence keybind unbound warning
+    key_mappings.MBTN_MID = function() seek_to() set_inactive() end
+end
 for i = 0, 9 do
     local func = function() change_number(i) show_seeker() end
     key_mappings[string.format("KP%d", i)] = func
