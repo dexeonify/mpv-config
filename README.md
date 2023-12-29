@@ -43,8 +43,9 @@ backup and keeping track of changes.
   Create and manage playlists intuitively. Use [playlistmanager-save-interactive.lua](https://github.com/jonniek/mpv-playlistmanager/blob/master/playlistmanager-save-interactive.lua)
   to manually name playlists on save.
 
-- **[SmartCopyPaste.lua](https://github.com/Eisa01/mpv-scripts#smartcopypaste):**
-  Add the capability to copy and paste while being smart and customizable.
+- **[copyStuff.lua](https://github.com/0xR3V/mpv-copyStuff):**
+  Copy the filename, full path, relative path, current video time,
+  current displayed subtitle text, video duration and metadata to clipboard.
 
 - **[quality-menu.lua](https://github.com/christoph-heinrich/mpv-quality-menu):**
   Add a menu for changing the streamed video and audio quality on the fly.
