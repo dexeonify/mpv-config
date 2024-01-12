@@ -357,7 +357,10 @@ function cancel_crop()
     active = false
 end
 
-function remove_crop()
+function remove_crop(mode)
+    -- decide whether to remove video-crop or delogo first
+    -- soft crop is not supported and remove_first will be set to "delogo"
+    local remove_first = (mode == "hard" or mode == "delogo") and mode or "delogo"
     local remove_delogo = function()
         local vf_table = mp.get_property_native("vf")
         if #vf_table > 0 then
@@ -386,7 +389,8 @@ function remove_crop()
         end
         return false
     end
-    return remove_delogo() or remove_hard()
+    return (remove_first == "delogo" and remove_delogo() or remove_hard())
+        or (remove_first == "hard" and remove_hard() or remove_delogo())
 end
 
 function start_crop(mode)
