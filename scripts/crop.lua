@@ -363,10 +363,7 @@ function remove_crop()
         if #vf_table > 0 then
             for i = #vf_table, 1, -1 do
                 if vf_table[i].name == "delogo" then
-                    for j = i, #vf_table-1 do
-                        vf_table[j] = vf_table[j+1]
-                    end
-                    vf_table[#vf_table] = nil
+                    table.remove(vf_table, i)
                     mp.set_property_native("vf", vf_table)
                     mp.osd_message("Removed delogo filter.")
                     local subdata = mp.get_property_native("sub-ass-extradata")
@@ -382,12 +379,12 @@ function remove_crop()
     end
     local remove_hard = function()
         video_crop = mp.get_property_native("video-crop")
-        if video_crop == "" then
-            return false
+        if video_crop ~= "" then
+            mp.set_property_native("video-crop", "")
+            mp.osd_message("Reset video-crop to empty.")
+            return true
         end
-        mp.set_property_native("video-crop", "")
-        mp.osd_message("Reset video-crop to empty.")
-        return true
+        return false
     end
     return remove_delogo() or remove_hard()
 end
