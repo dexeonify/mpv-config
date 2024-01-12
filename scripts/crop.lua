@@ -357,6 +357,41 @@ function cancel_crop()
     active = false
 end
 
+function remove_crop()
+    local remove_delogo = function()
+        local vf_table = mp.get_property_native("vf")
+        if #vf_table > 0 then
+            for i = #vf_table, 1, -1 do
+                if vf_table[i].name == "delogo" then
+                    for j = i, #vf_table-1 do
+                        vf_table[j] = vf_table[j+1]
+                    end
+                    vf_table[#vf_table] = nil
+                    mp.set_property_native("vf", vf_table)
+                    mp.osd_message("Removed delogo filter.")
+                    local subdata = mp.get_property_native("sub-ass-extradata")
+                    if subdata ~= nil and opts.fix_borders then
+                        local playresx = subdata:match("PlayResX:%s*(%d+)")
+                        mp.set_property_native("sub-ass-force-style", "PlayResX=" .. playresx)
+                    end
+                    return true
+                end
+            end
+        end
+        return false
+    end
+    local remove_hard = function()
+        video_crop = mp.get_property_native("video-crop")
+        if video_crop == "" then
+            return false
+        end
+        mp.set_property_native("video-crop", "")
+        mp.osd_message("Reset video-crop to empty.")
+        return true
+    end
+    return remove_delogo() or remove_hard()
+end
+
 function start_crop(mode)
     if active then return end
     if not mp.get_property_native("osd-dimensions") then return end
@@ -395,40 +430,7 @@ function toggle_crop(mode)
     end
     local toggle_mode = mode or opts.mode
     if toggle_mode == "soft" then return end -- can't toggle soft mode
-
-    local remove_delogo = function()
-        local vf_table = mp.get_property_native("vf")
-        if #vf_table > 0 then
-            for i = #vf_table, 1, -1 do
-                if vf_table[i].name == "delogo" then
-                    for j = i, #vf_table-1 do
-                        vf_table[j] = vf_table[j+1]
-                    end
-                    vf_table[#vf_table] = nil
-                    mp.set_property_native("vf", vf_table)
-                    local subdata = mp.get_property_native("sub-ass-extradata")
-                    if subdata ~= nil and opts.fix_borders then
-                        local playresx = subdata:match("PlayResX:%s*(%d+)")
-                        mp.set_property_native("sub-ass-force-style", "PlayResX=" .. playresx)
-                    end
-                    return true
-                end
-            end
-        end
-        return false
-    end
-    if toggle_mode == "delogo" and not remove_delogo() then
-        start_crop(mode)
-    end
-    local remove_hard = function()
-        video_crop = mp.get_property_native("video-crop")
-        if video_crop == "" then
-            return false
-        end
-        mp.set_property_native("video-crop", "")
-        return true
-    end
-    if toggle_mode == "hard" and not remove_hard() then
+    if not remove_crop() then -- only start_crop if no crops are removed
         start_crop(mode)
     end
 end
@@ -459,6 +461,6 @@ bindings_repeat[opts.right_fine]   = movement_func(opts.fine_movement, 0)
 bindings_repeat[opts.up_fine]      = movement_func(0, -opts.fine_movement)
 bindings_repeat[opts.down_fine]    = movement_func(0, opts.fine_movement)
 
-
+mp.add_key_binding(nil, "remove-crop", remove_crop)
 mp.add_key_binding(nil, "start-crop", start_crop)
 mp.add_key_binding(nil, "toggle-crop", toggle_crop)
