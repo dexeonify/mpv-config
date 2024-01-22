@@ -389,6 +389,10 @@ function cancel_crop()
     mp.unregister_idle(draw_crop_zone)
     mp.set_osd_ass(1280, 720, '')
     active = false
+    if uosc_available and uosc_off then
+        mp.commandv('script-message-to', 'uosc', 'disable-elements', mp.get_script_name(), '')
+        uosc_off = false
+    end
 end
 
 -- adjust coordinates based on previous values
@@ -545,6 +549,10 @@ function start_crop(mode)
     if opts.mouse_support then
         cursor.x, cursor.y = mp.get_mouse_pos()
     end
+    if uosc_available then
+        mp.commandv('script-message-to', 'uosc', 'disable-elements', mp.get_script_name(), 'timeline,controls,volume,top_bar')
+        uosc_off = true
+    end
     redraw()
     for key, func in pairs(bindings) do
         mp.add_forced_key_binding(key, "crop-"..key, func)
@@ -584,6 +592,11 @@ function toggle_crop(mode)
         remove_last_filter_entry("hard")
     end
 end
+
+-- check if uosc is available
+mp.register_script_message('uosc-version', function(version)
+    uosc_available = true
+end)
 
 -- bindings
 if opts.mouse_support then
