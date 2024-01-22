@@ -267,6 +267,11 @@ function draw_crop_zone()
     end
 end
 
+-- history tables
+local recursive_crop = {}
+local recursive_zoom_pan = {}
+local remove_last_filter = {}
+
 function crop_video(x1, y1, x2, y2)
     if active_mode == "soft" then
         local w = x2 - x1
@@ -277,36 +282,57 @@ function crop_video(x1, y1, x2, y2)
         local zoom = mp.get_property_number("video-zoom")
         local newZoom1 = math.log(dim.h * (2 ^ zoom) / (dim.h - dim.mt - dim.mb) / h) / math.log(2)
         local newZoom2 = math.log(dim.w * (2 ^ zoom) / (dim.w - dim.ml - dim.mr) / w) / math.log(2)
-        mp.set_property("video-zoom", math.min(newZoom1, newZoom2))
-        mp.set_property("video-pan-x", 0.5 - (x1 + w / 2))
-        mp.set_property("video-pan-y", 0.5 - (y1 + h / 2))
+
+        local newZoom = math.min(newZoom1, newZoom2)
+        local newPanX = 0.5 - (x1 + w / 2)
+        local newPanY = 0.5 - (y1 + h / 2)
+
+        table.insert(recursive_zoom_pan, {zoom = newZoom, panX = newPanX, panY = newPanY})
+        mp.set_property("video-zoom", newZoom)
+        mp.set_property("video-pan-x", newPanX)
+        mp.set_property("video-pan-y", newPanY)
+        table.insert(remove_last_filter, "soft")
+
     elseif active_mode == "hard" or active_mode == "delogo" then
         x1 = clamp(0, x1, 1)
         y1 = clamp(0, y1, 1)
         x2 = clamp(0, x2, 1)
         y2 = clamp(0, y2, 1)
         local vop = mp.get_property_native("video-out-params")
-        local x = math.floor(x1 * vop.w + 0.5)
-        local y = math.floor(y1 * vop.h + 0.5)
-        local w = math.floor((x2 - x1) * vop.w + 0.5)
-        local h = math.floor((y2 - y1) * vop.h + 0.5)
         if active_mode == "hard" then
-            local video_crop = tostring(w) .."x".. tostring(h) .."+".. tostring(x) .."+".. tostring(y)
-            mp.set_property_native("video-crop", video_crop)
+            local w = x2 - x1
+            local h = y2 - y1
+
+            table.insert(recursive_crop, {x = x1, y = y1, w = w, h = h})
+            apply_video_crop()
+            table.insert(remove_last_filter, "hard")
+
         elseif active_mode == "delogo" then
             local vf_table = mp.get_property_native("vf")
+
+            local x, y, w, h = adjust_coordinates()
+
+            local x = math.floor((x + x1 * w) * vop.w + 0.5)
+            local y = math.floor((y + y1 * h) * vop.h + 0.5)
+            local w = math.floor(w * (x2 - x1) * vop.w + 0.5)
+            local h = math.floor(h * (y2 - y1) * vop.h + 0.5)
+
             -- delogo is a little special and needs some padding to function
             w = math.min(vop.w - 1, w)
             h = math.min(vop.h - 1, h)
             x = math.max(1, x)
             y = math.max(1, y)
+
             if x + w == vop.w then w = w - 1 end
             if y + h == vop.h then h = h - 1 end
+
             vf_table[#vf_table + 1] = {
                 name="delogo",
                 params= { x = tostring(x), y = tostring(y), w = tostring(w), h = tostring(h) }
             }
+
             mp.set_property_native("vf", vf_table)
+            table.insert(remove_last_filter, "delogo")
         end
     end
 end
@@ -351,6 +377,136 @@ function cancel_crop()
     active = false
 end
 
+-- adjust coordinates based on previous values
+function adjust_coordinates()
+    local x, y, w, h = 0, 0, 1, 1
+    for _, crop in ipairs(recursive_crop) do
+        x = x + w * crop.x
+        y = y + h * crop.y
+        w = w * crop.w
+        h = h * crop.h
+    end
+    return x, y, w, h
+end
+
+function apply_video_crop()
+    local x, y, w, h = adjust_coordinates()
+
+    local vop = mp.get_property_native("video-out-params")
+    local x = math.floor(x * vop.w + 0.5)
+    local y = math.floor(y * vop.h + 0.5)
+    local w = math.floor(w * vop.w + 0.5)
+    local h = math.floor(h * vop.h + 0.5)
+
+    local video_crop = tostring(w) .."x".. tostring(h) .."+".. tostring(x) .."+".. tostring(y)
+    mp.set_property_native("video-crop", video_crop)
+end
+
+function remove_filter(vf_table, filter_name, filter_number)
+    local filter_count = 0
+    local remove_last = 0
+    for i = 1, #vf_table do
+        if vf_table[i].name == filter_name then
+            filter_count = filter_count + 1
+            remove_last = i
+        end
+    end
+    if filter_count > 0 then
+        table.remove(vf_table, remove_last)
+        mp.set_property_native("vf", vf_table)
+        mp.osd_message("Removed: #" .. tostring(filter_number or filter_count) .. " " .. filter_name)
+        return true
+    end
+    return false
+end
+
+function remove_video_crop(filter_number)
+    if #recursive_crop > 0 then
+        table.remove(recursive_crop)
+        -- reapply each crop in the table
+        apply_video_crop()
+        if #recursive_crop == 0 then
+            mp.set_property_native("video-crop", "")
+        end
+        mp.osd_message("Removed: #" .. tostring(filter_number or #recursive_crop + 1) .. " " .. "video-crop")
+        return true
+    end
+    return false
+end
+
+function remove_zoom_pan(filter_number)
+    if #recursive_zoom_pan > 0 then
+        table.remove(recursive_zoom_pan)
+        if #recursive_zoom_pan > 0 then
+            local lastZoomPan = recursive_zoom_pan[#recursive_zoom_pan]
+            mp.set_property("video-zoom", lastZoomPan.zoom)
+            mp.set_property("video-pan-x", lastZoomPan.panX)
+            mp.set_property("video-pan-y", lastZoomPan.panY)
+        else
+            mp.set_property("video-zoom", 0)
+            mp.set_property("video-pan-x", 0)
+            mp.set_property("video-pan-y", 0)
+        end
+        mp.osd_message("Removed: #" .. tostring(filter_number or #recursive_zoom_pan + 1) .. " " .. "soft-crop")
+        return true
+    end
+    return false
+end
+
+-- remove an entry in 'remove_last_filter' at correct position to keep it in sync when 'remove_crop' and 'toggle_crop' are used in the same session
+function remove_last_filter_entry(filter_type)
+    for i = #remove_last_filter, 1, -1 do
+        if remove_last_filter[i] == filter_type then
+            table.remove(remove_last_filter, i)
+            break
+        end
+    end
+end
+
+function remove_crop(mode, order)
+    local vf_table = mp.get_property_native("vf")
+    local total_filters = #remove_last_filter
+
+    -- 'remove-crop all order' removes all filters starting with most recently added
+    if order == "order" then
+        if total_filters == 0 then
+            mp.osd_message("Nothing to remove")
+            return
+        end
+        local last_filter = table.remove(remove_last_filter)
+        if last_filter == "hard" then
+            remove_video_crop(total_filters)
+        elseif last_filter == "delogo" then
+            remove_filter(vf_table, "delogo", total_filters)
+        elseif last_filter == "soft" then
+            remove_zoom_pan(total_filters)
+        end
+    else
+        local modes = {"delogo", "hard", "soft"}
+        if order == "hard" then
+            modes = {"hard", "soft", "delogo"}
+        elseif order == "soft" then
+            modes = {"soft", "hard", "delogo"}
+        end
+
+        for _, mode_name in ipairs(modes) do
+            if not mode or mode == "all" or mode == mode_name then
+                if mode_name == "delogo" and remove_filter(vf_table, "delogo") then
+                    remove_last_filter_entry("delogo")
+                    return
+                elseif mode_name == "hard" and remove_video_crop() then
+                    remove_last_filter_entry("hard")
+                    return
+                elseif mode_name == "soft" and remove_zoom_pan() then
+                    remove_last_filter_entry("soft")
+                    return
+                end
+            end
+        end
+        mp.osd_message("Nothing to remove")
+    end
+end
+
 function start_crop(mode)
     if active then return end
     if not mp.get_property_native("osd-dimensions") then return end
@@ -388,37 +544,24 @@ function toggle_crop(mode)
         msg.error("Invalid mode value: " .. mode)
     end
     local toggle_mode = mode or opts.mode
-    if toggle_mode == "soft" then return end -- can't toggle soft mode
 
-    local remove_delogo = function()
-        local vf_table = mp.get_property_native("vf")
-        if #vf_table > 0 then
-            for i = #vf_table, 1, -1 do
-                if vf_table[i].name == "delogo" then
-                    for j = i, #vf_table-1 do
-                        vf_table[j] = vf_table[j+1]
-                    end
-                    vf_table[#vf_table] = nil
-                    mp.set_property_native("vf", vf_table)
-                    return true
-                end
-            end
-        end
-        return false
-    end
-    if toggle_mode == "delogo" and not remove_delogo() then
+    if toggle_mode == "soft" and not remove_zoom_pan() then
         start_crop(mode)
+    elseif toggle_mode == "soft" then
+        remove_last_filter_entry("soft")
     end
-    local remove_hard = function()
-        video_crop = mp.get_property_native("video-crop")
-        if video_crop == "" then
-            return false
-        end
-        mp.set_property_native("video-crop", "")
-        return true
-    end
-    if toggle_mode == "hard" and not remove_hard() then
+
+    local vf_table = mp.get_property_native("vf")
+    if toggle_mode == "delogo" and not remove_filter(vf_table, "delogo") then
         start_crop(mode)
+    elseif toggle_mode == "delogo" then
+        remove_last_filter_entry("delogo")
+    end
+
+    if toggle_mode == "hard" and not remove_video_crop() then
+        start_crop(mode)
+    elseif toggle_mode == "hard" then
+        remove_last_filter_entry("hard")
     end
 end
 
@@ -449,5 +592,6 @@ bindings_repeat[opts.up_fine]      = movement_func(0, -opts.fine_movement)
 bindings_repeat[opts.down_fine]    = movement_func(0, opts.fine_movement)
 
 
+mp.add_key_binding(nil, "remove-crop", remove_crop)
 mp.add_key_binding(nil, "start-crop", start_crop)
 mp.add_key_binding(nil, "toggle-crop", toggle_crop)
