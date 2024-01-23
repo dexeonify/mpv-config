@@ -8,6 +8,7 @@ local opts = {
     frame_border_color = "EEEEEE",
     draw_crosshair = true,
     draw_text = true,
+    draw_center = false,
     mouse_support = true,
     disable_window_dragging = true,
     coarse_movement = 30,
@@ -169,6 +170,13 @@ function draw_frame(ass, frame)
     ass:rect_cw(c2.x, c1.y, c2.x + b, c2.y + b)
     ass:rect_cw(c1.x - b, c2.y, c2.x, c2.y + b)
     ass:rect_cw(c1.x - b, c1.y - b, c1.x, c2.y)
+    if opts.draw_center then
+        local xm = (c1.x + c2.x) / 2
+        local ym = (c1.y + c2.y) / 2
+        local bh = b / 2
+        ass:rect_cw(c1.x, ym - b, c2.x + b, ym + bh)
+        ass:rect_cw(xm - bh, c1.y, xm + bh, c2.y)
+    end
     ass:draw_stop()
 end
 
