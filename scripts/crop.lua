@@ -26,6 +26,9 @@ local opts = {
 }
 (require 'mp.options').read_options(opts)
 
+-- Convert RRGGBB to BBGGRR to be intuitive
+local frame_border_color = opts.frame_border_color:gsub("(%x%x)(%x%x)(%x%x)","%3%2%1")
+
 function split(input)
     local ret = {}
     for str in string.gmatch(input, "([^,]+)") do
@@ -158,7 +161,7 @@ function draw_frame(ass, frame)
     ass:append("{\\an7}")
     ass:append("{\\bord0}")
     ass:append("{\\shad0}")
-    ass:append("{\\c&H" .. opts.frame_border_color .. "&}")
+    ass:append("{\\c&H" .. frame_border_color .. "&}")
     ass:append("{\\1a&H00&}")
     ass:append("{\\2a&HFF&}")
     ass:append("{\\3a&HFF&}")
