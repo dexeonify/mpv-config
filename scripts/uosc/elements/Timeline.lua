@@ -258,7 +258,7 @@ function Timeline:render()
 		local offset = opts.size / (visibility > 0 and 24 or 28)
 		for _, range in ipairs(state.uncached_ranges) do
 			if not buffered_playtime and (range[1] > state.time or range[2] > state.time) then
-				buffered_playtime = (range[1] - state.time) / (state.speed or 1)
+				buffered_playtime = (range[1] - state.time) / state.speed
 			end
 			if options.timeline_cache then
 				local ax = range[1] < 0.5 and bax or math.floor(t2x(range[1]))
@@ -455,7 +455,7 @@ function Timeline:render()
 		end
 
 		-- Chapter title
-		if #state.chapters > 0 then
+		if config.opacity.chapters > 0 and #state.chapters > 0 then
 			local _, chapter = itable_find(state.chapters, function(c) return hovered_seconds >= c.time end,
 				#state.chapters, 1)
 			if chapter and not chapter.is_end_only then
