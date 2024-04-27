@@ -2,11 +2,12 @@ require 'mp'
 require 'mp.msg'
 
 -- Copy:
--- Filename
+-- Filename or URL
 -- Full Filename Path
--- Relative Filename Path
 -- Current Video Time
+-- Current Video Duration
 -- Current Displayed Subtitle
+-- Video Metadata
 
 WINDOWS = 2
 UNIX = 3
@@ -78,50 +79,38 @@ end
 -- Copy Filename with Extension
 local function copyFilename()
     local filename = string.format("%s", mp.get_property_osd("filename"))
+    local extension = string.match(filename, "%.(%w+)$")
+
+    local succ_message = "Filename Copied to Clipboard"
+    local fail_message = "Failed to copy filename to clipboard"
+
+    -- If filename doesn't have an extension then it is a URL.
+    if not extension then
+        filename = mp.get_property_osd("path")
+
+        succ_message = "URL Copied to Clipboard"
+        fail_message = "Failed to copy URL to clipboard"
+    end
+
     if set_clipboard(filename) then
-        mp.osd_message(string.format("Filename Copied to Clipboard: %s", filename))
+        mp.osd_message(string.format("%s: %s", succ_message, filename))
     else
-        mp.osd_message("Failed to copy filename to clipboard")
+        mp.osd_message(string.format("%s", fail_message))
     end
 end
 
 -- Copy Full Filename Path
 local function copyFullPath()
     if platform == WINDOWS then
-        full_path = string.format("%s\\%s", mp.get_property_osd("working-directory"), mp.get_property_osd("filename"))
+        full_path = string.format("%s\\%s", mp.get_property_osd("working-directory"), mp.get_property_osd("path"))
     else
-        full_path = string.format("%s/%s", mp.get_property_osd("working-directory"), mp.get_property_osd("filename"))
+        full_path = string.format("%s/%s", mp.get_property_osd("working-directory"), mp.get_property_osd("path"))
     end
 
     if set_clipboard(full_path) then
         mp.osd_message(string.format("Full Filename Path Copied to Clipboard: %s", full_path))
     else
         mp.osd_message("Failed to copy full filename path to clipboard")
-    end
-end
-
--- Copy Relative Filename Path (Parent Directory + Filename)
-local function getCWD(s, delimiter)
-    devided_full_path = {};
-    for match in (s..delimiter):gmatch("(.-)"..delimiter) do
-        table.insert(devided_full_path, match);
-    end
-    return devided_full_path[#devided_full_path+1-1];
-end
-
-local function copyRelativePath()
-    local full_path = string.format("%s", mp.get_property_osd("working-directory"))
-
-    if platform  == WINDOWS then
-        relative_path = string.format("%s\\%s", getCWD(full_path, "\\"), mp.get_property_osd("filename"))
-    else
-        relative_path = string.format("%s/%s", getCWD(full_path, "/"), mp.get_property_osd("filename"))
-    end
-
-    if set_clipboard(relative_path) then
-        mp.osd_message(string.format("Relative Filename Path Copied to Clipboard: %s", relative_path))
-    else
-        mp.osd_message("Failed to copy relative filename path to clipboard")
     end
 end
 
@@ -172,7 +161,6 @@ end
 mp.add_key_binding(nil, "copyTime", copyTime)
 mp.add_key_binding(nil, "copyFilename", copyFilename)
 mp.add_key_binding(nil, "copyFullPath", copyFullPath)
-mp.add_key_binding(nil, "copyRelativePath", copyRelativePath)
 mp.add_key_binding(nil, "copySubtitle", copySubtitle)
 mp.add_key_binding(nil, "copyDuration", copyDuration)
 mp.add_key_binding(nil, "copyMetadata", copyMetadata)
