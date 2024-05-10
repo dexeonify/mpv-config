@@ -49,6 +49,14 @@ local o = {
     --potentially useful on windows systems
     substitute_backslash = false,
 
+    --interpret backslashes `\` in paths as forward slashes `/`
+    --this is useful on Windows, which natively uses backslashes.
+    --As backslashes are valid filename characters in Unix systems this could
+    --cause mangled paths, though such filenames are rare.
+    --Use `yes` and `no` to enable/disable. `auto` tries to use the mpv `platform`
+    --property (mpv v0.36+) to decide. If the property is unavailable it defaults to `yes`.
+    normalise_backslash = 'auto',
+
     --this option reverses the behaviour of the alt+ENTER keybind
     --when disabled the keybind is required to enable autoload for the file
     --when enabled the keybind disables autoload for the file
@@ -63,6 +71,10 @@ local o = {
     --note that the working directory is set as the 'current' directory regardless, so `home` will
     --move the browser there even if this option is set to false
     default_to_working_directory = false,
+
+    --when moving up a directory do not stop on empty protocol schemes like `ftp://`
+    --e.g. moving up from `ftp://localhost/` will move straight to the root instead of `ftp://`
+    skip_protocol_schemes = true,
 
     --allows custom icons be set for the folder and cursor
     --the `\h` character is a hard space to add padding between the symbol and the text
