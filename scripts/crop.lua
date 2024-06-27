@@ -8,6 +8,7 @@ local opts = {
     draw_crosshair = true,
     draw_text = true,
     mouse_support = true,
+    disable_window_dragging = true,
     coarse_movement = 30,
     left_coarse = "LEFT",
     right_coarse = "RIGHT",
@@ -375,6 +376,9 @@ function cancel_crop()
     mp.unregister_idle(draw_crop_zone)
     mp.set_osd_ass(1280, 720, '')
     active = false
+    if opts.disable_window_dragging and not mp.get_property_bool("window-dragging") then
+        mp.set_property_bool("window-dragging", true)
+    end
 end
 
 -- adjust coordinates based on previous values
@@ -525,6 +529,9 @@ function start_crop(mode)
     active = true
     active_mode = mode_maybe
 
+    if opts.disable_window_dragging then
+        mp.set_property_bool("window-dragging", false)
+    end
     if opts.mouse_support then
         cursor.x, cursor.y = mp.get_mouse_pos()
     end
