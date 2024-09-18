@@ -188,6 +188,12 @@ function fb_utils.join_path(working, relative)
     return fb_utils.get_protocol(relative) and relative or utils.join_path(working, relative)
 end
 
+--converts the given path into an absolute path and normalises it using fb_utils.fix_path
+function fb_utils.absolute_path(path)
+    local absolute_path = fb_utils.join_path(mp.get_property('working-directory', ''), path)
+    return fb_utils.fix_path(absolute_path)
+end
+
 --sorts the table lexicographically ignoring case and accounting for leading/non-leading zeroes
 --the number format functionality was proposed by github user twophyro, and was presumably taken
 --from here: http://notebook.kulchenko.com/algorithms/alphanumeric-natural-sorting-for-humans-in-lua
@@ -223,6 +229,28 @@ end
 --returns whether or not the item can be parsed
 function fb_utils.parseable_item(item)
     return item.type == "dir" or g.parseable_extensions[fb_utils.get_extension(item.name, "")]
+end
+
+-- Takes a directory string and resolves any directory aliases,
+-- returning the resolved directory.
+function fb_utils.resolve_directory_mapping(directory)
+    if not directory then return directory end
+
+    for alias, target in pairs(g.directory_mappings) do
+        local start, finish  = string.find(directory, alias)
+        if start then
+            msg.debug('alias', alias, 'found for directory', directory, 'changing to', target)
+
+            -- if the alias is an exact match then return the target as is
+            if finish == #directory then return target end
+
+            -- else make sure the path is correctly formatted
+            target = fb_utils.fix_path(target, true)
+            return string.gsub(directory, alias, target)
+        end
+    end
+
+    return directory
 end
 
 --removes items and folders from the list
@@ -357,28 +385,19 @@ function fb_utils.copy_table(t, depth)
     return copy_table_recursive(t, {}, depth or math.huge)
 end
 
---format the item string for either single or multiple items
-local function create_item_string(base_code_fn, items, state, cmd, quoted)
-    if not items[1] then return end
-    local func = quoted and function(...) return ("%q"):format(base_code_fn(...)) end or base_code_fn
-
-    local out = {}
-    for _, item in ipairs(items) do
-        table.insert(out, func(item, state))
-    end
-
-    return table.concat(out, cmd['concat-string'] or ' ')
-end
-
 --functions to replace custom-keybind codes
 fb_utils.code_fns = {
     ["%"] = "%",
 
     f = function(item, s) return item and fb_utils.get_full_path(item, s.directory) or "" end,
     n = function(item, s) return item and (item.label or item.name) or "" end,
-    i = function(item, s) local i = fb_utils.list.indexOf(s.list, item) ; return i ~= -1 and i or 0 end,
-    j = function (item, s) return fb_utils.list.indexOf(s.list, item) ~= -1 and math.abs(fb_utils.list.indexOf( fb_utils.sort_keys(s.selection) , item)) or 0 end,
-
+    i = function(item, s)
+            local i = fb_utils.list.indexOf(s.list, item)
+            return i ~= -1 and ('%0'..math.ceil(math.log10(#s.list))..'d'):format(i) or 0
+        end,
+    j = function (item, s)
+            return fb_utils.list.indexOf(s.list, item) ~= -1 and math.abs(fb_utils.list.indexOf( fb_utils.sort_keys(s.selection) , item)) or 0
+        end,
     x = function(_, s) return #s.list or 0 end,
     p = function(_, s) return s.directory or "" end,
     q = function(_, s) return s.directory == '' and 'ROOT' or s.directory_label or s.directory or "" end,
