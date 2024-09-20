@@ -3,17 +3,17 @@ local Element = require('elements/Element')
 ---@alias MenuAction {name: string; icon: string; label?: string;}
 
 -- Menu data structure accepted by `Menu:open(menu)`.
----@alias MenuData {id?: string; type?: string; title?: string; hint?: string; footnote: string; search_style?: 'on_demand' | 'palette' | 'disabled';  actions?: MenuAction[]; callback?: string[]; keep_open?: boolean; bold?: boolean; italic?: boolean; muted?: boolean; separator?: boolean; align?: 'left'|'center'|'right'; items?: MenuDataItem[]; selected_index?: integer; on_search?: string|string[]; on_paste?: string|string[]; on_move?: string|string[]; on_close?: string|string[]; search_debounce?: number|string; search_submenus?: boolean; search_suggestion?: string}
----@alias MenuDataItem MenuDataValue|MenuData
----@alias MenuDataValue {title?: string; hint?: string; icon?: string; value: any; actions?: MenuAction[]; active?: boolean; keep_open?: boolean; selectable?: boolean; bold?: boolean; italic?: boolean; muted?: boolean; separator?: boolean; align?: 'left'|'center'|'right'}
+---@alias MenuData {id?: string; type?: string; title?: string; hint?: string; footnote: string; search_style?: 'on_demand' | 'palette' | 'disabled';  item_actions?: MenuAction[]; item_actions_place?: 'inside' | 'outside'; callback?: string[]; keep_open?: boolean; bold?: boolean; italic?: boolean; muted?: boolean; separator?: boolean; align?: 'left'|'center'|'right'; items?: MenuDataChild[]; selected_index?: integer; on_search?: string|string[]; on_paste?: string|string[]; on_move?: string|string[]; on_close?: string|string[]; search_debounce?: number|string; search_submenus?: boolean; search_suggestion?: string}
+---@alias MenuDataChild MenuDataItem|MenuData
+---@alias MenuDataItem {title?: string; hint?: string; icon?: string; value: any; actions?: MenuAction[]; actions_place?: 'inside' | 'outside'; active?: boolean; keep_open?: boolean; selectable?: boolean; bold?: boolean; italic?: boolean; muted?: boolean; separator?: boolean; align?: 'left'|'center'|'right'}
 ---@alias MenuOptions {mouse_nav?: boolean;}
 
 -- Internal data structure created from `MenuData`.
----@alias MenuStack {id?: string; type?: string; title?: string; hint?: string; footnote: string; search_style?: 'on_demand' | 'palette' | 'disabled';  actions?: MenuAction[]; callback?: string[]; selected_index?: number; action_index?: number; keep_open?: boolean; bold?: boolean; italic?: boolean; muted?: boolean; separator?: boolean; align?: 'left'|'center'|'right'; items: MenuStackItem[]; on_search?: string|string[]; on_paste?: string|string[]; on_move?: string|string[]; on_close?: string|string[]; search_debounce?: number|string; search_submenus?: boolean; search_suggestion?: string; parent_menu?: MenuStack; submenu_path: integer[]; active?: boolean; width: number; height: number; top: number; scroll_y: number; scroll_height: number; title_width: number; hint_width: number; max_width: number; is_root?: boolean; fling?: Fling, search?: Search, ass_safe_title?: string}
----@alias MenuStackItem MenuStackValue|MenuStack
----@alias MenuStackValue {title?: string; hint?: string; icon?: string; value: any; actions?: MenuAction[]; active?: boolean; keep_open?: boolean; selectable?: boolean; bold?: boolean; italic?: boolean; muted?: boolean; separator?: boolean; align?: 'left'|'center'|'right'; title_width: number; hint_width: number; ass_safe_hint?: string}
+---@alias MenuStack {id?: string; type?: string; title?: string; hint?: string; footnote: string; search_style?: 'on_demand' | 'palette' | 'disabled';  item_actions?: MenuAction[]; item_actions_place?: 'inside' | 'outside'; callback?: string[]; selected_index?: number; action_index?: number; keep_open?: boolean; bold?: boolean; italic?: boolean; muted?: boolean; separator?: boolean; align?: 'left'|'center'|'right'; items: MenuStackChild[]; on_search?: string|string[]; on_paste?: string|string[]; on_move?: string|string[]; on_close?: string|string[]; search_debounce?: number|string; search_submenus?: boolean; search_suggestion?: string; parent_menu?: MenuStack; submenu_path: integer[]; active?: boolean; width: number; height: number; top: number; scroll_y: number; scroll_height: number; title_width: number; hint_width: number; max_width: number; is_root?: boolean; fling?: Fling, search?: Search, ass_safe_title?: string}
+---@alias MenuStackChild MenuStackItem|MenuStack
+---@alias MenuStackItem {title?: string; hint?: string; icon?: string; value: any; actions?: MenuAction[]; actions_place?: 'inside' | 'outside'; active?: boolean; keep_open?: boolean; selectable?: boolean; bold?: boolean; italic?: boolean; muted?: boolean; separator?: boolean; align?: 'left'|'center'|'right'; title_width: number; hint_width: number; ass_safe_hint?: string}
 ---@alias Fling {y: number, distance: number, time: number, easing: fun(x: number), duration: number, update_cursor?: boolean}
----@alias Search {query: string; timeout: unknown; min_top: number; max_width: number; source: {width: number; top: number; scroll_y: number; selected_index?: integer; items?: MenuDataItem[]}}
+---@alias Search {query: string; timeout: unknown; min_top: number; max_width: number; source: {width: number; top: number; scroll_y: number; selected_index?: integer; items?: MenuStackChild[]}}
 
 ---@alias MenuEventActivate {type: 'activate'; index: number; value: any; action?: string; modifiers?: string; alt: boolean; ctrl: boolean; shift: boolean; keep_open?: boolean; menu_id: string;}
 ---@alias MenuEventMove {type: 'move'; from_index: number; to_index: number; menu_id: string;}
@@ -272,7 +272,7 @@ function Menu:update(data)
 	self:search_ensure_key_bindings()
 end
 
----@param items MenuDataItem[]
+---@param items MenuDataChild[]
 function Menu:update_items(items)
 	local data = table_assign({}, self.root)
 	data.items = items
@@ -473,7 +473,7 @@ end
 function Menu:select_action(index, menu_id)
 	local menu = self:get_menu(menu_id)
 	if not menu then return end
-	local actions = menu.items[menu.selected_index] and menu.items[menu.selected_index].actions or menu.actions
+	local actions = menu.items[menu.selected_index] and menu.items[menu.selected_index].actions or menu.item_actions
 	if not index or not actions or type(actions) ~= 'table' or index < 1 or index > #actions then
 		menu.action_index = nil
 		return
@@ -487,7 +487,7 @@ end
 function Menu:navigate_action(delta, menu_id)
 	local menu = self:get_menu(menu_id)
 	if not menu then return end
-	local actions = menu.items[menu.selected_index] and menu.items[menu.selected_index].actions or menu.actions
+	local actions = menu.items[menu.selected_index] and menu.items[menu.selected_index].actions or menu.item_actions
 	if actions and delta ~= 0 then
 		-- Circular navigation where zero gets converted to nil
 		local index = (menu.action_index or (delta > 0 and 0 or #actions + 1)) + delta
@@ -629,7 +629,7 @@ function Menu:activate_selected_item(shortcut)
 			self:tween(self.offset_x + menu.width / 2, 0, function(offset) self:set_offset_x(offset) end)
 			self.opacity = 1 -- in case tween above canceled fade in animation
 		else
-			local actions = item.actions or menu.actions
+			local actions = item.actions or menu.item_actions
 			local action = actions and actions[menu.action_index]
 			self.callback({
 				type = 'activate',
@@ -766,7 +766,7 @@ function Menu:paste()
 	if not payload then return end
 	if menu.on_paste then
 		local selected_item = menu.items and menu.selected_index and menu.items[menu.selected_index]
-		local actions = selected_item and selected_item.actions or menu.actions
+		local actions = selected_item and selected_item.actions or menu.item_actions
 		local selected_action = actions and menu.action_index and actions[menu.action_index]
 		self:command_or_event(menu.on_paste, {payload, menu.id}, {
 			type = 'paste',
@@ -809,11 +809,11 @@ function Menu:search_internal(menu_id, no_select_first)
 	self:update_content_dimensions()
 end
 
----@param items MenuStackItem[]
+---@param items MenuStackChild[]
 ---@param query string
 ---@param recursive? boolean
 ---@param prefix? string
----@return MenuStackItem[]
+---@return MenuStackChild[]
 function search_items(items, query, recursive, prefix)
 	local result = {}
 	local concat = table.concat
@@ -1027,12 +1027,26 @@ end
 
 function Menu:enable_key_bindings()
 	-- `+` at the end enables `repeatable` flag
-	local keys = {'up+', 'down+', 'left', 'right', 'enter', 'kp_enter', 'bs', 'tab', 'esc', 'pgup+',
-		'pgdwn+', 'home', 'end', 'del', 'v'}
+	local standalone_keys = {'f1', 'f2', 'f3', 'f4', 'f5', 'f6', 'f7', 'f8', 'f9', 'f10', 'f11', 'f12', {'v', 'ctrl'}}
+	local modifiable_keys = {'up+', 'down+', 'left', 'right', 'enter', 'kp_enter', 'bs', 'tab', 'esc', 'pgup+',
+		'pgdwn+', 'home', 'end', 'del'}
 	local modifiers = {nil, 'alt', 'alt+ctrl', 'alt+shift', 'alt+ctrl+shift', 'ctrl', 'ctrl+shift', 'shift'}
 	local normalized = {kp_enter = 'enter'}
 
-	for i, key in ipairs(keys) do
+	local function bind(key, modifier, flags)
+		local binding = modifier and modifier .. '+' .. key or key
+		local shortcut = create_shortcut(normalized[key] or key, modifier)
+		local handler = self:create_action(function(info) self:handle_shortcut(shortcut, info) end)
+		self:add_key_binding(binding, 'menu-binding-' .. binding, handler, flags)
+	end
+
+	for i, key_mods in ipairs(standalone_keys) do
+		local is_table = type(key_mods) == 'table'
+		local key, mods = is_table and key_mods[1] or key_mods, is_table and key_mods[2] or nil
+		bind(key, mods, {repeatable = false, complex = true})
+	end
+
+	for i, key in ipairs(modifiable_keys) do
 		local flags = {repeatable = false, complex = true}
 
 		if key:sub(-1) == '+' then
@@ -1041,11 +1055,7 @@ function Menu:enable_key_bindings()
 		end
 
 		for j = 1, #modifiers do
-			local modifier = modifiers[j]
-			local binding = modifier and modifier .. '+' .. key or key
-			local shortcut = create_shortcut(normalized[key] or key, modifier)
-			local handler = self:create_action(function(info) self:handle_shortcut(shortcut, info) end)
-			self:add_key_binding(binding, 'menu-binding-' .. binding, handler, flags)
+			bind(key, modifiers[j], flags)
 		end
 	end
 
@@ -1065,7 +1075,7 @@ function Menu:handle_shortcut(shortcut, info)
 	local menu, id, key, modifiers = self.current, shortcut.id, shortcut.key, shortcut.modifiers
 	local selected_index = menu.selected_index
 	local selected_item = menu and selected_index and menu.items[selected_index]
-	local actions = selected_item and selected_item.actions or menu.actions
+	local actions = selected_item and selected_item.actions or menu.item_actions
 	local selected_action = actions and menu.action_index and actions[menu.action_index]
 
 	if info.event == 'down' then return end
@@ -1213,8 +1223,7 @@ function Menu:render()
 			bx = bx,
 			by = by + self.padding,
 		}
-		local blur_selected_index = is_current and self.mouse_nav
-		local blur_action_index = is_current and self.mouse_nav
+		local cursor_is_moving = self.mouse_nav and cursor.distance > 10
 
 		-- Background
 		ass:rect(menu_rect.ax, menu_rect.ay, menu_rect.bx, menu_rect.by, {
@@ -1225,6 +1234,16 @@ function Menu:render()
 
 		if is_parent then
 			cursor:zone('primary_down', menu_rect, self:create_action(function() self:slide_in_menu(menu.id, x) end))
+		end
+
+		-- Scrollbar
+		if menu.scroll_height > 0 then
+			local groove_height = menu.height - 2
+			local thumb_height = math.max((menu.height / (menu.scroll_height + menu.height)) * groove_height, 40)
+			local thumb_y = ay + 1 + ((menu.scroll_y / menu.scroll_height) * (groove_height - thumb_height))
+			local sax = bx - round(self.scrollbar_size / 2)
+			local sbx = sax + self.scrollbar_size
+			ass:rect(sax, thumb_y, sbx, thumb_y + thumb_height, {color = fg, opacity = menu_opacity * 0.8})
 		end
 
 		-- Footnote
@@ -1291,7 +1310,7 @@ function Menu:render()
 			local next_is_active = next_item and next_item.active
 			local next_has_background = menu.selected_index == index + 1 or next_is_active
 			local font_color = item.active and fgt or bgt
-			local actions = is_selected and (item.actions or menu.actions) -- not nil = actions are visible
+			local actions = is_selected and (item.actions or menu.item_actions) -- not nil = actions are visible
 			local action = actions and actions[menu.action_index] -- not nil = action is selected
 
 			-- Separator
@@ -1331,17 +1350,19 @@ function Menu:render()
 			local title_clip_bx = content_bx
 
 			-- Actions
+			local item_can_blur_action_index = false
 			local actions_rect
 			if is_selected and actions and #actions > 0 and not item.items then
+				local place = item.actions_place or menu.item_actions_place
 				local margin = self.gap * 2
 				local size = item_by - item_ay - margin * 2
 				local rect_width = size * #actions + margin * (#actions - 1)
 
-				-- Place actions outside of menu when possible
+				-- Place actions outside of menu when requested and there's enough space for it
 				actions_rect = {
 					ay = item_ay + margin,
 					by = item_by - margin,
-					is_outside = display.width - menu_rect.bx + margin * 2 > rect_width and (item.hint or item.icon),
+					is_outside = place == 'outside' and display.width - menu_rect.bx + margin * 2 > rect_width,
 				}
 				actions_rect.bx = actions_rect.is_outside and menu_rect.bx + margin + rect_width or item_bx - margin
 				actions_rect.ax = actions_rect.bx
@@ -1372,14 +1393,17 @@ function Menu:render()
 					})
 
 					-- Select action on cursor hover
-					if self.mouse_nav and get_point_to_rectangle_proximity(cursor, rect) == 0 then
-						cursor:zone('primary_click', rect, self:create_action(function(shortcut)
-							self:activate_selected_item(shortcut)
-						end))
-						blur_action_index = false
-						if not is_active then
-							menu.action_index = action_index
-							request_render()
+					if cursor_is_moving then
+						item_can_blur_action_index = menu.action_index ~= nil
+						if get_point_to_rectangle_proximity(cursor, rect) == 0 then
+							cursor:zone('primary_click', rect, self:create_action(function(shortcut)
+								self:activate_selected_item(shortcut)
+							end))
+							item_can_blur_action_index = false
+							if not is_active then
+								menu.action_index = action_index
+								request_render()
+							end
 						end
 					end
 				end
@@ -1467,17 +1491,13 @@ function Menu:render()
 			end
 
 			-- Select hovered item
-			if is_current and self.mouse_nav and item.selectable ~= false then
-				if submenu_rect and cursor:direction_to_rectangle_distance(submenu_rect)
-					or actions_rect and actions_rect.is_outside and cursor:direction_to_rectangle_distance(actions_rect) then
-					blur_selected_index = false
-				else
-					if submenu_is_hovered or get_point_to_rectangle_proximity(cursor, item_rect_hitbox) == 0 then
-						blur_selected_index = false
-						menu.selected_index = index
-						if not is_selected then request_render() end
-					end
-				end
+			if is_current and cursor_is_moving and item.selectable ~= false
+				-- Do not select items if cursor is moving towards a submenu
+				and (not submenu_rect or not cursor:direction_to_rectangle_distance(submenu_rect))
+				and (submenu_is_hovered or get_point_to_rectangle_proximity(cursor, item_rect_hitbox) == 0) then
+				menu.selected_index = index
+				if not is_selected or item_can_blur_action_index and menu.action_index then request_render() end
+				if item_can_blur_action_index then menu.action_index = nil end
 			end
 		end
 
@@ -1576,24 +1596,6 @@ function Menu:render()
 					clip = '\\clip(' .. rect.ax .. ',' .. rect.ay .. ',' .. rect.bx .. ',' .. rect.by .. ')',
 				})
 			end
-		end
-
-		-- Scrollbar
-		if menu.scroll_height > 0 then
-			local groove_height = menu.height - 2
-			local thumb_height = math.max((menu.height / (menu.scroll_height + menu.height)) * groove_height, 40)
-			local thumb_y = ay + 1 + ((menu.scroll_y / menu.scroll_height) * (groove_height - thumb_height))
-			local sax = bx - round(self.scrollbar_size / 2)
-			local sbx = sax + self.scrollbar_size
-			ass:rect(sax, thumb_y, sbx, thumb_y + thumb_height, {color = fg, opacity = menu_opacity * 0.8})
-		end
-
-		-- We are in mouse nav and cursor isn't hovering any item
-		if blur_selected_index then
-			menu.selected_index = nil
-		end
-		if blur_action_index then
-			menu.action_index = nil
 		end
 
 		return menu_rect
