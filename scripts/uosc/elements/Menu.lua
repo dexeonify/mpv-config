@@ -15,7 +15,7 @@ local Element = require('elements/Element')
 ---@alias Fling {y: number, distance: number, time: number, easing: fun(x: number), duration: number, update_cursor?: boolean}
 ---@alias Search {query: string; timeout: unknown; min_top: number; max_width: number; source: {width: number; top: number; scroll_y: number; selected_index?: integer; items?: MenuStackChild[]}}
 
----@alias MenuEventActivate {type: 'activate'; index: number; value: any; action?: string; modifiers?: string; alt: boolean; ctrl: boolean; shift: boolean; keep_open?: boolean; menu_id: string;}
+---@alias MenuEventActivate {type: 'activate'; index: number; value: any; action?: string; modifiers?: string; alt: boolean; ctrl: boolean; shift: boolean; is_pointer: boolean; keep_open?: boolean; menu_id: string;}
 ---@alias MenuEventMove {type: 'move'; from_index: number; to_index: number; menu_id: string;}
 ---@alias MenuEventSearch {type: 'search'; query: string; menu_id: string;}
 ---@alias MenuEventKey {type: 'key'; id: string; key: string; modifiers?: string; alt: boolean; ctrl: boolean; shift: boolean; menu_id: string; selected_item?: {index: number; value: any; action?: string;}}
@@ -322,7 +322,8 @@ function Menu:update_dimensions()
 	-- This is a debt from an era where we had different cursor event handling,
 	-- and dumb titles with no search inputs. It could use a refactor.
 	local margin = round(self.item_height / 2)
-	local width_available, height_available = display.width - margin * 2, display.height - margin * 2
+	local external_buttons_reserve = display.width / self.item_height > 14 and self.scroll_step * 6 - margin * 2 or 0
+	local width_available, height_available = display.width - margin * 2 - external_buttons_reserve, display.height - margin * 2
 	local min_width = math.min(self.min_width, width_available)
 
 	for _, menu in ipairs(self.all) do
@@ -616,7 +617,8 @@ function Menu:back()
 end
 
 ---@param shortcut? Shortcut
-function Menu:activate_selected_item(shortcut)
+---@param is_pointer? boolean Whether this was called by a pointer.
+function Menu:activate_selected_item(shortcut, is_pointer)
 	local menu = self.current
 	local item = menu.items[menu.selected_index]
 	if item then
@@ -635,6 +637,7 @@ function Menu:activate_selected_item(shortcut)
 				type = 'activate',
 				index = menu.selected_index,
 				value = item.value,
+				is_pointer = is_pointer == true,
 				action = action and action.name,
 				keep_open = item.keep_open or menu.keep_open,
 				modifiers = shortcut and shortcut.modifiers or nil,
@@ -686,7 +689,7 @@ end
 ---@param shortcut? Shortcut
 function Menu:handle_cursor_up(shortcut)
 	if self.proximity_raw == 0 and self.drag_last_y and not self.is_dragging then
-		self:activate_selected_item(shortcut)
+		self:activate_selected_item(shortcut, true)
 	end
 	if self.is_dragging then
 		local distance = cursor:get_velocity().y / -3
@@ -1075,12 +1078,13 @@ function Menu:handle_shortcut(shortcut, info)
 	local menu, id, key, modifiers = self.current, shortcut.id, shortcut.key, shortcut.modifiers
 	local selected_index = menu.selected_index
 	local selected_item = menu and selected_index and menu.items[selected_index]
+	local is_submenu = selected_item and selected_item.items ~= nil
 	local actions = selected_item and selected_item.actions or menu.item_actions
 	local selected_action = actions and menu.action_index and actions[menu.action_index]
 
-	if info.event == 'down' then return end
+	if info.event == 'up' then return end
 
-	if key == 'enter' and selected_item then
+	if (key == 'enter' and selected_item) or (id == 'right' and is_submenu) then
 		self:activate_selected_item(shortcut)
 	elseif id == 'enter' and menu.search and menu.search_debounce == 'submit' then
 		self:search_submit()
@@ -1091,9 +1095,9 @@ function Menu:handle_shortcut(shortcut, info)
 		self:navigate_by_offset(items_per_page * (id == 'pgup' and -1 or 1))
 	elseif id == 'home' or id == 'end' then
 		self:navigate_by_offset(id == 'home' and -math.huge or math.huge)
-	elseif id == 'left' or id == 'shift+tab' then
+	elseif id == 'shift+tab' then
 		self:prev_action()
-	elseif id == 'right' or id == 'tab' then
+	elseif id == 'tab' then
 		self:next_action()
 	elseif id == 'ctrl+up' then
 		self:move_selected_item_by(-1)
@@ -1113,6 +1117,8 @@ function Menu:handle_shortcut(shortcut, info)
 		else
 			self:request_close()
 		end
+	elseif id == 'left' and menu.parent_menu then
+		self:back()
 	elseif key == 'bs' then
 		if menu.search then
 			if modifiers == 'shift' then
@@ -1204,7 +1210,6 @@ function Menu:render()
 	local ass = assdraw.ass_new()
 	local spacing = self.item_padding
 	local icon_size = self.font_size
-	local is_alive = self:is_alive()
 
 	---@param menu MenuStack
 	---@param x number
@@ -1223,7 +1228,7 @@ function Menu:render()
 			bx = bx,
 			by = by + self.padding,
 		}
-		local cursor_is_moving = self.mouse_nav and cursor.distance > 10
+		local blur_action_index = self.mouse_nav and menu.action_index ~= nil
 
 		-- Background
 		ass:rect(menu_rect.ax, menu_rect.ay, menu_rect.bx, menu_rect.by, {
@@ -1246,45 +1251,18 @@ function Menu:render()
 			ass:rect(sax, thumb_y, sbx, thumb_y + thumb_height, {color = fg, opacity = menu_opacity * 0.8})
 		end
 
-		-- Footnote
-		if menu.footnote and is_current then
-			local is_hovered = false
-			if is_current then
-				local hitbox = {
-					ax = menu_rect.ax,
-					ay = menu_rect.by,
-					bx = menu_rect.bx,
-					by = menu_rect.by + self.font_size * 2,
-				}
-				is_hovered = get_point_to_rectangle_proximity(cursor, hitbox) == 0
-			end
-			local opacity = (is_hovered and 1 or 0.5) * menu_opacity
-			local x, y = menu_rect.ax + self.padding, menu_rect.by + self.font_size
-			ass:icon(x + self.font_size / 2, y, self.font_size, is_hovered and 'help' or 'help_outline', {
-				color = fg, border = state.scale, border_color = bg, opacity = opacity,
-			})
-			if is_hovered then
-				ass:txt(x + self.font_size * 1.25, y, 4, menu.footnote, {
-					size = self.font_size,
-					color = fg,
-					border = state.scale,
-					border_color = bg,
-					opacity = opacity,
-					italic = true,
-				})
-			end
-		end
-
 		-- Draw submenu if selected
 		local submenu_rect, current_item = nil, is_current and menu.selected_index and menu.items[menu.selected_index]
 		local submenu_is_hovered = false
 		if current_item and current_item.items then
 			submenu_rect = draw_menu(current_item --[[@as MenuStack]], menu_rect.bx + self.gap, 1)
 			cursor:zone('primary_down', submenu_rect, self:create_action(function(shortcut)
-				self:activate_selected_item(shortcut)
+				self:activate_selected_item(shortcut, true)
 			end))
 		end
 
+		---@type MenuAction|nil
+		local selected_action
 		for index = start_index, end_index, 1 do
 			local item = menu.items[index]
 
@@ -1302,8 +1280,20 @@ function Menu:render()
 				ax = item_ax,
 				ay = math.max(item_ay, menu_rect.ay),
 				bx = menu_rect.bx + (item.items and self.gap or -self.padding), -- to bridge the gap with cursor
-				by = math.min(item_by, menu_rect.by),
+				by = math.min(item_ay + self.scroll_step, menu_rect.by),
 			}
+
+			-- Select hovered item
+			if is_current and self.mouse_nav and item.selectable ~= false
+				-- Do not select items if cursor is moving towards a submenu
+				and (not submenu_rect or not cursor:direction_to_rectangle_distance(submenu_rect))
+				and (submenu_is_hovered or get_point_to_rectangle_proximity(cursor, item_rect_hitbox) == 0) then
+				menu.selected_index = index
+				if not is_selected then
+					is_selected = true
+					request_render()
+				end
+			end
 
 			local has_background = is_selected or item.active
 			local next_item = menu.items[index + 1]
@@ -1312,6 +1302,8 @@ function Menu:render()
 			local font_color = item.active and fgt or bgt
 			local actions = is_selected and (item.actions or menu.item_actions) -- not nil = actions are visible
 			local action = actions and actions[menu.action_index] -- not nil = action is selected
+
+			if action then selected_action = action end
 
 			-- Separator
 			if item_by < by and ((not has_background and not next_has_background) or item.separator) then
@@ -1335,22 +1327,11 @@ function Menu:render()
 					opacity = highlight_opacity * menu_opacity,
 					clip = item_clip,
 				})
-
-				-- Selected item indicator line
-				if is_selected and not action then
-					local size = round(2 * state.scale)
-					local v_padding = math.min(state.radius, math.ceil(self.item_height / 3))
-					ass:rect(ax + self.padding - size - 1, item_ay + v_padding, ax + self.padding - 1,
-						item_by - v_padding, {
-							radius = 1 * state.scale, color = fg, opacity = menu_opacity, clip = item_clip,
-						})
-				end
 			end
 
 			local title_clip_bx = content_bx
 
 			-- Actions
-			local item_can_blur_action_index = false
 			local actions_rect
 			if is_selected and actions and #actions > 0 and not item.items then
 				local place = item.actions_place or menu.item_actions_place
@@ -1381,7 +1362,7 @@ function Menu:render()
 					actions_rect.ax = rect.ax
 
 					ass:rect(rect.ax, rect.ay, rect.bx, rect.by, {
-						radius = state.radius - 1,
+						radius = state.radius > 2 and state.radius - 1 or state.radius,
 						color = is_active and fg or bg,
 						border = is_active and self.gap or nil,
 						border_color = bg,
@@ -1392,23 +1373,34 @@ function Menu:render()
 						color = is_active and bg or fg, opacity = menu_opacity, clip = item_clip,
 					})
 
+					-- Re-use rect as a hitbox by growing it so it bridges gaps to prevent flickering
+					rect.ay, rect.by, rect.bx = item_ay, item_ay + self.scroll_step, rect.bx + margin
+
 					-- Select action on cursor hover
-					if cursor_is_moving then
-						item_can_blur_action_index = menu.action_index ~= nil
-						if get_point_to_rectangle_proximity(cursor, rect) == 0 then
-							cursor:zone('primary_click', rect, self:create_action(function(shortcut)
-								self:activate_selected_item(shortcut)
-							end))
-							item_can_blur_action_index = false
-							if not is_active then
-								menu.action_index = action_index
-								request_render()
-							end
+					if self.mouse_nav and get_point_to_rectangle_proximity(cursor, rect) == 0 then
+						cursor:zone('primary_click', rect, self:create_action(function(shortcut)
+							self:activate_selected_item(shortcut, true)
+						end))
+						blur_action_index = false
+						if not is_active then
+							menu.action_index = action_index
+							selected_action = actions[action_index]
+							request_render()
 						end
 					end
 				end
 
 				title_clip_bx = actions_rect.ax - self.gap * 2
+			end
+
+			-- Selected item indicator line
+			if is_selected and not selected_action then
+				local size = round(2 * state.scale)
+				local v_padding = math.min(state.radius, math.ceil(self.item_height / 3))
+				ass:rect(ax + self.padding - size - 1, item_ay + v_padding, ax + self.padding - 1,
+					item_by - v_padding, {
+						radius = 1 * state.scale, color = fg, opacity = menu_opacity, clip = item_clip,
+					})
 			end
 
 			-- Icon
@@ -1478,26 +1470,34 @@ function Menu:render()
 					clip = clip,
 				})
 			end
+		end
 
-			-- Selected action label
-			if is_alive and action and action.label and actions_rect then
-				ass:tooltip(actions_rect, action.label, {
+		-- Footnote / Selected action label
+		if is_current and (menu.footnote or selected_action) then
+			local height_half = self.font_size
+			local icon_x, icon_y = menu_rect.ax + self.padding + self.font_size / 2, menu_rect.by + height_half
+			local is_icon_hovered = false
+			local icon_hitbox = {
+				ax = icon_x - height_half,
+				ay = icon_y - height_half,
+				bx = icon_x + height_half,
+				by = icon_y + height_half,
+			}
+			is_icon_hovered = get_point_to_rectangle_proximity(cursor, icon_hitbox) == 0
+			local text = selected_action and selected_action.label or is_icon_hovered and menu.footnote
+			local opacity = (is_icon_hovered and 1 or 0.5) * menu_opacity
+			ass:icon(icon_x, icon_y, self.font_size, is_icon_hovered and 'help' or 'help_outline', {
+				color = fg, border = state.scale, border_color = bg, opacity = opacity,
+			})
+			if text then
+				ass:txt(icon_x + self.font_size * 0.75, icon_y, 4, text, {
 					size = self.font_size,
-					align = actions_rect.is_outside and 8 or 4,
-					offset = self.gap * 2,
-					responsive = false,
-					invert_colors = not item.active,
+					color = fg,
+					border = state.scale,
+					border_color = bg,
+					opacity = menu_opacity,
+					italic = true,
 				})
-			end
-
-			-- Select hovered item
-			if is_current and cursor_is_moving and item.selectable ~= false
-				-- Do not select items if cursor is moving towards a submenu
-				and (not submenu_rect or not cursor:direction_to_rectangle_distance(submenu_rect))
-				and (submenu_is_hovered or get_point_to_rectangle_proximity(cursor, item_rect_hitbox) == 0) then
-				menu.selected_index = index
-				if not is_selected or item_can_blur_action_index and menu.action_index then request_render() end
-				if item_can_blur_action_index then menu.action_index = nil end
 			end
 		end
 
@@ -1596,6 +1596,11 @@ function Menu:render()
 					clip = '\\clip(' .. rect.ax .. ',' .. rect.ay .. ',' .. rect.bx .. ',' .. rect.by .. ')',
 				})
 			end
+		end
+
+		if blur_action_index then
+			menu.action_index = nil
+			request_render()
 		end
 
 		return menu_rect

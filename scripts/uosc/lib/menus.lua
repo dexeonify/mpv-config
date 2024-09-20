@@ -6,11 +6,11 @@ function open_command_menu(data, opts)
 	local menu
 
 	local function run_command(command)
-		if type(command) == 'string' then
-			mp.command(command)
-		else
+		if type(command) == 'table' then
 			---@diagnostic disable-next-line: deprecated
 			mp.commandv(unpack(command))
+		else
+			mp.command(tostring(command))
 		end
 	end
 
@@ -19,8 +19,15 @@ function open_command_menu(data, opts)
 			---@diagnostic disable-next-line: deprecated
 			mp.commandv(unpack(itable_join({'script-message-to'}, menu.root.callback, {utils.format_json(event)})))
 		elseif event.type == 'activate' then
-			run_command(event.value)
-			menu:close()
+			-- Modifiers and actions are not available on basic non-callback mode menus
+			if not event.modifiers and not event.action then
+				run_command(event.value)
+			end
+			-- Convention: Only pure item activations should close the menu.
+			-- Using modifiers or triggering item actions should not.
+			if not event.keep_open and not event.modifiers and not event.action then
+				menu:request_close()
+			end
 		end
 	end
 
@@ -85,6 +92,14 @@ function create_self_updating_menu_opener(opts)
 
 		---@type MenuAction[]
 		local actions = opts.actions or {}
+		if opts.on_move then
+			actions[#actions + 1] = {
+				name = 'move_up', icon = 'arrow_upward', label = t('Move up') .. ' (ctrl+up/pgup/home)',
+			}
+			actions[#actions + 1] = {
+				name = 'move_down', icon = 'arrow_downward', label = t('Move down') .. ' (ctrl+down/pgdwn/end)',
+			}
+		end
 		if opts.on_reload then
 			actions[#actions + 1] = {name = 'reload', icon = 'refresh', label = t('Reload') .. ' (f5)'}
 		end
@@ -127,7 +142,21 @@ function create_self_updating_menu_opener(opts)
 			on_close = 'callback',
 		}, function(event)
 			if event.type == 'activate' then
-				if event.action == 'reload' and opts.on_reload then
+				if (event.action == 'move_up' or event.action == 'move_down') and opts.on_move then
+					local to_index = event.index + (event.action == 'move_up' and -1 or 1)
+					if to_index >= 1 and to_index <= #menu.current.items then
+						opts.on_move({
+							type = 'move',
+							from_index = event.index,
+							to_index = to_index,
+							menu_id = menu.current.id,
+						})
+						menu:select_index(to_index)
+						if not event.is_pointer then
+							menu:scroll_to_index(to_index, nil, true)
+						end
+					end
+				elseif event.action == 'reload' and opts.on_reload then
 					opts.on_reload({type = 'reload', index = event.index, value = event.value})
 				elseif event.action == 'remove' and (opts.on_remove or opts.on_delete) then
 					remove_or_delete(event.index, event.value, event.menu_id, event.modifiers)
@@ -193,6 +222,8 @@ function create_select_tracklist_type_menu_opener(opts)
 		end
 
 		local track_prop_index, snd_prop_index = get_props()
+		local filename = mp.get_property_native('filename/no-ext')
+		local escaped_filename = filename and regexp_escape(filename)
 		local first_item_index = #items + 1
 		local active_index = nil
 		local disabled_item = nil
@@ -214,7 +245,10 @@ function create_select_tracklist_type_menu_opener(opts)
 				local hint_values = {}
 				local track_selected = track.selected and track.id == track_prop_index
 				local snd_selected = snd and track.id == snd_prop_index
-				local function h(value) hint_values[#hint_values + 1] = value end
+				local function h(value)
+					value = trim(value)
+					if #value > 0 then hint_values[#hint_values + 1] = value end
+				end
 
 				if track.lang then h(track.lang) end
 				if track['demux-h'] then
@@ -230,7 +264,16 @@ function create_select_tracklist_type_menu_opener(opts)
 				if track['demux-samplerate'] then h(string.format('%.3gkHz', track['demux-samplerate'] / 1000)) end
 				if track.forced then h(t('forced')) end
 				if track.default then h(t('default')) end
-				if track.external then h(t('external')) end
+				if track.external then
+					local extension = track.title:match('%.([^%.]+)$')
+					if track.title and escaped_filename and extension then
+						track.title = trim(track.title:gsub(escaped_filename .. '%.?', ''):gsub('%.?([^%.]+)$', ''))
+						if track.title == '' or track.lang and track.title:lower() == track.lang:lower() then
+							track.title = nil
+						end
+					end
+					h(t('external'))
+				end
 
 				items[#items + 1] = {
 					title = (track.title and track.title or t('Track %s', track.id)),
