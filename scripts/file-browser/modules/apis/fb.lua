@@ -16,8 +16,13 @@ package.loaded["file-browser"] = setmetatable({}, { __index = fb })
 
 --these functions we'll provide as-is
 fb.redraw = ass.update_ass
-fb.rescan = scanning.rescan
 fb.browse_directory = controls.browse_directory
+
+function fb.rescan()
+    cache:clear({g.state.directory})
+    scanning.rescan()
+end
+
 
 function fb.clear_cache()
     cache:clear()
@@ -122,7 +127,7 @@ function fb.get_parse_state(co) return g.parse_states[co or coroutine.running() 
 -- deprecated
 function fb.get_dvd_device()
     local dvd_device = mp.get_property('dvd-device')
-    if not dvd_device then return nil end
+    if not dvd_device or dvd_device == '' then return nil end
     return fb_utils.fix_path(dvd_device, true)
 end
 
