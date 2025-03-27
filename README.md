@@ -46,10 +46,6 @@ backup and keeping track of changes.
 - **[quality-menu.lua](https://github.com/christoph-heinrich/mpv-quality-menu):**
   Add a menu for changing the streamed video and audio quality on the fly.
 
-- **[memo.lua](https://github.com/po5/memo):**
-  A recent files menu for mpv. Saves your watch history and displays it
-  in a nice menu.
-
 - **[crop.lua](https://github.com/occivink/mpv-scripts#croplua):**
   Crop the video by defining the target rectangle with the cursor.
 
