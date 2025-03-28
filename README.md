@@ -39,10 +39,6 @@ backup and keeping track of changes.
   Navigate through the file system entirely from within mpv, as well as
   opening and appending files & folders.
 
-- **[copyStuff.lua](https://github.com/rofe33/mpv-copyStuff):**
-  Copy the filename, full path, relative path, current video time,
-  current displayed subtitle text, video duration and metadata to clipboard.
-
 - **[quality-menu.lua](https://github.com/christoph-heinrich/mpv-quality-menu):**
   Add a menu for changing the streamed video and audio quality on the fly.
 
