@@ -35,7 +35,7 @@ local o = {
     custom_keybinds_file = "~~/script-opts/file-browser-keybinds.json",
 
     --blacklist compatible files, it's recommended to use this rather than to edit the
-    --compatible list directly. A semicolon separated list of extensions without spaces
+    --compatible list directly. A comma separated list of extensions without spaces
     extension_blacklist = "",
 
     --add extra file extensions
@@ -101,6 +101,9 @@ local o = {
     --when moving up a directory do not stop on empty protocol schemes like `ftp://`
     --e.g. moving up from `ftp://localhost/` will move straight to the root instead of `ftp://`
     skip_protocol_schemes = true,
+
+    --move the cursor to the currently playing item (if available) when the playing file changes
+    cursor_follows_playing_item = false,
 
     --Replace the user's home directory with `~/` in the header.
     --Uses the internal home-label addon.
