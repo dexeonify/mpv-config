@@ -777,7 +777,9 @@ function Menu:paste()
 	local menu = self.current
 	local payload = get_clipboard()
 	if not payload then return end
-	if menu.on_paste then
+	if menu.search then
+		self:search_query_insert(payload)
+	elseif menu.on_paste then
 		local selected_item = menu.items and menu.selected_index and menu.items[menu.selected_index]
 		local actions = selected_item and selected_item.actions or menu.item_actions
 		local selected_action = actions and menu.action_index and actions[menu.action_index]
@@ -789,8 +791,6 @@ function Menu:paste()
 				index = menu.selected_index, value = selected_item.value, action = selected_action,
 			},
 		})
-	elseif menu.search then
-		self:search_query_replace(menu.search.query .. payload)
 	elseif menu.search_style ~= 'disabled' then
 		self:search_start(menu.id)
 		self:search_query_replace(payload, menu.id)
@@ -883,7 +883,18 @@ function Menu:search_cursor_move(amount, word_mode)
 	if word_mode then
 		menu.search.cursor = find_string_segment_bound(query, cursor, amount) + (amount < 0 and -1 or 0)
 	else
-		menu.search.cursor = clamp(0, cursor + amount, #query)
+		local move = amount > 0 and utf8_next or utf8_prev
+		local step_count = 0
+		local limit = math.abs(amount)
+
+		while step_count < limit do
+			local next_cursor = move(query, cursor)
+			if next_cursor == cursor then break end
+			cursor = next_cursor
+			step_count = step_count + 1
+		end
+
+		menu.search.cursor = clamp(0, cursor, #query)
 	end
 	request_render()
 end
@@ -1642,8 +1653,9 @@ function Menu:render()
 					local query, cursor = menu.search.query, menu.search.cursor
 					-- Add a ZWNBSP suffix to prevent libass from trimming trailing spaces
 					local head = ass_escape(string.sub(query, 1, cursor)) .. '\239\187\191'
-					local tail = ass_escape(string.sub(query, cursor + 1)) .. '\239\187\191'
-					cursor_ax = math.max(round(cursor_ax - text_width(tail, opts)), rect.cx)
+					local tail_no_escape = string.sub(query, cursor + 1)
+					local tail = ass_escape(tail_no_escape) .. '\239\187\191'
+					cursor_ax = math.max(round(cursor_ax - text_width(tail_no_escape, opts)), rect.cx)
 					ass:txt(cursor_ax, rect.cy, 6, head, opts)
 					ass:txt(cursor_ax, rect.cy, 4, tail, opts)
 				else

@@ -1,5 +1,5 @@
 --[[ uosc | https://github.com/tomasklaen/uosc ]]
-local uosc_version = '5.8.0'
+local uosc_version = '5.9.2'
 
 mp.commandv('script-message', 'uosc-version', uosc_version)
 
@@ -29,7 +29,7 @@ defaults = {
 	timeline_cache = true,
 
 	controls =
-	'menu,gap,<!image>subtitles,<has_many_audio>audio,<has_many_video>video,<has_many_edition>editions,<stream>stream-quality,gap,space,<!image>speed,space,shuffle,loop-playlist,loop-file,gap,prev,items,next,gap,fullscreen',
+	'menu,gap,<video,audio>subtitles,<has_many_audio>audio,<has_many_video>video,<has_many_edition>editions,<stream>stream-quality,gap,space,<video,audio>speed,space,shuffle,loop-playlist,loop-file,gap,prev,items,next,gap,fullscreen',
 	controls_size = 32,
 	controls_margin = 8,
 	controls_spacing = 2,
@@ -487,23 +487,18 @@ end
 function update_human_times()
 	state.speed = state.speed or 1
 	if state.time then
-		state.max_seconds = state.duration
 		if state.duration then
 			if options.destination_time == 'playtime-remaining' then
-				state.max_seconds = state.duration / state.speed
-				state.destination_time_human = format_time(
-					(state.time - state.duration) / state.speed,
-					state.max_seconds
-				)
+				state.destination_time_human = format_time((state.time - state.duration) / state.speed, state.duration)
 			elseif options.destination_time == 'total' then
-				state.destination_time_human = format_time(state.duration, state.max_seconds)
+				state.destination_time_human = format_time(state.duration, state.duration)
 			else
-				state.destination_time_human = format_time(state.time - state.duration, state.max_seconds)
+				state.destination_time_human = format_time(state.time - state.duration, state.duration)
 			end
 		else
 			state.destination_time_human = nil
 		end
-		state.time_human = format_time(state.time, state.max_seconds)
+		state.time_human = format_time(state.time, state.duration or state.time)
 	else
 		state.time_human, state.destination_time_human = nil, nil
 	end
