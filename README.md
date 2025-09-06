@@ -15,8 +15,8 @@ backup and keeping track of changes.
 ## Fonts
 
 - [Manrope](https://github.com/sharanda/manrope) (OSC, Subtitle, Stats)
-  - A modified version of Manrope (with Tabular Number enabled) is used for the
-    OSC and Stats window, which can be downloaded [here](https://github.com/dexeonify/mpv-config/tree/uosc/fonts).
+  - A modified version of Manrope with Tabular Number enabled is used for the
+    OSC and Stats window. [Download from the `uosc/fonts` directory](https://github.com/dexeonify/mpv-config/tree/uosc/fonts).
 - [Cascadia Code](https://github.com/microsoft/cascadia-code) (Console)
 
 ## User scripts
