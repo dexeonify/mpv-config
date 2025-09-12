@@ -1,4 +1,5 @@
 -- Original script from https://github.com/occivink/mpv-scripts/blob/master/scripts/seek-to.lua
+-- Incorporated some changes from https://github.com/Sneakpeakcss/mpv-config-seek-to/blob/main/scripts/seek-to.lua
 local o = {
     mouse_controls = true,
     selection_color = "FFCF46",
