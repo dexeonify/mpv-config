@@ -65,7 +65,7 @@ function show_seeker()
             str = str .. history[history_position][i]
         end
     end
-    local prefix = seek_end and "-" or ""
+    local prefix = seek_end and "<" or (seek_bwd and "-" or (seek_fwd and "+" or ""))
     mp.osd_message("Seek to: " .. ass_begin .. prefix .. str .. ass_end, timer_duration)
 end
 
@@ -120,6 +120,14 @@ function seek_to()
     copy_history_to_last()
     local seek_time = current_time_as_sec(history[history_position])
     local duration = mp.get_property_number("duration")
+    local current_time = mp.get_property_native("time-pos")
+    -- Avoid jumps in certain video types that can happen even with empty timestamp
+    if (seek_fwd or seek_bwd or seek_end) and seek_time == 0 then return end
+    if seek_bwd then
+        seek_time = math.max(0, current_time - seek_time)
+    elseif seek_fwd then
+        seek_time = current_time + seek_time
+    end
     if seek_time > duration then
         mp.osd_message("Timestamp pasted exceeds the video duration!")
         msg.warn(seek_time .. "s exceeds the video duration!")
@@ -154,8 +162,17 @@ function history_move(up)
     end
 end
 
-function toggle_seek_mode()
-    seek_end = not seek_end
+function toggle_seek_mode(mode)
+    if mode == "seek_end" then
+        seek_end = not seek_end
+        seek_fwd, seek_bwd = false, false
+    elseif mode == "seek_fwd" then
+        seek_fwd = not seek_fwd
+        seek_end, seek_bwd = false, false
+    elseif mode == "seek_bwd" then
+        seek_bwd = not seek_bwd
+        seek_end, seek_fwd = false, false
+    end
     show_seeker()
 end
 
@@ -167,9 +184,14 @@ local key_mappings = {
     BS    = function() backspace() show_seeker() end,
     ESC   = function() set_inactive() end,
     ENTER = function() seek_to() set_inactive() end,
-    KP_ENTER = function() seek_to() set_inactive() end,
     ["Ctrl+v"] = function() paste_timestamp() end,
-    ["-"] = function() toggle_seek_mode() end
+    ["-"] = function() toggle_seek_mode("seek_bwd") end,
+    ["+"] = function() toggle_seek_mode("seek_fwd") end,
+    ["="] = function() toggle_seek_mode("seek_end") end,
+    KP_ENTER = function() seek_to() set_inactive() end,
+    KP_SUBTRACT = function() toggle_seek_mode("seek_bwd") end,
+    KP_ADD = function() toggle_seek_mode("seek_fwd") end,
+    KP_MULTIPLY = function() toggle_seek_mode("seek_end") end
 }
 
 -- Mouse controls
