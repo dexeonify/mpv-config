@@ -14,6 +14,7 @@ local platform = mp.get_property_native("platform")
 local active = false
 local cursor_position = 1
 local time_scale = {60*60*10, 60*60, 60*10, 60, 10, 1, 0.1, 0.01, 0.001}
+local seek_mode = nil
 
 local ass_begin = mp.get_property("osd-ass-cc/0")
 local ass_end = mp.get_property("osd-ass-cc/1")
@@ -65,7 +66,7 @@ function show_seeker()
             str = str .. history[history_position][i]
         end
     end
-    local prefix = seek_end and "<" or (seek_bwd and "-" or (seek_fwd and "+" or ""))
+    local prefix = ({seek_end = "<", seek_bwd = "-", seek_fwd = "+"})[seek_mode] or ""
     mp.osd_message("Seek to: " .. ass_begin .. prefix .. str .. ass_end, timer_duration)
 end
 
@@ -134,7 +135,7 @@ function seek_to()
         message_displayed = true
         return
     end
-    local prefix = seek_end and "-" or ""
+    local prefix = (seek_mode == "seek_end") and "-" or ""
     mp.commandv("osd-bar", "seek", prefix .. seek_time, "absolute")
     --deduplicate consecutive timestamps
     if #history == 1 or not time_equal(history[history_position], history[#history - 1]) then
@@ -163,15 +164,10 @@ function history_move(up)
 end
 
 function toggle_seek_mode(mode)
-    if mode == "seek_end" then
-        seek_end = not seek_end
-        seek_fwd, seek_bwd = false, false
-    elseif mode == "seek_fwd" then
-        seek_fwd = not seek_fwd
-        seek_end, seek_bwd = false, false
-    elseif mode == "seek_bwd" then
-        seek_bwd = not seek_bwd
-        seek_end, seek_fwd = false, false
+    if seek_mode == mode then
+        seek_mode = nil
+    else
+        seek_mode = mode
     end
     show_seeker()
 end
