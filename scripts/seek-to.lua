@@ -240,36 +240,33 @@ function set_inactive()
     active = false
 end
 
-function subprocess(args)
-    local cmd = {
-        name = "subprocess",
-        args = args,
-        playback_only = false,
-        capture_stdout = true
-    }
-    local res = mp.command_native(cmd)
-    if not res.error then
-        return res.stdout
-    else
-        msg.error("Error getting data from clipboard")
-        return
-    end
-end
-
-function get_clipboard()
-    local res
-    if platform == "windows" then
-        res = subprocess({ "powershell", "-Command", "Get-Clipboard", "-Raw" })
-    elseif platform == "darwin" then
-        res = subprocess({ "pbpaste" })
-    elseif platform == "linux" then
-        if os.getenv("WAYLAND_DISPLAY") then
-            res = subprocess({ "wl-paste", "-n" })
-        else
-            res = subprocess({ "xclip", "-selection", "clipboard", "-out" })
+local function get_clipboard()
+    if platform == "x11" then
+        local res = utils.subprocess({
+            args = { "xclip", "-selection", "clipboard", "-out" },
+            playback_only = false,
+        })
+        if not res.error then
+            return res.stdout
         end
+    elseif platform == "wayland" then
+        if mp.get_property("current-clipboard-backend") == "wayland" then
+            return mp.get_property("clipboard/text", "")
+        end
+        -- Wayland VO clipboard is only updated on window focus
+        if get_property_cached("focused") then
+            return mp.get_property("clipboard/text", "")
+        end
+        local res = utils.subprocess({
+            args = { "wl-paste", "-n" },
+            playback_only = false,
+        })
+        if not res.error then
+            return res.stdout
+        end
+    elseif platform == "windows" or platform == "darwin" then
+        return mp.get_property("clipboard/text", "")
     end
-    return res
 end
 
 function paste_timestamp()
