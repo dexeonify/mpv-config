@@ -300,6 +300,7 @@ local check_time_timer = nil
 local reapply_filter_timer = nil
 
 local detect_filter_label = mp.get_script_name() .. "_silencedetect"
+local detect_filter_ffmpeg_id = mp.get_script_name() .. "_detection"
 
 local function dprint(...)
     if opts.debug then
@@ -344,7 +345,8 @@ local function estimate_input_time(now)
 end
 
 local function get_silence_filter()
-    local filter = "silencedetect=n="..opts.threshold_db.."dB:d="..opts.threshold_duration
+    local filter = "silencedetect@"..detect_filter_ffmpeg_id
+        .."=n="..opts.threshold_db.."dB:d="..opts.threshold_duration
     local branch_detection = false
     local split_prefix = ""
 
@@ -897,16 +899,32 @@ local function add_event(silent, pts)
 end
 
 -- example messages:
--- [ffmpeg] silencedetect: silence_start: 6.07669
--- [ffmpeg] silencedetect: silence_end: 7.06427 | silence_duration: 0.987583
+--
+--     [ffmpeg] silencedetect@filterId: silence_start: 6.07669
+--     [ffmpeg] silencedetect@filterId: silence_end: 7.06427 | silence_duration: 0.987583
+--
+-- before ffmpeg 8.1: no @filterId
+
+-- ffmpeg 8.1 and newer
+local msg_pattern_with_id = "^silencedetect@"..detect_filter_ffmpeg_id..": silence_(%a+): ([0-9%.]+)"
+-- ffmpeg 8.0 and older
+local msg_pattern_no_id = "^silencedetect: silence_(%a+): ([0-9%.]+)"
+
 local function handle_silence_msg(msg)
     if msg.prefix ~= "ffmpeg" then return end
     -- find without pattern is significantly faster; jump out fast
-    if msg.text:find("silencedetect: silence_", 1, true) ~= 1 then return end
+    if msg.text:find("silencedetect", 1, true) ~= 1 then return end
 
-    local startend, pts =
-        msg.text:match("^silencedetect: silence_(%a+): ([0-9%.]+)")
+    local pattern = msg_pattern_no_id
+    -- Check presence of @filterId in silencedetect@filterId by
+    -- index to avoid multiple match calls.
+    if msg.text:sub(14, 14) == "@" then
+        pattern = msg_pattern_with_id
+    end
+
+    local startend, pts = msg.text:match(pattern)
     pts = tonumber(pts)
+
     if startend == "start" and pts then
         filter_reapply_time = -1
         dprint("got silence start message", pts)
