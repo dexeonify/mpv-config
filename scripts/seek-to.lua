@@ -278,7 +278,20 @@ end
 function paste_timestamp()
     local clipboard = get_clipboard()
     if clipboard == nil then return end
+    local clipboard = clipboard:gsub("[\r\n]", "")
     local back_seek = clipboard:sub(1, 1) == "-"
+
+    -- Support for dot separated timestamps
+    if clipboard:match("%d+%.%d+%.%d+%.?%d*") then
+        local segment_count = select(2, clipboard:gsub("%.", "")) + 1
+        if segment_count == 4 then
+            clipboard = clipboard:gsub("(%d+)%.(%d+)%.(%d+)%.", "%1:%2:%3.")
+        elseif segment_count == 3 then
+            clipboard = clipboard:match("%.(%d%d%d)$") and
+                        clipboard:gsub("(%d+)%.(%d+)%.", "%1:%2.") or
+                        clipboard:gsub("(%d+)%.(%d+)%.(%d+)", "%1:%2:%3")
+        end
+    end
 
     local hours, minutes, seconds, milliseconds = clipboard:match("(%d+):(%d+):(%d+)%.?(%d*)")
     if not hours then
