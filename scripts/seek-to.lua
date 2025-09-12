@@ -232,13 +232,15 @@ function set_inactive()
     if not message_displayed then
         mp.osd_message("")
     end
-    for key, _ in pairs(key_mappings) do
-        mp.remove_key_binding("seek-to-"..key)
+    if active then
+        for key, _ in pairs(key_mappings) do
+            mp.remove_key_binding("seek-to-"..key)
+        end
+        blink_timer:kill()
     end
     message_displayed = false
     underline_forced = true
     active = false
-    blink_timer:kill()
 end
 
 function subprocess(args)
@@ -346,3 +348,4 @@ function paste_timestamp()
 end
 
 mp.add_key_binding(nil, "toggle-seeker", function() if active then set_inactive() else set_active() end end)
+mp.add_key_binding(nil, "paste-timestamp", paste_timestamp)
