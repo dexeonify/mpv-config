@@ -1,5 +1,5 @@
 local opts = {
-    mode = "hard", -- can be "hard" or "soft". If hard, use video-crop, if soft use zoom + pan. Or a bonus "delogo" mode
+    mode = "hard", -- can be "hard" or "soft". If hard, apply a crop filter, if soft zoom + pan. Or a bonus "delogo" mode
     draw_shade = true,
     shade_opacity = "77",
     draw_frame = false,
@@ -8,7 +8,6 @@ local opts = {
     draw_crosshair = true,
     draw_text = true,
     mouse_support = true,
-    fix_borders = true,
     coarse_movement = 30,
     left_coarse = "LEFT",
     right_coarse = "RIGHT",
@@ -50,7 +49,7 @@ local rect_centered = false
 local rect_keepaspect = false
 local needs_drawing = false
 local crop_first_corner = nil -- in normalized video space
-local cursor = {
+local crop_cursor = {
     x = 0,
     y = 0
 }
@@ -83,11 +82,6 @@ function rect_from_two_points(p1, p2, centered, ratio)
     return { x = c1[1], y = c1[2] }, { x = c2[1], y = c2[2] }
 end
 
-function round(num, num_decimal_places)
-    local mult = 10^(num_decimal_places or 0)
-    return math.floor(num * mult + 0.5) / mult
-end
-
 function clamp(low, value, high)
     if value <= low then
         return low
@@ -98,10 +92,10 @@ function clamp(low, value, high)
     end
 end
 
-function clamp_point(point, dim)
+function clamp_point(top_left, point, bottom_right)
     return {
-        x = clamp(dim.ml, point.x, dim.w - dim.mr),
-        y = clamp(dim.mt, point.y, dim.h - dim.mb)
+        x = clamp(top_left.x, point.x, bottom_right.x),
+        y = clamp(top_left.y, point.y, bottom_right.y)
     }
 end
 
@@ -216,7 +210,10 @@ function draw_crop_zone()
             return
         end
 
-        cursor = clamp_point(cursor, dim)
+        local cursor = {
+            x = crop_cursor.x,
+            y = crop_cursor.y,
+        }
         local ass = assdraw.ass_new()
 
         if crop_first_corner and (opts.draw_shade or opts.draw_frame) then
@@ -250,13 +247,9 @@ function draw_crop_zone()
                 local cursor_norm = screen_to_video_norm(cursor, dim)
                 local text = string.format("%d, %d", cursor_norm.x * vop.w, cursor_norm.y * vop.h)
                 if crop_first_corner then
-                    local crop_zone_w = math.abs((cursor_norm.x - crop_first_corner.x) * vop.w )
-                    local crop_zone_h = math.abs((cursor_norm.y - crop_first_corner.y) * vop.h )
-                    local crop_zone_aspect = round(crop_zone_w / crop_zone_h, 3)
-                    text = string.format("%s (%dx%d/%s)", text,
-                        crop_zone_w,
-                        crop_zone_h,
-                        crop_zone_aspect
+                    text = string.format("%s (%dx%d)", text,
+                        math.abs((cursor_norm.x - crop_first_corner.x) * vop.w ),
+                        math.abs((cursor_norm.y - crop_first_corner.y) * vop.h )
                     )
                 end
                 draw_position_text(ass, text, cursor, { w = dim.w, h = dim.h }, 6)
@@ -287,15 +280,12 @@ function crop_video(x1, y1, x2, y2)
         x2 = clamp(0, x2, 1)
         y2 = clamp(0, y2, 1)
         local vop = mp.get_property_native("video-out-params")
+        local vf_table = mp.get_property_native("vf")
         local x = math.floor(x1 * vop.w + 0.5)
         local y = math.floor(y1 * vop.h + 0.5)
         local w = math.floor((x2 - x1) * vop.w + 0.5)
         local h = math.floor((y2 - y1) * vop.h + 0.5)
-        if active_mode == "hard" then
-            local video_crop = tostring(w) .."x".. tostring(h) .."+".. tostring(x) .."+".. tostring(y)
-            mp.set_property_native("video-crop", video_crop)
-        elseif active_mode == "delogo" then
-            local vf_table = mp.get_property_native("vf")
+        if active_mode == "delogo" then
             -- delogo is a little special and needs some padding to function
             w = math.min(vop.w - 1, w)
             h = math.min(vop.h - 1, h)
@@ -303,17 +293,12 @@ function crop_video(x1, y1, x2, y2)
             y = math.max(1, y)
             if x + w == vop.w then w = w - 1 end
             if y + h == vop.h then h = h - 1 end
-            vf_table[#vf_table + 1] = {
-                name="delogo",
-                params= { x = tostring(x), y = tostring(y), w = tostring(w), h = tostring(h) }
-            }
-            mp.set_property_native("vf", vf_table)
         end
-        local subdata = mp.get_property_native("sub-ass-extradata")
-        if subdata ~= nil and opts.fix_borders then
-            local playresy = subdata:match("PlayResY:%s*(%d+)")
-            mp.set_property_native("sub-ass-force-style", "PlayResX=" .. tostring(tonumber(playresy) * (w/h)))
-        end
+        vf_table[#vf_table + 1] = {
+            name=(active_mode == "hard") and "crop" or "delogo",
+            params= { x = tostring(x), y = tostring(y), w = tostring(w), h = tostring(h) }
+        }
+        mp.set_property_native("vf", vf_table)
     end
 end
 
@@ -323,14 +308,14 @@ function update_crop_zone_state()
         cancel_crop()
         return
     end
-    cursor = clamp_point(cursor, dim)
+    local corner = crop_cursor
     if crop_first_corner == nil then
-        crop_first_corner = screen_to_video_norm(cursor, dim)
+        crop_first_corner = screen_to_video_norm(crop_cursor, dim)
         redraw()
     else
         local c1, c2 = rect_from_two_points(
             video_norm_to_screen(crop_first_corner, dim),
-            cursor,
+            crop_cursor,
             rect_centered,
             rect_keepaspect and dim.w/dim.h)
         local c1norm = screen_to_video_norm(c1, dim)
@@ -357,42 +342,6 @@ function cancel_crop()
     active = false
 end
 
-function remove_crop(mode)
-    -- decide whether to remove video-crop or delogo first
-    -- soft crop is not supported and remove_first will be set to "delogo"
-    local remove_first = (mode == "hard" or mode == "delogo") and mode or "delogo"
-    local remove_delogo = function()
-        local vf_table = mp.get_property_native("vf")
-        if #vf_table > 0 then
-            for i = #vf_table, 1, -1 do
-                if vf_table[i].name == "delogo" then
-                    table.remove(vf_table, i)
-                    mp.set_property_native("vf", vf_table)
-                    mp.osd_message("Removed delogo filter.")
-                    local subdata = mp.get_property_native("sub-ass-extradata")
-                    if subdata ~= nil and opts.fix_borders then
-                        local playresx = subdata:match("PlayResX:%s*(%d+)")
-                        mp.set_property_native("sub-ass-force-style", "PlayResX=" .. playresx)
-                    end
-                    return true
-                end
-            end
-        end
-        return false
-    end
-    local remove_hard = function()
-        video_crop = mp.get_property_native("video-crop")
-        if video_crop ~= "" then
-            mp.set_property_native("video-crop", "")
-            mp.osd_message("Reset video-crop to empty.")
-            return true
-        end
-        return false
-    end
-    return (remove_first == "delogo" and remove_delogo() or remove_hard())
-        or (remove_first == "hard" and remove_hard() or remove_delogo())
-end
-
 function start_crop(mode)
     if active then return end
     if not mp.get_property_native("osd-dimensions") then return end
@@ -401,7 +350,7 @@ function start_crop(mode)
         return
     end
     local mode_maybe = mode or opts.mode
-    if mode_maybe == "delogo" then
+    if mode_maybe ~= 'soft' then
         local hwdec = mp.get_property("hwdec-current")
         if hwdec and hwdec ~= "no" and not string.find(hwdec, "-copy$") then
             msg.error("Cannot crop with hardware decoding active (see manual)")
@@ -412,7 +361,7 @@ function start_crop(mode)
     active_mode = mode_maybe
 
     if opts.mouse_support then
-        cursor.x, cursor.y = mp.get_mouse_pos()
+        crop_cursor.x, crop_cursor.y = mp.get_mouse_pos()
     end
     redraw()
     for key, func in pairs(bindings) do
@@ -431,14 +380,32 @@ function toggle_crop(mode)
     end
     local toggle_mode = mode or opts.mode
     if toggle_mode == "soft" then return end -- can't toggle soft mode
-    if not remove_crop() then -- only start_crop if no crops are removed
+
+    local remove_filter = function()
+        local to_remove = (toggle_mode == "hard") and "crop" or "delogo"
+        local vf_table = mp.get_property_native("vf")
+        if #vf_table > 0 then
+            for i = #vf_table, 1, -1 do
+                if vf_table[i].name == to_remove then
+                    for j = i, #vf_table-1 do
+                        vf_table[j] = vf_table[j+1]
+                    end
+                    vf_table[#vf_table] = nil
+                    mp.set_property_native("vf", vf_table)
+                    return true
+                end
+            end
+        end
+        return false
+    end
+    if not remove_filter() then
         start_crop(mode)
     end
 end
 
 -- bindings
 if opts.mouse_support then
-    bindings["MOUSE_MOVE"] = function() cursor.x, cursor.y = mp.get_mouse_pos(); redraw() end
+    bindings["MOUSE_MOVE"] = function() crop_cursor.x, crop_cursor.y = mp.get_mouse_pos(); redraw() end
 end
 for _, key in ipairs(opts.accept) do
     bindings[key] = update_crop_zone_state
@@ -448,8 +415,8 @@ for _, key in ipairs(opts.cancel) do
 end
 function movement_func(move_x, move_y)
     return function()
-        cursor.x = cursor.x + move_x
-        cursor.y = cursor.y + move_y
+        crop_cursor.x = crop_cursor.x + move_x
+        crop_cursor.y = crop_cursor.y + move_y
         redraw()
     end
 end
@@ -462,6 +429,6 @@ bindings_repeat[opts.right_fine]   = movement_func(opts.fine_movement, 0)
 bindings_repeat[opts.up_fine]      = movement_func(0, -opts.fine_movement)
 bindings_repeat[opts.down_fine]    = movement_func(0, opts.fine_movement)
 
-mp.add_key_binding(nil, "remove-crop", remove_crop)
+
 mp.add_key_binding(nil, "start-crop", start_crop)
 mp.add_key_binding(nil, "toggle-crop", toggle_crop)
